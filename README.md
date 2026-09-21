@@ -90,35 +90,6 @@
 | การคอมไพล์ | `javac` และ `java` จาก JDK |
 | Version Control | Git & GitHub |
 
-## สถาปัตยกรรมคลาส (OOP Architecture)
-
-### Model Layer (ข้อมูลและ Business Logic)
-
-| คลาส | รายละเอียด |
-| :--- | :--- |
-| `User` (Abstract) | `userId`, `username`, `password`, `fullName`, `phone`, `role` และเมธอด `abstract displayDashboard()` |
-| `Tenant extends User` | เพิ่ม `roomId`, เมธอด `viewBill()`, `submitPayment()`, `requestTransfer()`, `submitComplaint()` |
-| `Admin extends User` | เมธอด `recordMeter()`, `verifyPayment()`, `manageRoom()`, `approveTransfer()` |
-| `Applicant extends User` | เมธอดดูห้องว่างและ `requestBooking()` |
-| `Room` | `roomId`, `roomNumber`, `roomType`, `baseRent`, `RoomStatus` (AVAILABLE, OCCUPIED, MAINTENANCE) |
-| `Bill` | `billId`, `roomId`, `monthYear`, หน่วยน้ำ-ไฟ, `totalAmount`, `PaymentStatus` และเมธอด `calculateTotal(waterRate, elecRate)` |
-| `Contract` | `contractId`, `userId`, `roomId`, `startDate`, `endDate`, `deposit`, `ContractStatus` |
-| `TransferRequest` | คำขอย้ายห้องและสถานะการพิจารณา |
-| `Complaint` | คำร้องเรียน หมวดหมู่ และสถานะ |
-| `Expense` | รายจ่ายของหอพัก |
-
-### Service / Data Access Layer
-
-| คลาส | หน้าที่ |
-| :--- | :--- |
-| `CSVService` | คลาสกลางสำหรับอ่าน/เขียนไฟล์ CSV และจัดการ Exception (`IOException`, `FileNotFoundException`) |
-| `AuthManager` | ตรวจสอบการ Login และสิทธิ์เข้าถึงเมนูตามบทบาท |
-| `RoomManager` | โหลดรายการห้อง, ค้นหาห้องว่าง, อัปเดตสถานะห้อง, ย้ายห้อง |
-| `ContractManager` | จัดการสัญญาเช่า, ตรวจสัญญาใกล้หมดอายุ |
-| `BillingManager` | คำนวณค่าน้ำ-ไฟ ออกบิลประจำเดือน และยืนยันการชำระเงิน |
-| `ComplaintManager` | รับและอัปเดตสถานะคำร้องเรียน |
-| `ReportManager` | รวบรวมข้อมูลสำหรับกราฟ (รายได้-รายจ่าย, อัตราเข้าพัก, อัตราเข้า-ออก) |
-
 ## โครงสร้างโปรเจ็ค (Project Structure)
 
 <!-- TODO: ปรับให้ตรงกับโครงสร้างจริง -->
@@ -139,8 +110,6 @@ dormitory-management/
 ├── docs/                      # เอกสารและภาพหน้าจอ
 └── README.md
 ```
-
-> หลักการสำคัญ: **แยก UI ออกจาก Logic** ห้ามเขียนโค้ดอ่าน/เขียนไฟล์ CSV ไว้ในปุ่มของหน้าจอ ให้เรียกผ่านคลาสใน `service/` เสมอ
 
 ## การจัดเก็บข้อมูล (CSV Database Design)
 
@@ -169,77 +138,6 @@ B202609-01,R101,2026-09,120,128,450,490,5330.0,PAID
 B202610-01,R101,2026-10,128,135,490,545,5505.0,PENDING
 ```
 
-### ไฟล์เพิ่มเติมสำหรับฟีเจอร์ใหม่
-
-<!-- TODO: ปรับชื่อคอลัมน์ให้ตรงกับที่ออกแบบจริง -->
-
-| ไฟล์ | คอลัมน์หลัก | ใช้กับฟีเจอร์ |
-| :--- | :--- | :--- |
-| `contracts.csv` | contractId, userId, roomId, startDate, endDate, deposit, monthlyRent, status, moveOutDate | สัญญาเช่า, อัตราเข้า-ออก |
-| `bookings.csv` | bookingId, userId, roomId, requestDate, expectedMoveIn, status | จองห้อง |
-| `payments.csv` | paymentId, billId, userId, slipFileName, paidDate, status | ส่งหลักฐานและยืนยันชำระเงิน |
-| `transfers.csv` | requestId, userId, fromRoomId, toRoomId, reason, requestDate, status, adminNote | ขอย้ายห้อง |
-| `complaints.csv` | complaintId, userId, roomId, category, title, detail, reportedDate, status, adminNote, resolvedDate | คำร้องเรียน |
-| `expenses.csv` | expenseId, date, category, description, amount | รายจ่ายและรายงาน |
-
-> `contracts.csv` มีวันเข้าพักและวันย้ายออก จึงใช้คำนวณอัตราการเข้า-ออกและอัตราการเข้าพักย้อนหลังได้ ส่วน `payments.csv` มีวันที่ชำระ ใช้สรุปรายได้รายเดือนได้
-
-## การติดตั้งและใช้งาน (Getting Started)
-
-### สิ่งที่ต้องมี (Prerequisites)
-- JDK 17 ขึ้นไป (ตรวจสอบด้วย `java -version` และ `javac -version`)
-
-### ขั้นตอนการรันโปรแกรม
-
-1. โคลนโปรเจ็ค
-   ```bash
-   git clone https://github.com/<username>/<repo-name>.git
-   cd <repo-name>
-   ```
-
-2. คอมไพล์โค้ดทั้งหมด
-
-   macOS / Linux
-   ```bash
-   mkdir -p out
-   javac -encoding UTF-8 -d out $(find src -name "*.java")
-   ```
-
-   Windows (Command Prompt)
-   ```bat
-   mkdir out
-   dir /s /b src\*.java > sources.txt
-   javac -encoding UTF-8 -d out @sources.txt
-   ```
-
-3. รันโปรแกรม
-   ```bash
-   java -Dfile.encoding=UTF-8 -cp out Main
-   ```
-
-> ไฟล์ CSV ต้องบันทึกเป็น UTF-8 เพื่อให้ภาษาไทยแสดงผลถูกต้อง
-
-### บัญชีสำหรับทดสอบ (Demo Accounts)
-
-| บทบาท | Username | Password |
-| :--- | :--- | :--- |
-| ผู้ดูแล | `admin` | `admin123` |
-| ผู้เช่า | `tenant101` | `pass101` |
-| ผู้สนใจเข้าอาศัย | `applicant1` | `pass123` |
-
-## ตัวอย่างการใช้งาน (Usage)
-
-<!-- TODO: ใส่ภาพหน้าจอจริงในโฟลเดอร์ docs/ -->
-
-| หน้าจอ | ตัวอย่าง |
-| :--- | :--- |
-| เข้าสู่ระบบ | `docs/login.png` |
-| ผู้สนใจ: ดูห้องว่างและจอง | `docs/guest.png` |
-| ผู้เช่า: บิลและสัญญาเช่า | `docs/tenant.png` |
-| ผู้ดูแล: จัดการห้องและบันทึกมิเตอร์ | `docs/admin.png` |
-| ผู้ดูแล: กราฟรายได้-รายจ่าย | `docs/report.png` |
-| คำร้องเรียนและขอย้ายห้อง | `docs/complaint.png` |
-
 ## เช็กลิสต์ความสมบูรณ์ (Quality Checklist)
 
 - [ ] **OOP Structure:** Encapsulation (private fields + getter/setter), Inheritance (`User` → `Tenant` / `Admin` / `Applicant`) และ Polymorphism
@@ -263,6 +161,7 @@ B202610-01,R101,2026-10,128,135,490,545,5505.0,PENDING
 
 ## ใบอนุญาต (License)
 
-โปรเจ็คนี้จัดทำขึ้นเพื่อการศึกษา
+โปรเจ็คนี้จัดทำขึ้นเพื่อการศึกษา 
+รายวิชา Software Construction รหัสวิชา 01418211
+อาจารย์ผู้สอน อาจารย์กฤษณะ ตรีฉลอง
 
-<!-- TODO: ใส่ชื่อรายวิชาและอาจารย์ผู้สอนหากต้องการ -->
