@@ -102,7 +102,7 @@ MAINTENANCE    อยู่ระหว่างปรับปรุง
 
 ```text
 PENDING                  รอชำระ
-WAITING_VERIFICATION     รอตรวจสอบการชำระเงิน
+VERIFICATION             รอตรวจสอบการชำระเงิน
 PAID                     ชำระแล้ว
 OVERDUE                  ค้างชำระ
 ```
