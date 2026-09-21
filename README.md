@@ -275,6 +275,7 @@ U003,applicant1,pass123,อนันต์ มุ่งมั่น,0861112233,A
 dormitory-management/
 ├── src/
 │   ├── Main.java
+│   │
 │   ├── model/
 │   │   ├── User.java
 │   │   ├── Admin.java
@@ -306,6 +307,13 @@ dormitory-management/
 └── README.md
 ```
 
+หน้าที่ของแต่ละส่วน
+model/ — จัดเก็บคลาสและข้อมูลหลักของระบบ
+service/ — จัดการ Business Logic ของระบบ
+storage/ — จัดการอ่านและเขียนข้อมูล CSV
+ui/ — ส่วนติดต่อผู้ใช้งาน
+data/ — ไฟล์ข้อมูล CSV
+docs/ — เอกสารและข้อมูลประกอบโครงงาน
 ---
 
 ## 9. ข้อมูลโครงงาน
