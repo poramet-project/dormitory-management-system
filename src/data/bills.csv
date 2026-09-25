@@ -1,0 +1,2 @@
+billId,contractId,billMonth,rentAmount,waterMeterPrev,waterMeterCurr,waterUnit,waterRate,waterAmount,electricMeterPrev,electricMeterCurr,electricUnit,electricRate,electricAmount,totalAmount,status,dueDate
+B001,C001,2026-08,4500,120,128,8,18,144,450,480,30,7,210,4854,PAID,2026-08-05

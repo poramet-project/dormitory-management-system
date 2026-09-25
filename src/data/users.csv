@@ -1,0 +1,4 @@
+userId,username,password,fullName,phone,role,roomId
+U001,admin,admin123,สมชาย ใจดี,0812345678,ADMIN,-
+U002,tenant101,pass101,กิตติพงษ์ รักสงบ,0898765432,TENANT,R101
+U003,applicant1,pass123,อนันต์ มุ่งมั่น,0861112233,APPLICANT,-

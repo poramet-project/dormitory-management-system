@@ -1,0 +1,2 @@
+contractId,userId,roomId,startDate,endDate,monthlyRent,deposit,status
+C001,U002,R101,2026-01-01,2026-12-31,4500,9000,ACTIVE

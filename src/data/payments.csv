@@ -1,0 +1,2 @@
+paymentId,billId,userId,amount,paymentDate,proofFile,status
+P001,B001,U002,4854,2026-08-03,proof_P001.jpg,VERIFIED

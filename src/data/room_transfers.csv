@@ -1,0 +1,2 @@
+transferId,userId,oldRoomId,newRoomId,reason,requestDate,status,approvedDate
+RT001,U002,R101,R103,ต้องการห้องที่เงียบกว่าเดิม,2026-09-15,PENDING,-

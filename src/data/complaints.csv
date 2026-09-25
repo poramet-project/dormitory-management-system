@@ -1,0 +1,2 @@
+complaintId,userId,roomId,type,description,status,createdDate,updatedDate
+CP001,U002,R101,แอร์ไม่เย็น,แอร์ในห้องไม่เย็นตั้งแต่เมื่อวาน,PENDING,2026-09-20,2026-09-20
