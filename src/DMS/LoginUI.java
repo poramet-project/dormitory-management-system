@@ -396,7 +396,7 @@ public class LoginUI extends JFrame {
 
     private void setupFieldProps(JTextField field) {
         field.setOpaque(false);
-        field.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 13));
+        field.setFont(new Font("Tahoma", Font.PLAIN, 13));
         field.setCaretColor(Color.decode("#00796B"));
         field.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
         field.setPreferredSize(new Dimension(310, 40));
