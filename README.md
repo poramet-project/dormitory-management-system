@@ -104,7 +104,7 @@ MAINTENANCE    อยู่ระหว่างปรับปรุง
 PENDING                  รอชำระ
 VERIFICATION             รอตรวจสอบการชำระเงิน
 PAID                     ชำระแล้ว
-OVERDUE                  ค้างชำระ
+UNPAID                   ค้างชำระ
 ```
 
 ### 3.5 ระบบชำระเงิน
