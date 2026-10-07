@@ -39,16 +39,15 @@ public class LoginUI extends JFrame {
     }
 
     private void loadBgImage() {
-        String name = "content.png";
-        var url = getClass().getResource("/img/" + name);
-        if (url == null) url = getClass().getClassLoader().getResource("img/" + name);
-
+        String path = "img/content.png";
+        // โหลดตรงผ่าน ClassLoader แบบบรรทัดเดียว
+        java.net.URL url = ClassLoader.getSystemResource(path);
+        
         if (url != null) {
             bgImg = new ImageIcon(url).getImage();
         } else {
-            File f = new File("src/img/" + name);
-            if (!f.exists()) f = new File("img/" + name);
-            if (f.exists()) bgImg = new ImageIcon(f.getAbsolutePath()).getImage();
+            // สำรองกรณีรันผ่าน IDE แล้วหาใน classpath ไม่เจอ
+            bgImg = new ImageIcon("src/" + path).getImage();
         }
     }
 
