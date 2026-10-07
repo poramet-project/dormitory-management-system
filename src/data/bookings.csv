@@ -1,0 +1,2 @@
+bookingId,userId,roomId,fullName,phone,requestDate,status
+BK001,U003,R103,อนันต์ มุ่งมั่น,0861112233,2026-09-10,PENDING
