@@ -89,6 +89,19 @@ public class LoginUI extends JFrame {
         signUp.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         signUp.setAlignmentX(CENTER_ALIGNMENT);
 
+        // ปุ่ม Log in -> เรียก LogicLogin เพื่อตรวจสอบและเปิดหน้าตามบทบาท
+        ActionListener doLogin = e -> {
+            String u = userField.getText().trim();
+            String p = new String(passField.getPassword());
+            // ถ้ายังเป็นข้อความ placeholder ให้ถือว่าว่าง
+            if (u.equals("👤  Username")) u = "";
+            if (p.equals("🔑  Password")) p = "";
+            LogicLogin.login(this, u, p);
+        };
+        loginBtn.addActionListener(doLogin);
+        userField.addActionListener(doLogin);   // กด Enter ในช่อง username
+        passField.addActionListener(doLogin);   // กด Enter ในช่อง password
+
         // -------------------------------------------------------------
         // ดักจับการคลิกที่ปุ่ม Sign Up -> ปิดหน้าเดิม แล้ว new หน้าใหม่
         // -------------------------------------------------------------
