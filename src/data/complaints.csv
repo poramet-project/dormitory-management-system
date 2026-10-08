@@ -1,0 +1,2 @@
+complaintId,userId,roomId,category,topic,description,requestDate,status
+C001,U002,R101,เครื่องปรับอากาศ / พัดลม,แอร์ไม่เย็น,เปิด 16 องศายังไม่เย็นเลยครับ,2026-10-09,PENDING

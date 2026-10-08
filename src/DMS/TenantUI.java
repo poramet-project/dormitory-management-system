@@ -5,37 +5,45 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+
 
 public class TenantUI extends JFrame {
 
-    static final Color TEAL        = new Color(0x12756B);
-    static final Color TEAL_HOVER  = new Color(0x0E5F57);
-    static final Color TEAL_LIGHT  = new Color(0xD3F1EC);
+    static final Color TEAL = new Color(0x12756B);
+    static final Color TEAL_HOVER = new Color(0x0E5F57);
+    static final Color TEAL_LIGHT = new Color(0xD3F1EC);
     static final Color TEAL_BORDER = new Color(0x8FD8CC);
-    static final Color BG          = new Color(0xF2F2F2);
+    static final Color BG = new Color(0xF2F2F2);
     static final Color CARD_BORDER = new Color(0xD9D9D9);
-    static final Color TEXT        = new Color(0x333333);
-    static final Color TEXT_MUTED  = new Color(0x666666);
-    static final Color YELLOW      = new Color(0xF2D80C);
-    static final Color GREEN       = new Color(0x3BD675);
+    static final Color TEXT = new Color(0x333333);
+    static final Color TEXT_MUTED = new Color(0x666666);
+    static final Color YELLOW = new Color(0xF2D80C);
+    static final Color GREEN = new Color(0x3BD675);
 
     static final String FONT = pickThaiFont();
 
     static String pickThaiFont() {
-        String[] prefs = {"Sarabun", "Noto Sans Thai", "Leelawadee UI", "Leelawadee", "Thonburi", "Tahoma"};
+        String[] prefs = { "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Leelawadee", "Thonburi", "Tahoma" };
         Set<String> avail = new HashSet<>(Arrays.asList(
                 GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
-        for (String p : prefs) if (avail.contains(p)) return p;
+        for (String p : prefs)
+            if (avail.contains(p))
+                return p;
         return Font.DIALOG;
     }
 
@@ -50,6 +58,14 @@ public class TenantUI extends JFrame {
         return l;
     }
 
+    /** แปลงค่า null / ว่าง / "-" ให้เป็นข้อความที่แสดงผลได้ */
+    static String orDefault(String s, String fallback) {
+        if (s == null)
+            return fallback;
+        String t = s.trim();
+        return (t.isEmpty() || t.equals("-")) ? fallback : t;
+    }
+
     private final CardLayout cardLayout;
     private final JPanel centerCardsPanel;
     private final List<MenuItem> menuItems = new ArrayList<>();
@@ -62,36 +78,77 @@ public class TenantUI extends JFrame {
         setMinimumSize(new Dimension(980, 650));
         setLocationRelativeTo(null);
 
-        LogicLogin.User user = LogicLogin.getCurrentUser();
+        // ---- 1. หา user ปัจจุบัน (ห้ามให้ล้มเหลวจนหน้าต่างไม่เปิด) ----
+        LogicLogin.User user = null;
+        try {
+            user = LogicLogin.getCurrentUser();
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
         if (user == null) {
             user = new LogicLogin.User("tenant", "1234", "กิตติพงษ์ รักสงบ", "0812345678", "TENANT", "R101");
         }
         this.currentUser = user;
+        final LogicLogin.User u = this.currentUser;
 
         JPanel root = new JPanel(new BorderLayout());
 
-        // 1. Sidebar ด้านซ้าย (คงอยู่ตลอดเวลา)
+        // ---- 2. Sidebar ด้านซ้าย (คงอยู่ตลอดเวลา) ----
         root.add(buildSidebar(), BorderLayout.WEST);
 
-        // 2. ฝั่งขวา (TopBar + Content Cards)
+        // ---- 3. ฝั่งขวา (TopBar + Content Cards) ----
         JPanel rightContainer = new JPanel(new BorderLayout());
         rightContainer.add(buildTopBar(), BorderLayout.NORTH);
 
         cardLayout = new CardLayout();
         centerCardsPanel = new JPanel(cardLayout);
 
-        // เพิ่มแต่ละ Class Panel เข้าสู่ CardLayout
-        centerCardsPanel.add(new TenantHome(this, currentUser), "HOME");
-        centerCardsPanel.add(new MyRoomUI(currentUser), "ROOM");
-        centerCardsPanel.add(new LeaseContractUI(currentUser), "CONTRACT");
-        centerCardsPanel.add(new ReportUI(currentUser), "REPORT");
-        centerCardsPanel.add(new RoomChangeRequestUI(currentUser), "TRANSFER");
+        // สร้างแต่ละหน้าแบบปลอดภัย: ถ้าหน้าไหนพัง จะแสดงข้อความ error ในหน้านั้น
+        // แทนที่จะทำให้ทั้งหน้าต่างไม่ขึ้น
+        centerCardsPanel.add(safePage("HOME", () -> new TenantHome(this, u)), "HOME");
+        centerCardsPanel.add(safePage("ROOM", () -> new MyRoomUI(u)), "ROOM");
+        centerCardsPanel.add(safePage("CONTRACT", () -> new LeaseContractUI(u)), "CONTRACT");
+        centerCardsPanel.add(safePage("REPORT", () -> new ReportUI(u)), "REPORT");
+        centerCardsPanel.add(safePage("TRANSFER", () -> new RoomChangeRequestUI(u)), "TRANSFER");
 
         rightContainer.add(centerCardsPanel, BorderLayout.CENTER);
         root.add(rightContainer, BorderLayout.CENTER);
 
         setContentPane(root);
         setVisible(true);
+    }
+
+    /**
+     * สร้างหน้า ถ้า constructor ของหน้านั้นโยน Exception จะคืนหน้าแสดง error แทน
+     */
+    /**
+     * สร้างหน้า ถ้า constructor ของหน้านั้นโยน Exception จะคืนหน้าแสดง error แทน
+     */
+    private Component safePage(String name, Callable<? extends Component> factory) {
+        try {
+            return factory.call();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return buildErrorPanel(name, t);
+        }
+    }
+
+    private JComponent buildErrorPanel(String pageName, Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+
+        JTextArea area = new JTextArea(sw.toString());
+        area.setEditable(false);
+        area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        area.setForeground(new Color(0xB00020));
+
+        JPanel p = new JPanel(new BorderLayout(0, 10));
+        p.setBackground(BG);
+        p.setBorder(new EmptyBorder(24, 24, 24, 24));
+        p.add(label("เกิดข้อผิดพลาดในการโหลดหน้า " + pageName, 16, Font.BOLD, new Color(0xB00020)),
+                BorderLayout.NORTH);
+        p.add(new JScrollPane(area), BorderLayout.CENTER);
+        return p;
     }
 
     public void showPage(String pageName, int menuIndex) {
@@ -108,7 +165,8 @@ public class TenantUI extends JFrame {
         side.setBorder(new MatteBorder(0, 0, 0, 1, CARD_BORDER));
 
         JLabel logo = new JLabel("KU", SwingConstants.CENTER) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = aa(g);
                 g2.setColor(TEAL);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
@@ -125,10 +183,10 @@ public class TenantUI extends JFrame {
         title.setBounds(54, 17, 130, 26);
         side.add(title);
 
-        String[] names = {"หน้าหลัก", "ห้องพักของฉัน", "สัญญาเช่า", "แจ้งซ่อม/ร้องเรียน", "ยื่นคำขอย้ายห้อง"};
-        String[] cards = {"HOME", "ROOM", "CONTRACT", "REPORT", "TRANSFER"};
-        LineIcon.Type[] icons = {LineIcon.Type.GRID, LineIcon.Type.BED, LineIcon.Type.DOC,
-                LineIcon.Type.WRENCH, LineIcon.Type.ARROW};
+        String[] names = { "หน้าหลัก", "ห้องพักของฉัน", "สัญญาเช่า", "แจ้งซ่อม/ร้องเรียน", "ยื่นคำขอย้ายห้อง" };
+        String[] cards = { "HOME", "ROOM", "CONTRACT", "REPORT", "TRANSFER" };
+        LineIcon.Type[] icons = { LineIcon.Type.GRID, LineIcon.Type.BED, LineIcon.Type.DOC,
+                LineIcon.Type.WRENCH, LineIcon.Type.ARROW };
 
         for (int i = 0; i < names.length; i++) {
             final int index = i;
@@ -143,13 +201,26 @@ public class TenantUI extends JFrame {
         logoutBtn.setBounds(20, 620, 150, 30);
         logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         logoutBtn.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) {
-                LogicLogin.logout();
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    LogicLogin.logout();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
                 dispose();
                 new LoginUI().setVisible(true);
             }
         });
         side.add(logoutBtn);
+
+        // ให้ปุ่มออกจากระบบอยู่ติดขอบล่างเสมอ แม้ย่อ/ขยายหน้าต่าง
+        side.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                logoutBtn.setBounds(20, Math.max(400, side.getHeight() - 60), 150, 30);
+            }
+        });
 
         return side;
     }
@@ -170,11 +241,23 @@ public class TenantUI extends JFrame {
             text.setForeground(TEXT);
             add(text);
             addMouseListener(new MouseAdapter() {
-                @Override public void mouseClicked(MouseEvent e) {
-                    if (onClick != null) onClick.run();
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (onClick != null)
+                        onClick.run();
                 }
-                @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
-                @Override public void mouseExited(MouseEvent e)  { hover = false; repaint(); }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    hover = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    hover = false;
+                    repaint();
+                }
             });
         }
 
@@ -186,7 +269,8 @@ public class TenantUI extends JFrame {
             repaint();
         }
 
-        @Override protected void paintComponent(Graphics g) {
+        @Override
+        protected void paintComponent(Graphics g) {
             if (selected || hover) {
                 Graphics2D g2 = aa(g);
                 g2.setColor(selected ? TEAL_LIGHT : new Color(0xF2F7F6));
@@ -209,9 +293,10 @@ public class TenantUI extends JFrame {
         names.setOpaque(false);
         names.setLayout(new BoxLayout(names, BoxLayout.Y_AXIS));
 
-        String displayName = (currentUser.fullName != null && !currentUser.fullName.isEmpty()) 
-                ? currentUser.fullName : currentUser.username;
-        String roleText = "ผู้อยู่อาศัย (ห้อง " + (currentUser.roomId.isEmpty() ? "ไม่ระบุ" : currentUser.roomId) + ")";
+        // ใช้ orDefault กัน null / ว่าง / "-" (เดิม roomId เป็น null แล้วทำให้
+        // constructor ล้ม)
+        String displayName = orDefault(currentUser.fullName, orDefault(currentUser.username, "ผู้ใช้"));
+        String roleText = "ผู้อยู่อาศัย (ห้อง " + orDefault(currentUser.roomId, "ไม่ระบุ") + ")";
 
         names.add(label(displayName, 13, Font.BOLD, Color.BLACK));
         names.add(label(roleText, 11, Font.PLAIN, TEXT_MUTED));
@@ -228,12 +313,19 @@ public class TenantUI extends JFrame {
     }
 
     static class RoundedPanel extends JPanel {
-        final int radius; final Color fill; final Color border;
+        final int radius;
+        final Color fill;
+        final Color border;
+
         RoundedPanel(int radius, Color fill, Color border) {
-            this.radius = radius; this.fill = fill; this.border = border;
+            this.radius = radius;
+            this.fill = fill;
+            this.border = border;
             setOpaque(false);
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             g2.setColor(fill);
             g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
@@ -256,7 +348,9 @@ public class TenantUI extends JFrame {
             setFocusPainted(false);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             ButtonModel m = getModel();
             g2.setColor(m.isPressed() ? TEAL_HOVER.darker() : m.isRollover() ? TEAL_HOVER : TEAL);
@@ -268,13 +362,17 @@ public class TenantUI extends JFrame {
 
     static class Pill extends JLabel {
         final Color fill, border;
+
         Pill(String text, Color fill, Color border, Color fg, float size) {
             super(text, SwingConstants.CENTER);
-            this.fill = fill; this.border = border;
+            this.fill = fill;
+            this.border = border;
             setFont(font(Font.PLAIN, size));
             setForeground(fg);
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             int h = getHeight();
             g2.setColor(fill);
@@ -290,9 +388,16 @@ public class TenantUI extends JFrame {
     }
 
     static class CircleIcon extends JComponent {
-        final Icon icon; final int size;
-        CircleIcon(Icon icon, int size) { this.icon = icon; this.size = size; }
-        @Override protected void paintComponent(Graphics g) {
+        final Icon icon;
+        final int size;
+
+        CircleIcon(Icon icon, int size) {
+            this.icon = icon;
+            this.size = size;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             g2.setColor(TEAL_LIGHT);
             g2.fillOval(0, 0, size, size);
@@ -309,19 +414,29 @@ public class TenantUI extends JFrame {
                 g2.fillOval(x, y, d, d);
                 g2.dispose();
             }
-            public int getIconWidth()  { return d; }
-            public int getIconHeight() { return d; }
+
+            public int getIconWidth() {
+                return d;
+            }
+
+            public int getIconHeight() {
+                return d;
+            }
         };
     }
 
     static class Avatar extends JComponent {
-        final int size; final Image img;
+        final int size;
+        final Image img;
+
         Avatar(int size) {
             this.size = size;
             this.img = loadImage("avatar.png", "avatar.jpg", "src/img/avatar.png");
             setPreferredSize(new Dimension(size, size + 2));
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             Shape circle = new Ellipse2D.Double(0, 1, size, size);
             if (img != null) {
@@ -341,7 +456,9 @@ public class TenantUI extends JFrame {
 
     static class RoomImage extends JComponent {
         final Image img = loadImage("src/img/room205.jpg", "room205.jpg", "src/img/room.jpg");
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             int w = getWidth(), h = getHeight();
             g2.setClip(new RoundRectangle2D.Double(0, 0, w, h, 10, 10));
@@ -364,19 +481,38 @@ public class TenantUI extends JFrame {
                 File f = new File(n);
                 if (f.exists()) {
                     BufferedImage b = ImageIO.read(f);
-                    if (b != null) return b;
+                    if (b != null)
+                        return b;
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         }
         return null;
     }
 
     static class LineIcon implements Icon {
-        enum Type { GRID, BED, DOC, WRENCH, ARROW, PIN, CALENDAR, RECEIPT }
-        final Type type; final int size; Color color;
-        LineIcon(Type type, int size, Color color) { this.type = type; this.size = size; this.color = color; }
-        public int getIconWidth()  { return size; }
-        public int getIconHeight() { return size; }
+        enum Type {
+            GRID, BED, DOC, WRENCH, ARROW, PIN, CALENDAR, RECEIPT
+        }
+
+        final Type type;
+        final int size;
+        Color color;
+
+        LineIcon(Type type, int size, Color color) {
+            this.type = type;
+            this.size = size;
+            this.color = color;
+        }
+
+        public int getIconWidth() {
+            return size;
+        }
+
+        public int getIconHeight() {
+            return size;
+        }
+
         public void paintIcon(Component c, Graphics g, int x, int y) {
             Graphics2D g2 = aa(g);
             g2.translate(x, y);
@@ -398,7 +534,12 @@ public class TenantUI extends JFrame {
                     break;
                 case DOC:
                     Path2D p = new Path2D.Double();
-                    p.moveTo(5, 2); p.lineTo(14, 2); p.lineTo(19, 7); p.lineTo(19, 22); p.lineTo(5, 22); p.closePath();
+                    p.moveTo(5, 2);
+                    p.lineTo(14, 2);
+                    p.lineTo(19, 7);
+                    p.lineTo(19, 22);
+                    p.lineTo(5, 22);
+                    p.closePath();
                     g2.draw(p);
                     g2.draw(new Line2D.Double(8.5, 11, 15.5, 11));
                     g2.draw(new Line2D.Double(8.5, 15, 15.5, 15));
@@ -417,7 +558,9 @@ public class TenantUI extends JFrame {
                     break;
                 case PIN:
                     Path2D pin = new Path2D.Double();
-                    pin.moveTo(12, 22); pin.curveTo(4, 14, 4, 3, 12, 3); pin.curveTo(20, 3, 20, 14, 12, 22);
+                    pin.moveTo(12, 22);
+                    pin.curveTo(4, 14, 4, 3, 12, 3);
+                    pin.curveTo(20, 3, 20, 14, 12, 22);
                     g2.draw(pin);
                     g2.draw(new Ellipse2D.Double(9, 7.5, 6, 6));
                     break;
@@ -431,8 +574,13 @@ public class TenantUI extends JFrame {
                     break;
                 case RECEIPT:
                     Path2D rec = new Path2D.Double();
-                    rec.moveTo(10, 21); rec.lineTo(8, 19.5); rec.lineTo(6, 21); rec.lineTo(4, 19.5);
-                    rec.lineTo(4, 3); rec.lineTo(17, 3); rec.lineTo(17, 9);
+                    rec.moveTo(10, 21);
+                    rec.lineTo(8, 19.5);
+                    rec.lineTo(6, 21);
+                    rec.lineTo(4, 19.5);
+                    rec.lineTo(4, 3);
+                    rec.lineTo(17, 3);
+                    rec.lineTo(17, 9);
                     g2.draw(rec);
                     g2.draw(new Line2D.Double(7, 7, 14, 7));
                     g2.draw(new Line2D.Double(7, 10.5, 12, 10.5));

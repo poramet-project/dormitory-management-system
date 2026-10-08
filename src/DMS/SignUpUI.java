@@ -9,6 +9,10 @@ import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SignUpUI extends JFrame {
     private Image bgImg;
@@ -23,6 +27,14 @@ public class SignUpUI extends JFrame {
     private static final String PH_NAME = "Fullname";
     private static final String PH_PHONE = "Phone";
 
+    // ===== ค่าคงที่ของไฟล์ users.csv =====
+    // คอลัมน์: userId(0), username(1), password(2), fullName(3), phone(4), role(5), roomId(6)
+    private static final String HEADER = "userId,username,password,fullName,phone,role,roomId";
+    private static final String ID_PREFIX = "U";
+    private static final int ID_DIGITS = 3;
+    private static final String DEFAULT_ROLE = "GUEST"; // README ใช้ APPLICANT ให้ตรวจว่า LoginUI เช็คค่าไหน
+    private static final String NO_ROOM = "-";
+
     public SignUpUI() {
         setTitle("KU Dormitory - Sign Up");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -36,7 +48,7 @@ public class SignUpUI extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                
+
                 if (bgImg != null) {
                     g2.drawImage(bgImg, 0, 0, getWidth(), getHeight(), this);
                 } else {
@@ -214,6 +226,7 @@ public class SignUpUI extends JFrame {
         card.add(content);
         return card;
     }
+
     /**
      * ตรวจสอบว่าข้อความมีตัวอักษรภาษาไทยปนอยู่หรือไม่
      */
@@ -256,50 +269,61 @@ public class SignUpUI extends JFrame {
                 throw new IllegalArgumentException("Full name must be in English only (No Thai characters)");
             }
 
+            // 2.1 ห้ามมีเครื่องหมายจุลภาค (,) เพราะ CSV ใช้ , คั่นคอลัมน์ ถ้าใส่เข้าไปคอลัมน์จะเลื่อน
+            if (u.contains(",") || p.contains(",") || n.contains(",")) {
+                throw new IllegalArgumentException("Username, password and full name cannot contain a comma (,)");
+            }
+
             // 3. ตรวจสอบเบอร์โทรศัพท์ (ตัวเลข 9-10 หลัก เริ่มต้นด้วย 0)
             if (!ph.matches("^0[0-9]{8,9}$")) {
                 throw new NumberFormatException("Invalid phone number (must be 9-10 digits and start with 0)");
             }
 
-            // 4. ตรวจสอบ Username ซ้ำ
+            // 4. เตรียมไฟล์ (แปลงไฟล์เก่าให้มีคอลัมน์ userId) แล้วตรวจ Username ซ้ำ
             File csvFile = resolveCsvFile();
+            ensureUserIdColumn(csvFile);
             if (isUsernameTaken(csvFile, u)) {
                 throw new IllegalStateException("This username is already taken. Please choose another one.");
             }
 
-            // 5. บันทึกข้อมูลแบบ 6 คอลัมน์ด้วย UTF-8
-            saveUserToCsv(csvFile, u, p, n, ph, "GUEST", "");
+            // 5. สร้าง userId ถัดไป แล้วบันทึกทันที (7 คอลัมน์ ด้วย UTF-8)
+            String userId = nextUserId(csvFile);
+            saveUserToCsv(csvFile, userId, u, p, n, ph, DEFAULT_ROLE, NO_ROOM);
 
-            JOptionPane.showMessageDialog(this, 
-                    "Sign up successful!", 
-                    "Success", 
+            JOptionPane.showMessageDialog(this,
+                    "Sign up successful!",
+                    "Success",
                     JOptionPane.INFORMATION_MESSAGE);
 
             dispose();
             new LoginUI().setVisible(true);
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, 
-                    "Invalid format: " + ex.getMessage(), 
-                    "Error", 
+            JOptionPane.showMessageDialog(this,
+                    "Invalid format: " + ex.getMessage(),
+                    "Error",
                     JOptionPane.ERROR_MESSAGE);
         } catch (IllegalArgumentException | IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, 
-                    ex.getMessage(), 
-                    "Warning", 
+            JOptionPane.showMessageDialog(this,
+                    ex.getMessage(),
+                    "Warning",
                     JOptionPane.WARNING_MESSAGE);
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, 
-                    "Failed to save data: " + ex.getMessage(), 
-                    "File Error", 
+            JOptionPane.showMessageDialog(this,
+                    "Failed to save data: " + ex.getMessage(),
+                    "File Error",
                     JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, 
-                    "An unexpected error occurred: " + ex.getMessage(), 
-                    "Error", 
+            JOptionPane.showMessageDialog(this,
+                    "An unexpected error occurred: " + ex.getMessage(),
+                    "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    // ==================================================================
+    //  ส่วนจัดการไฟล์ users.csv
+    // ==================================================================
 
     private File resolveCsvFile() {
         String[] paths = {
@@ -317,16 +341,71 @@ public class SignUpUI extends JFrame {
         return fallback;
     }
 
+    /**
+     * ถ้าไฟล์เก่ายังไม่มีคอลัมน์ userId ให้เติมให้อัตโนมัติ (ทำครั้งเดียว)
+     * - เพิ่ม userId (U001, U002, ...) ตามลำดับแถว
+     * - roomId ที่ว่าง จะถูกแทนด้วย "-"
+     * - ลบบรรทัดว่างทิ้ง
+     */
+    private void ensureUserIdColumn(File file) throws IOException {
+        if (!file.exists() || file.length() == 0) return;
+
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        List<String> out = new ArrayList<>();
+        boolean headerSeen = false;
+        int n = 1;
+
+        for (String line : lines) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            if (!headerSeen) {
+                headerSeen = true;
+                if (line.startsWith("userId,")) return; // เป็นไฟล์รูปแบบใหม่แล้ว
+                out.add(HEADER);
+                continue;
+            }
+
+            String[] c = line.split(",", -1);
+            if (c.length > 0 && c[c.length - 1].trim().isEmpty()) {
+                c[c.length - 1] = NO_ROOM;
+            }
+            out.add(String.format("%s%0" + ID_DIGITS + "d,%s", ID_PREFIX, n++, String.join(",", c)));
+        }
+        Files.write(file.toPath(), out, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * สร้าง userId ถัดไป เช่น U001, U002, ... โดยหาเลขสูงสุดในไฟล์แล้วบวก 1
+     */
+    private String nextUserId(File file) throws IOException {
+        int max = 0;
+        if (file.exists()) {
+            for (String line : Files.readAllLines(file.toPath(), StandardCharsets.UTF_8)) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                String id = line.split(",", -1)[0].trim();
+                if (id.matches(ID_PREFIX + "\\d+")) {
+                    max = Math.max(max, Integer.parseInt(id.substring(ID_PREFIX.length())));
+                }
+            }
+        }
+        return String.format("%s%0" + ID_DIGITS + "d", ID_PREFIX, max + 1);
+    }
+
+    /**
+     * ตรวจ username ซ้ำ (username อยู่คอลัมน์ index 1 เพราะ index 0 คือ userId)
+     */
     private boolean isUsernameTaken(File file, String username) throws IOException {
         if (!file.exists()) return false;
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(file), java.nio.charset.StandardCharsets.UTF_8))) {
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
-                String[] cols = line.split(",");
-                if (cols.length > 0 && cols[0].trim().equalsIgnoreCase(username)) {
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith("userId,")) continue;
+                String[] cols = line.split(",", -1);
+                if (cols.length > 1 && cols[1].trim().equalsIgnoreCase(username)) {
                     return true;
                 }
             }
@@ -334,18 +413,35 @@ public class SignUpUI extends JFrame {
         return false;
     }
 
-    private void saveUserToCsv(File file, String u, String p, String name, String phone, String role, String roomId) throws IOException {
-        boolean fileExists = file.exists() && file.length() > 0;
+    private void saveUserToCsv(File file, String userId, String u, String p,
+                               String name, String phone, String role, String roomId) throws IOException {
+        boolean hasContent = file.exists() && file.length() > 0;
         try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(file, true), java.nio.charset.StandardCharsets.UTF_8))) {
-            if (!fileExists) {
-                writer.write("username,password,fullName,phone,role,roomId");
+                new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8))) {
+            if (!hasContent) {
+                writer.write(HEADER);
                 writer.newLine();
+            } else if (!endsWithNewline(file)) {
+                writer.newLine(); // กันแถวใหม่ไปต่อท้ายแถวเก่า
             }
-            writer.write(String.format("%s,%s,%s,%s,%s,%s", u, p, name, phone, role, roomId));
+            writer.write(String.join(",", userId, u, p, name, phone, role, roomId));
             writer.newLine();
         }
     }
+
+    /** เช็คว่าตัวอักษรสุดท้ายของไฟล์เป็นขึ้นบรรทัดใหม่หรือไม่ */
+    private boolean endsWithNewline(File file) throws IOException {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            if (raf.length() == 0) return true;
+            raf.seek(raf.length() - 1);
+            int last = raf.read();
+            return last == '\n' || last == '\r';
+        }
+    }
+
+    // ==================================================================
+    //  ส่วน UI ช่วยเหลือ
+    // ==================================================================
 
     static class NumericDocumentFilter extends DocumentFilter {
         private final int maxLength;

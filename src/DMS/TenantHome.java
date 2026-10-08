@@ -4,18 +4,17 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-public class TenantHome extends JFrame {
+public class TenantHome extends JPanel {
     public TenantHome(TenantUI mainUI, LogicLogin.User user) {
         setLayout(new BorderLayout());
         setBackground(TenantUI.BG);
-        setVisible(true);
 
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
         content.setBorder(new EmptyBorder(18, 25, 20, 25));
 
-        // 1. การ์ดห้องพัก
+        // 1. การ์ดห้องพัก (อ่านจาก rooms.csv)
         content.add(createRoomCard(mainUI, user));
         content.add(Box.createVerticalStrut(18));
 
@@ -23,17 +22,20 @@ public class TenantHome extends JFrame {
         content.add(createRepairCard(mainUI));
         content.add(Box.createVerticalStrut(18));
 
-        // 3. การ์ดสัญญาเช่า
-        content.add(createContractCard(mainUI));
+        // 3. การ์ดสัญญาเช่า (อ่านจาก contracts.csv)
+        content.add(createContractCard(mainUI, user));
 
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(null);
+        scroll.getViewport().setOpaque(false);
+        scroll.setOpaque(false);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll, BorderLayout.CENTER);
-        setVisible(true);
     }
 
     private JPanel createRoomCard(TenantUI mainUI, LogicLogin.User user) {
+        DataStore.Room room = (user == null) ? null : DataStore.room(user.roomId);
+
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new BorderLayout(20, 0));
         card.setBorder(new EmptyBorder(14, 16, 14, 16));
@@ -47,13 +49,18 @@ public class TenantHome extends JFrame {
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setOpaque(false);
 
-        String roomDisplay = "ห้อง " + (user.roomId.isEmpty() ? "R101" : user.roomId);
+        String roomDisplay = (room != null) ? "ห้อง " + room.number : "ยังไม่มีห้องพัก";
         JLabel roomLbl = TenantUI.label(roomDisplay, 26, Font.BOLD, TenantUI.TEXT);
 
-        TenantUI.Pill airPill = new TenantUI.Pill("ห้องแอร์", TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
-        airPill.setPreferredSize(new Dimension(75, 25));
+        String pillText = (room != null) ? room.typeShort() : "-";
+        TenantUI.Pill typePill = new TenantUI.Pill(pillText, TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
+        typePill.setPreferredSize(new Dimension(90, 25));
+        typePill.setMaximumSize(new Dimension(90, 25));
 
-        JLabel loc = TenantUI.label("อาคารหอพักนักศึกษา | " + roomDisplay, 13, Font.PLAIN, TenantUI.TEXT_MUTED);
+        String locText = (room != null)
+                ? "อาคารหอพักนักศึกษา | ชั้น " + room.floor() + " | " + room.statusThai()
+                : "ติดต่อผู้ดูแลหอพักเพื่อจองห้อง";
+        JLabel loc = TenantUI.label(locText, 13, Font.PLAIN, TenantUI.TEXT_MUTED);
         loc.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.PIN, 14, TenantUI.TEXT_MUTED));
         loc.setIconTextGap(6);
 
@@ -64,7 +71,7 @@ public class TenantHome extends JFrame {
 
         info.add(roomLbl);
         info.add(Box.createVerticalStrut(6));
-        info.add(airPill);
+        info.add(typePill);
         info.add(Box.createVerticalStrut(8));
         info.add(loc);
         info.add(Box.createVerticalStrut(14));
@@ -117,7 +124,9 @@ public class TenantHome extends JFrame {
         return card;
     }
 
-    private JPanel createContractCard(TenantUI mainUI) {
+    private JPanel createContractCard(TenantUI mainUI, LogicLogin.User user) {
+        DataStore.Contract contract = DataStore.contractFor(user);
+
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBorder(new EmptyBorder(14, 18, 14, 18));
@@ -130,7 +139,10 @@ public class TenantHome extends JFrame {
         card.add(header);
         card.add(Box.createVerticalStrut(8));
 
-        JLabel end = TenantUI.label("สิ้นสุดสัญญา: 31 พ.ค. 2570", 14, Font.PLAIN, TenantUI.TEXT);
+        String endText = (contract != null)
+                ? "สิ้นสุดสัญญา: " + DataStore.thaiDate(contract.end)
+                : "ยังไม่มีข้อมูลสัญญาเช่า";
+        JLabel end = TenantUI.label(endText, 14, Font.PLAIN, TenantUI.TEXT);
         end.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.CALENDAR, 16, TenantUI.TEXT));
         end.setIconTextGap(8);
         card.add(end);
