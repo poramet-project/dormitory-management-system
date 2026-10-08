@@ -1,2 +1,0 @@
-transferId,userId,contractId,oldRoomId,newRoomId,reason,requestDate,status
-T001,U002,C001,R101,R103,กูอยากย้าย,2026-10-09,PENDING
