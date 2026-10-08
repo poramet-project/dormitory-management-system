@@ -6,9 +6,6 @@ import java.awt.*;
 public class GuestUI extends JFrame {
     private CardLayout cardLayout;
     private JPanel contentPanel;
-    private GuestSearchPanel searchPanel;
-    private GuestDetailPanel detailPanel;
-    private GuestContactPanel contactPanel;
 
     public GuestUI() {
         setTitle("KU Dormitory - ระบบค้นหาและจองห้องพัก");
@@ -25,15 +22,8 @@ public class GuestUI extends JFrame {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        searchPanel = new GuestSearchPanel(this);
-        detailPanel = new GuestDetailPanel(this);
-        contactPanel = new GuestContactPanel();
-
-        contentPanel.add(searchPanel, "SEARCH");
-        contentPanel.add(detailPanel, "DETAIL");
-        contentPanel.add(contactPanel, "CONTACT");
-
         add(contentPanel, BorderLayout.CENTER);
+        setVisible(true);
     }
 
     private JPanel createTopNavBar() {
@@ -106,12 +96,10 @@ public class GuestUI extends JFrame {
     }
 
     public void showSearchPage() {
-        searchPanel.reloadRooms();
         cardLayout.show(contentPanel, "SEARCH");
     }
 
     public void showDetailPage(RoomData room) {
-        detailPanel.loadRoomDetails(room);
         cardLayout.show(contentPanel, "DETAIL");
     }
 
