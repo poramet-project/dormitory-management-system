@@ -18,14 +18,13 @@ public class SignUpUI extends JFrame {
     private JTextField phoneField;
     private JButton signUpBtn;
 
-    private static final String THAI_FONT = "Tahoma"; 
-    private static final String PH_USER = "👤  ชื่อผู้ใช้ (Username)";
-    private static final String PH_PASS = "🔑  รหัสผ่าน (Password)";
-    private static final String PH_NAME = "👤  ชื่อ-นามสกุล (Fullname)";
-    private static final String PH_PHONE = "📞  เบอร์โทรศัพท์ (Phone)";
+    private static final String PH_USER = "Username";
+    private static final String PH_PASS = "Password";
+    private static final String PH_NAME = "Fullname";
+    private static final String PH_PHONE = "Phone";
 
     public SignUpUI() {
-        setTitle("KU Dormitory - สมัครสมาชิก");
+        setTitle("KU Dormitory - Sign Up");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1100, 700);
         setLocationRelativeTo(null);
@@ -53,11 +52,9 @@ public class SignUpUI extends JFrame {
 
         bgPanel.setLayout(new BorderLayout());
 
-        // Header ด้านบนขวา: เข้าสู่ระบบ →
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 30, 20));
         topBar.setOpaque(false);
-        JLabel topLoginBtn = new JLabel("เข้าสู่ระบบ →");
-        topLoginBtn.setFont(new Font(THAI_FONT, Font.BOLD, 15));
+        JLabel topLoginBtn = new JLabel("Login →");
         topLoginBtn.setForeground(Color.WHITE);
         topLoginBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         topLoginBtn.addMouseListener(new MouseAdapter() {
@@ -78,7 +75,6 @@ public class SignUpUI extends JFrame {
         topBar.add(topLoginBtn);
         bgPanel.add(topBar, BorderLayout.NORTH);
 
-        // วางการ์ดไว้ฝั่งซ้าย
         JPanel centerContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 70, 10));
         centerContainer.setOpaque(false);
         centerContainer.add(createGlassCard());
@@ -144,7 +140,6 @@ public class SignUpUI extends JFrame {
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        // หัวข้อสมัครสมาชิก
         JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
         headerPanel.setOpaque(false);
         headerPanel.setMaximumSize(new Dimension(340, 55));
@@ -157,12 +152,11 @@ public class SignUpUI extends JFrame {
         JPanel titleTextPanel = new JPanel(new GridLayout(2, 1, 0, 2));
         titleTextPanel.setOpaque(false);
 
-        JLabel titleMain = new JLabel("สมัครสมาชิก");
-        titleMain.setFont(new Font(THAI_FONT, Font.BOLD, 22));
+        JLabel titleMain = new JLabel("Sign Up");
         titleMain.setForeground(Color.WHITE);
 
-        JLabel titleSub = new JLabel("สร้างบัญชีเพื่อใช้งานระบบจองหอพัก");
-        titleSub.setFont(new Font(THAI_FONT, Font.PLAIN, 13));
+        JLabel titleSub = new JLabel("Create account to access KU Dormitory");
+        titleSub.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         titleSub.setForeground(new Color(220, 235, 240));
 
         titleTextPanel.add(titleMain);
@@ -171,22 +165,18 @@ public class SignUpUI extends JFrame {
         headerPanel.add(userIcon, BorderLayout.WEST);
         headerPanel.add(titleTextPanel, BorderLayout.CENTER);
 
-        // ช่อง Input
         userField = createModernField(PH_USER, false);
         passField = (JPasswordField) createModernField(PH_PASS, true);
         nameField = createModernField(PH_NAME, false);
         phoneField = createModernField(PH_PHONE, false);
 
-        // ตรวจสอบ DocumentFilter ให้ช่องเบอร์โทรศัพท์ (พิมพ์ได้เฉพาะตัวเลข และไม่เกิน 10 หลัก)
         ((AbstractDocument) phoneField.getDocument()).setDocumentFilter(new NumericDocumentFilter(10));
 
-        // ปุ่มสมัครสมาชิก
-        signUpBtn = createGradientButton("สมัครสมาชิก");
+        signUpBtn = createGradientButton("Sign Up");
         signUpBtn.addActionListener(e -> processSignUp());
 
-        // ลิงก์ด้านล่างสุด
-        JLabel alreadyLabel = new JLabel("มีบัญชีอยู่แล้ว? เข้าสู่ระบบ");
-        alreadyLabel.setFont(new Font(THAI_FONT, Font.BOLD, 13));
+        JLabel alreadyLabel = new JLabel("Already have an account? Login");
+        alreadyLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
         alreadyLabel.setForeground(new Color(235, 245, 245));
         alreadyLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         alreadyLabel.setAlignmentX(CENTER_ALIGNMENT);
@@ -224,10 +214,13 @@ public class SignUpUI extends JFrame {
         card.add(content);
         return card;
     }
-
     /**
-     * ดักจับและตรวจสอบความถูกต้องของข้อมูล พร้อมจัดการ Exception ทั้งหมด
+     * ตรวจสอบว่าข้อความมีตัวอักษรภาษาไทยปนอยู่หรือไม่
      */
+    private boolean containsThai(String text) {
+        return text != null && text.matches(".*[\\u0E00-\\u0E7F].*");
+    }
+
     private void processSignUp() {
         try {
             String u = userField.getText().trim();
@@ -235,91 +228,99 @@ public class SignUpUI extends JFrame {
             String n = nameField.getText().trim();
             String ph = phoneField.getText().trim();
 
-            //ตรวจสอบค่าว่างหรือยังไม่ได้พิมพ์
+            // 1. ตรวจสอบค่าว่างหรือ Placeholder
             if (u.isEmpty() || u.equals(PH_USER)) {
-                throw new IllegalArgumentException("กรุณากรอกชื่อผู้ใช้ (Username)");
+                throw new IllegalArgumentException("Please enter a username");
             }
             if (p.isEmpty() || p.equals(PH_PASS)) {
-                throw new IllegalArgumentException("กรุณากรอกรหัสผ่าน (Password)");
+                throw new IllegalArgumentException("Please enter a password");
             }
             if (p.length() < 4) {
-                throw new IllegalArgumentException("รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร");
+                throw new IllegalArgumentException("Password must be at least 4 characters long");
             }
             if (n.isEmpty() || n.equals(PH_NAME)) {
-                throw new IllegalArgumentException("กรุณากรอกชื่อ-นามสกุล (Fullname)");
+                throw new IllegalArgumentException("Please enter your full name");
             }
             if (ph.isEmpty() || ph.equals(PH_PHONE)) {
-                throw new IllegalArgumentException("กรุณากรอกเบอร์โทรศัพท์ (Phone)");
+                throw new IllegalArgumentException("Please enter your phone number");
             }
 
-            //ตรวจสอบเงื่อนไขเบอร์โทรศัพท์ (ตัวเลข 9 - 10 หลัก และขึ้นต้นด้วย 0)
+            // 2. ดักจับภาษาไทย (ไม่อนุญาตให้มีภาษาไทยในระบบ)
+            if (containsThai(u)) {
+                throw new IllegalArgumentException("Username cannot contain Thai characters (English only)");
+            }
+            if (containsThai(p)) {
+                throw new IllegalArgumentException("Password cannot contain Thai characters");
+            }
+            if (containsThai(n)) {
+                throw new IllegalArgumentException("Full name must be in English only (No Thai characters)");
+            }
+
+            // 3. ตรวจสอบเบอร์โทรศัพท์ (ตัวเลข 9-10 หลัก เริ่มต้นด้วย 0)
             if (!ph.matches("^0[0-9]{8,9}$")) {
-                throw new NumberFormatException("เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็นตัวเลข 9-10 หลัก และขึ้นต้นด้วย 0)");
+                throw new NumberFormatException("Invalid phone number (must be 9-10 digits and start with 0)");
             }
 
-            //ตรวจสอบว่ามีชื่อผู้ใช้นี้อยู่แล้วใน users.csv หรือไม่
+            // 4. ตรวจสอบ Username ซ้ำ
             File csvFile = resolveCsvFile();
             if (isUsernameTaken(csvFile, u)) {
-                throw new IllegalStateException("ชื่อผู้ใช้นี้มีคนใช้งานแล้ว กรุณาใช้ชื่ออื่น");
+                throw new IllegalStateException("This username is already taken. Please choose another one.");
             }
 
-            //บันทึกข้อมูลใหม่ลงใน users.csv
-            saveUserToCsv(csvFile, u, p, n, ph);
+            // 5. บันทึกข้อมูลแบบ 6 คอลัมน์ด้วย UTF-8
+            saveUserToCsv(csvFile, u, p, n, ph, "GUEST", "");
 
             JOptionPane.showMessageDialog(this, 
-                    "สมัครสมาชิกสำเร็จเรียบร้อย!", 
-                    "สำเร็จ", 
+                    "Sign up successful!", 
+                    "Success", 
                     JOptionPane.INFORMATION_MESSAGE);
 
-            // ปิดหน้านี้แล้วพากลับไปหน้า Login
             dispose();
             new LoginUI().setVisible(true);
 
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, 
-                    "รูปแบบตัวเลขไม่ถูกต้อง: " + ex.getMessage(), 
-                    "ข้อผิดพลาด", 
+                    "Invalid format: " + ex.getMessage(), 
+                    "Error", 
                     JOptionPane.ERROR_MESSAGE);
         } catch (IllegalArgumentException | IllegalStateException ex) {
             JOptionPane.showMessageDialog(this, 
                     ex.getMessage(), 
-                    "ข้อผิดพลาดในการกรอกข้อมูล", 
+                    "Warning", 
                     JOptionPane.WARNING_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, 
-                    "ไม่สามารถบันทึกข้อมูลลงไฟล์ได้: " + ex.getMessage(), 
-                    "ข้อผิดพลาดระบบไฟล์", 
+                    "Failed to save data: " + ex.getMessage(), 
+                    "File Error", 
                     JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, 
-                    "เกิดข้อผิดพลาดที่ไม่คาดคิด: " + ex.getMessage(), 
-                    "ข้อผิดพลาด", 
+                    "An unexpected error occurred: " + ex.getMessage(), 
+                    "Error", 
                     JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    /**
-     * ค้นหาไฟล์ users.csv ในโปรเจกต์
-     */
     private File resolveCsvFile() {
         String[] paths = {
-            "src/data/users.csv",
+            "users.csv",
+            "src/users.csv",
             "data/users.csv",
+            "src/data/users.csv",
             "DMS/src/data/users.csv"
         };
         for (String p : paths) {
             File f = new File(p);
             if (f.exists()) return f;
         }
-        // หากยังไม่มี ให้สร้างไฟล์ที่ src/data/users.csv
-        File fallback = new File("src/data/users.csv");
-        fallback.getParentFile().mkdirs();
+        File fallback = new File("users.csv");
         return fallback;
     }
 
     private boolean isUsernameTaken(File file, String username) throws IOException {
         if (!file.exists()) return false;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), java.nio.charset.StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -333,17 +334,19 @@ public class SignUpUI extends JFrame {
         return false;
     }
 
-    private void saveUserToCsv(File file, String u, String p, String name, String phone) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            // เขียนแถวข้อมูลใหม่: username,password,fullname,phone
-            writer.write(String.format("%s,%s,%s,%s", u, p, name, phone));
+    private void saveUserToCsv(File file, String u, String p, String name, String phone, String role, String roomId) throws IOException {
+        boolean fileExists = file.exists() && file.length() > 0;
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file, true), java.nio.charset.StandardCharsets.UTF_8))) {
+            if (!fileExists) {
+                writer.write("username,password,fullName,phone,role,roomId");
+                writer.newLine();
+            }
+            writer.write(String.format("%s,%s,%s,%s,%s,%s", u, p, name, phone, role, roomId));
             writer.newLine();
         }
     }
 
-    /**
-     * DocumentFilter กรองให้พิมพ์ได้เฉพาะตัวเลข และจำกัดความยาว
-     */
     static class NumericDocumentFilter extends DocumentFilter {
         private final int maxLength;
 
@@ -374,6 +377,7 @@ public class SignUpUI extends JFrame {
 
     private JTextField createModernField(String ph, boolean isPass) {
         final boolean[] focus = {false};
+        final boolean[] isPlaceholder = {true};
 
         JTextField f = isPass ? new JPasswordField(ph) {
             @Override
@@ -394,7 +398,7 @@ public class SignUpUI extends JFrame {
                 }
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
                 g2.dispose();
-                super.paintComponent(g);
+                super.paintComponent(g); // สำคัญ: ต้องเรียก super เพื่อให้ Swing วาดข้อความและเคอร์เซอร์
             }
         } : new JTextField(ph) {
             @Override
@@ -420,7 +424,6 @@ public class SignUpUI extends JFrame {
         };
 
         f.setOpaque(false);
-        f.setFont(new Font(THAI_FONT, Font.PLAIN, 13));
         f.setCaretColor(Color.WHITE);
         f.setBorder(new EmptyBorder(6, 14, 6, 14));
         f.setPreferredSize(new Dimension(340, 42));
@@ -428,16 +431,19 @@ public class SignUpUI extends JFrame {
         f.setAlignmentX(CENTER_ALIGNMENT);
         f.setForeground(new Color(210, 225, 230));
 
-        if (isPass) ((JPasswordField) f).setEchoChar((char) 0);
+        if (isPass) {
+            ((JPasswordField) f).setEchoChar((char) 0);
+        }
 
         f.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 focus[0] = true;
-                if (f.getText().equals(ph)) {
+                if (isPlaceholder[0]) {
                     f.setText("");
                     if (isPass) ((JPasswordField) f).setEchoChar('•');
                     f.setForeground(Color.WHITE);
+                    isPlaceholder[0] = false;
                 }
                 f.repaint();
             }
@@ -446,6 +452,7 @@ public class SignUpUI extends JFrame {
             public void focusLost(FocusEvent e) {
                 focus[0] = false;
                 if (f.getText().isEmpty()) {
+                    isPlaceholder[0] = true;
                     if (isPass) ((JPasswordField) f).setEchoChar((char) 0);
                     f.setText(ph);
                     f.setForeground(new Color(210, 225, 230));
@@ -482,7 +489,6 @@ public class SignUpUI extends JFrame {
             }
         };
 
-        btn.setFont(new Font(THAI_FONT, Font.BOLD, 15));
         btn.setForeground(Color.WHITE);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);

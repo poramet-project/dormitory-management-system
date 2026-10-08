@@ -35,6 +35,7 @@ public class LoginUI extends JFrame {
         bgPanel.setLayout(new GridBagLayout());
         setContentPane(bgPanel);
         bgPanel.add(createGlassCard());
+        setVisible(true);
     }
 
     private void loadBgImage() {
