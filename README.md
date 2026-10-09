@@ -13,7 +13,7 @@
 | 6821651451   | นายปรเมศ อ่ำครอง **(หัวหน้ากลุ่ม)** | Backend Developer / Data Developer |               |
 | 6821651141   | นางสาวณัชชา บุญญกามะ                | UI Developer |               |
 | 6821651256   | นายแทนคุณ พิกุลขาว                  | UI Developer |               |
-| 6821651523   | นายพงษ์ภัทร สนธิชัย                 | Feature & Report Developer |               |
+| 6821651523   | นายพงษ์ภัทร สนธิชัย                 | Feature & Report Developer |  ไม่มี |
 
 ---
 
