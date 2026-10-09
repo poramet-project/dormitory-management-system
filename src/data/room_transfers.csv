@@ -1,2 +1,2 @@
 transferId,userId,contractId,oldRoomId,newRoomId,reason,requestDate,status
-T001,U002,C001,R101,R103,กูอยากย้าย,2026-10-09,PENDING
+T001,U002,C001,R101,R102,มีปัญหาด้านการเงิน มีภาระอย่างอื่นต้องรับผิดชอบ,2026-10-09,PENDING

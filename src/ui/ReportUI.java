@@ -107,7 +107,7 @@ public class ReportUI extends JPanel {
         formCard.add(descScroll);
         formCard.add(Box.createVerticalStrut(14));
 
-        TenantUI.RoundButton submitBtn = new TenantUI.RoundButton("ส่งเรื่องแจ้งซ่อม");
+        TenantUI.RoundButton submitBtn = new TenantUI.RoundButton("ยืนยัน");
         submitBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         submitBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         submitBtn.setPreferredSize(new Dimension(380, 38));
