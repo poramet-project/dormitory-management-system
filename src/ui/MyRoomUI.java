@@ -7,8 +7,10 @@ import java.awt.*;
 
 public class MyRoomUI extends JPanel {
     private final MyRoomLogic logic;
+    private final LogicLogin.User user;
 
     public MyRoomUI(LogicLogin.User user) {
+        this.user = user;
         this.logic = new MyRoomLogic(user);
         setLayout(new BorderLayout());
         setBackground(TenantUI.BG);
@@ -49,7 +51,9 @@ public class MyRoomUI extends JPanel {
         mainCard.setBorder(new EmptyBorder(16, 20, 16, 20));
         mainCard.setMaximumSize(new Dimension(860, 210));
 
-        TenantUI.RoomImage roomImg = new TenantUI.RoomImage();
+        // ดึง roomId จาก user ส่งไปสร้าง RoomImage
+        String roomId = (user != null) ? user.roomId : null;
+        TenantUI.RoomImage roomImg = new TenantUI.RoomImage(roomId);
         roomImg.setPreferredSize(new Dimension(260, 160));
         mainCard.add(roomImg, BorderLayout.WEST);
 

@@ -416,8 +416,43 @@ public class TenantUI extends JFrame {
         }
     }
 
+    /**
+     * คลาส RoomImage ค้นหาไฟล์รูปภาพตามเลขห้อง
+     */
     static class RoomImage extends JComponent {
-        final Image img = loadImage("src/img/room205.jpg", "room205.jpg", "src/img/room.jpg");
+        private final Image img;
+
+        RoomImage(String roomId) {
+            if (roomId != null && !roomId.trim().isEmpty()) {
+                String cleanRoom = roomId.trim();
+                
+                // ตัดตัวอักษร R ออก เหลือเฉพาะตัวเลข (เช่น R101 -> 101)
+                String roomNum = cleanRoom.replaceAll("[^0-9]", "");
+                if (roomNum.isEmpty()) {
+                    roomNum = cleanRoom;
+                }
+
+                // ค้นหาทั้งแบบมี/ไม่มี R และนามสกุล .jpg / .png
+                this.img = loadImage(
+                    "src/img/room_" + roomNum + ".jpg", 
+                    "src/img/room_" + roomNum + ".png",
+                    "room_" + roomNum + ".jpg", 
+                    "room_" + roomNum + ".png",
+                    "src/img/room_" + cleanRoom + ".jpg",
+                    "src/img/room_" + cleanRoom + ".png",
+                    "room_" + cleanRoom + ".jpg",
+                    "room_" + cleanRoom + ".png",
+                    "src/img/room.jpg",
+                    "room.jpg"
+                );
+            } else {
+                this.img = loadImage("src/img/room.jpg", "room.jpg");
+            }
+        }
+
+        RoomImage() {
+            this(null);
+        }
 
         @Override
         protected void paintComponent(Graphics g) {

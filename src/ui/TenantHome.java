@@ -7,9 +7,11 @@ import java.awt.*;
 
 public class TenantHome extends JPanel {
     private final TenantHomeLogic logic;
+    private final LogicLogin.User user;
     private JLabel totalLbl, inProgLbl, doneLbl;
 
     public TenantHome(TenantUI mainUI, LogicLogin.User user) {
+        this.user = user;
         this.logic = new TenantHomeLogic(user);
         setLayout(new BorderLayout());
         setBackground(TenantUI.BG);
@@ -51,7 +53,9 @@ public class TenantHome extends JPanel {
         card.setMaximumSize(new Dimension(860, 190));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        TenantUI.RoomImage img = new TenantUI.RoomImage();
+        // ดึง roomId จาก user เพื่อสร้าง RoomImage
+        String roomId = (user != null) ? user.roomId : null;
+        TenantUI.RoomImage img = new TenantUI.RoomImage(roomId);
         img.setPreferredSize(new Dimension(260, 150));
         card.add(img, BorderLayout.WEST);
 
@@ -61,9 +65,10 @@ public class TenantHome extends JPanel {
 
         JLabel roomLbl = TenantUI.label(logic.roomDisplay(), 26, Font.BOLD, TenantUI.TEXT);
 
+        // ขยายขนาดความกว้างป้ายจาก 90 เป็น 150 เพื่อให้แสดง "ห้องแอร์" หรือ "ห้องพัดลม" ได้เต็ม ไม่บีบหาย
         TenantUI.Pill typePill = new TenantUI.Pill(logic.pillText(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
-        typePill.setPreferredSize(new Dimension(90, 25));
-        typePill.setMaximumSize(new Dimension(90, 25));
+        typePill.setPreferredSize(new Dimension(150, 25));
+        typePill.setMaximumSize(new Dimension(150, 25));
         typePill.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel loc = TenantUI.label(logic.locationText(), 13, Font.PLAIN, TenantUI.TEXT_MUTED);
