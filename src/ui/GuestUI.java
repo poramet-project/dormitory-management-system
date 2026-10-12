@@ -1,9 +1,7 @@
 package ui;
 
-import logic.DataStore;
 import logic.GuestLogic;
 import logic.ImageLoader;
-import logic.LogicLogin;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
@@ -21,12 +19,15 @@ public class GuestUI extends JFrame {
     static final Color TEXT_GRAY  = new Color(100, 116, 139);
     static final Color TEXT_LIGHT = Color.GRAY;
 
-    JComboBox<String> cbType, cbPrice;
-    JButton btnSearch;
-    JPanel grid;
-    JScrollPane scroll;
+    private final GuestLogic logic;
+    private JComboBox<String> cbType, cbPrice;
+    private JButton btnSearch;
+    private JPanel grid;
+    private JScrollPane scroll;
 
     public GuestUI() {
+        this.logic = new GuestLogic();
+
         setTitle("KU Dormitory - ค้นหาห้องพัก");
         setSize(1100, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,7 +52,7 @@ public class GuestUI extends JFrame {
 
         grid = new JPanel(null);
         grid.setBackground(BG);
-        loadRoomCards("", "ทั้งหมด", "ทั้งหมด");
+        loadRoomCards();
 
         scroll = new JScrollPane(grid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
@@ -65,9 +66,9 @@ public class GuestUI extends JFrame {
         setVisible(true);
     }
 
-    private void loadRoomCards(String keyword, String typeF, String priceF) {
+    private void loadRoomCards() {
         grid.removeAll();
-        List<GuestLogic.RoomViewModel> rooms = GuestLogic.getFilteredRooms(keyword, typeF, priceF);
+        List<GuestLogic.RoomViewModel> rooms = logic.getFilteredRooms();
 
         int cardW = 235, cardH = 308, gap = 18, cols = 4;
         int rowsCount = Math.max(1, (rooms.size() + cols - 1) / cols);
@@ -77,7 +78,7 @@ public class GuestUI extends JFrame {
         for (int i = 0; i < rooms.size(); i++) {
             int x = (i % cols) * (cardW + gap);
             int y = (i / cols) * (cardH + gap);
-            grid.add(createRoomCard(rooms.get(i), i, x, y));
+            grid.add(createRoomCard(rooms.get(i), x, y));
         }
         grid.revalidate();
         grid.repaint();
@@ -99,10 +100,8 @@ public class GuestUI extends JFrame {
         brand.setBounds(74, 15, 140, 26);
         nav.add(brand);
 
-        LogicLogin.User u = LogicLogin.getCurrentUser();
-        if (u != null) {
-            String name = (u.fullName == null || u.fullName.isEmpty()) ? u.username : u.fullName;
-            JLabel lblName = label(name, Font.BOLD, 13, TEXT);
+        if (logic.isLoggedIn()) {
+            JLabel lblName = label(logic.getCurrentDisplayName(), Font.BOLD, 13, TEXT);
             lblName.setHorizontalAlignment(SwingConstants.RIGHT);
             lblName.setBounds(700, 15, 250, 26);
             nav.add(lblName);
@@ -110,8 +109,7 @@ public class GuestUI extends JFrame {
             JButton btnLogout = flatButton("ออกจากระบบ", false);
             btnLogout.setBounds(960, 12, 100, 32);
             btnLogout.addActionListener(e -> {
-                LogicLogin.logout();
-                DataStore.setCurrentLoginUser("Guest");
+                logic.performLogout();
                 LoginUI login = new LoginUI();
                 login.setLocation(getLocation());
                 login.setVisible(true);
@@ -139,26 +137,28 @@ public class GuestUI extends JFrame {
         card.setBounds(40, 148, 1004, 86);
 
         card.add(fieldLabel("ประเภทห้องพัก", 16, 14));
-        cbType = combo(new String[]{"ทั้งหมด", "ห้องพัดลม", "ห้องแอร์"});
+        cbType = combo(logic.getTypeOptions());
         cbType.setBounds(16, 34, 450, 36);
         card.add(cbType);
 
         card.add(fieldLabel("ช่วงราคาต่อเดือน", 484, 14));
-        cbPrice = combo(new String[]{"ทั้งหมด", "ต่ำกว่า 3,000 บาท", "3,000 บาทขึ้นไป"});
+        cbPrice = combo(logic.getPriceOptions());
         cbPrice.setBounds(484, 34, 390, 36);
         card.add(cbPrice);
 
         btnSearch = flatButton("ค้นหา", true);
         btnSearch.setBounds(894, 34, 94, 36);
         btnSearch.addActionListener(e -> {
-            loadRoomCards("", (String) cbType.getSelectedItem(), (String) cbPrice.getSelectedItem());
+            logic.setTypeFilter((String) cbType.getSelectedItem());
+            logic.setPriceFilter((String) cbPrice.getSelectedItem());
+            loadRoomCards();
         });
         card.add(btnSearch);
 
         return card;
     }
 
-    private JPanel createRoomCard(GuestLogic.RoomViewModel room, int index, int x, int y) {
+    private JPanel createRoomCard(GuestLogic.RoomViewModel room, int x, int y) {
         int w = 235;
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
@@ -198,7 +198,6 @@ public class GuestUI extends JFrame {
         btn.setBounds(16, 256, w - 32, 36);
         card.add(btn);
 
-        // เมื่อคลิกปุ่มดูรายละเอียด ให้ส่งข้อมูลไปเปิดหน้า RoomGuestUI
         btn.addActionListener(e -> {
             RoomGuestUI detailUI = new RoomGuestUI(room.numberText, room.typeShort, room.priceText, room.statusLabel);
             detailUI.setLocation(getLocation());
@@ -212,7 +211,7 @@ public class GuestUI extends JFrame {
     private static JPanel statusBadge(String status) {
         Color bg = status.contains("ว่าง") ? new Color(209, 250, 229) : (status.contains("มีผู้เช่า") ? new Color(254, 226, 226) : new Color(254, 243, 199));
         Color fg = status.contains("ว่าง") ? new Color(4, 120, 87) : (status.contains("มีผู้เช่า") ? new Color(220, 38, 38) : new Color(180, 83, 9));
-        
+
         JPanel badge = new JPanel(new GridBagLayout()) {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -322,7 +321,7 @@ public class GuestUI extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth(), h = getHeight();
-            
+
             if (w > 0 && h > 0) {
                 g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
             }
@@ -336,5 +335,4 @@ public class GuestUI extends JFrame {
             g2.dispose();
         }
     }
-
 }

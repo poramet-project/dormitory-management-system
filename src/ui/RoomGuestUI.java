@@ -1,6 +1,6 @@
 package ui;
 
-import logic.RoomGuestLogic;
+import logic.GuestRoomLogic;
 import logic.ImageLoader;
 import logic.LogicLogin;
 
@@ -10,14 +10,14 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
 public class RoomGuestUI extends JFrame {
-    private final RoomGuestLogic logic;
+    private final GuestRoomLogic logic;
 
     public RoomGuestUI() {
         this("ห้อง 101", "ห้องพัดลม", "2,800", "ว่าง");
     }
 
     public RoomGuestUI(String roomName, String roomType, String roomPrice, String roomStatus) {
-        this.logic = new RoomGuestLogic(roomName, roomType, roomPrice, roomStatus);
+        this.logic = new GuestRoomLogic(roomName, roomType, roomPrice, roomStatus);
 
         setTitle("KU Dormitory - รายละเอียด " + logic.getRoomName());
         setSize(1100, 750);
@@ -49,7 +49,7 @@ public class RoomGuestUI extends JFrame {
         brand.setBounds(160, 14, 250, 26);
         nav.add(brand);
 
-        LogicLogin.User cu = LogicLogin.getCurrentUser();
+        LogicLogin.User cu = logic.getCurrentUser();
         if (cu != null) {
             String shown = (cu.fullName == null || cu.fullName.isEmpty()) ? cu.username : cu.fullName;
             JLabel lblName = AdminUI.label(shown, Font.BOLD, 13, AdminUI.TEXT);
@@ -64,7 +64,7 @@ public class RoomGuestUI extends JFrame {
         topCard.setLayout(null);
         topCard.setBounds(70, 76, 960, 190);
 
-        String roomNumOnly = logic.getRoomName().replace("ห้อง ", "");
+        String roomNumOnly = logic.getRoomNumberOnly();
         RoomImage bigImg = new RoomImage("img/room_" + roomNumOnly + ".png", 240, 158);
         bigImg.setBounds(16, 16, 240, 158);
         topCard.add(bigImg);
@@ -89,7 +89,7 @@ public class RoomGuestUI extends JFrame {
         badgeWrap.add(AdminUI.label(logic.getRoomType(), Font.BOLD, 12, AdminUI.PRIMARY));
         topCard.add(badgeWrap);
 
-        JLabel lblSubInfo = AdminUI.label("อาคารหอพักนักศึกษา • ชั้น " + roomNumOnly.charAt(0) + " • สถานะห้อง: " + logic.getRoomStatus(), Font.PLAIN, 12, AdminUI.TEXT_GRAY);
+        JLabel lblSubInfo = AdminUI.label("อาคารหอพักนักศึกษา • ชั้น " + logic.getFloorChar() + " • สถานะห้อง: " + logic.getRoomStatus(), Font.PLAIN, 12, AdminUI.TEXT_GRAY);
         lblSubInfo.setBounds(280, 94, 600, 20);
         topCard.add(lblSubInfo);
 
@@ -99,7 +99,7 @@ public class RoomGuestUI extends JFrame {
 
         root.add(topCard);
 
-        // --- การ์ดล่าง: รายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้อง (แสดงแบบ 2 คอลัมน์) ---
+        // --- การ์ดล่าง: รายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้อง ---
         AdminUI.RoundedPanel bottomCard = new AdminUI.RoundedPanel(AdminUI.WHITE, AdminUI.BORDER, 12);
         bottomCard.setLayout(null);
         bottomCard.setBounds(70, 280, 960, 210);
@@ -108,29 +108,22 @@ public class RoomGuestUI extends JFrame {
         furnTitle.setBounds(24, 20, 400, 22);
         bottomCard.add(furnTitle);
 
-        String[] items = {
-            "- เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
-            "- ตู้เสื้อผ้าบิวท์อิน 2 บาน",
-            "- โต๊ะทำงานและเก้าอี้ (2 ชุด)",
-            "- พัดลมติดเพดาน",
-            "- เครื่องทำน้ำอุ่นในห้องน้ำส่วนตัว",
-            "- Wi-Fi ความเร็วสูงฟรี"
-        };
+        String[] items = logic.getFurnitureList();
 
         for (int i = 0; i < items.length; i++) {
-            int col = i / 3;
-            int row = i % 3;
+            int col = i / 4;
+            int row = i % 4;
             int fx = col == 0 ? 30 : 500;
-            int fy = 60 + (row * 40);
+            int fy = 56 + (row * 34);
 
             JLabel itemLbl = AdminUI.label(items[i], Font.PLAIN, 13, new Color(55, 65, 81));
-            itemLbl.setBounds(fx, fy, 400, 24);
+            itemLbl.setBounds(fx, fy, 420, 24);
             bottomCard.add(itemLbl);
         }
 
         root.add(bottomCard);
 
-        // --- ปุ่มกดจองห้องพักด้านล่างสุด ส่งต่อคำสั่งให้ Logic จัดการ ---
+        // --- ปุ่มกดจองห้องพัก ---
         JButton btnBook = new ManageRoomUI.FlatButton("จองห้องพักนี้", true);
         btnBook.setBounds(70, 508, 960, 44);
         if (!logic.isAvailable()) {
@@ -138,7 +131,7 @@ public class RoomGuestUI extends JFrame {
             btnBook.setText("ห้องนี้ไม่ว่าง");
         }
         btnBook.addActionListener(e -> {
-            LogicLogin.User user = LogicLogin.getCurrentUser();
+            LogicLogin.User user = logic.getCurrentUser();
 
             if (user == null) {
                 int res = JOptionPane.showConfirmDialog(this,
@@ -153,7 +146,7 @@ public class RoomGuestUI extends JFrame {
                 return;
             }
 
-            RoomGuestLogic.BookResult result = logic.bookRoom(user);
+            GuestRoomLogic.BookResult result = logic.bookRoom(user);
             switch (result) {
                 case OK:
                     JOptionPane.showMessageDialog(this,
@@ -186,7 +179,7 @@ public class RoomGuestUI extends JFrame {
             }
         });
         root.add(btnBook);
-        
+
         setVisible(true);
     }
 
@@ -205,7 +198,7 @@ public class RoomGuestUI extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth(), h = getHeight();
-            
+
             if (w > 0 && h > 0) {
                 g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
             }
