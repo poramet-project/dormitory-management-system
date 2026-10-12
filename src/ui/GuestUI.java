@@ -1,106 +1,340 @@
 package ui;
-import logic.*;
+
+import logic.DataStore;
+import logic.GuestLogic;
+import logic.ImageLoader;
+import logic.LogicLogin;
 
 import javax.swing.*;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
+import java.util.List;
 
 public class GuestUI extends JFrame {
-    private CardLayout cardLayout;
-    private JPanel contentPanel;
+
+    static final Color PRIMARY    = new Color(14, 121, 115);
+    static final Color BG         = new Color(248, 250, 252);
+    static final Color WHITE      = Color.WHITE;
+    static final Color BORDER     = new Color(226, 232, 240);
+    static final Color TEXT       = new Color(23, 32, 53);
+    static final Color TEXT_GRAY  = new Color(100, 116, 139);
+    static final Color TEXT_LIGHT = Color.GRAY;
+
+    JComboBox<String> cbType, cbPrice;
+    JButton btnSearch;
+    JPanel grid;
+    JScrollPane scroll;
 
     public GuestUI() {
-        setTitle("KU Dormitory - ระบบค้นหาและจองห้องพัก");
-        setSize(1180, 750);
-        setMinimumSize(new Dimension(1000, 650));
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setTitle("KU Dormitory - ค้นหาห้องพัก");
+        setSize(1100, 700);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setResizable(false);
 
-        // 1. แถบนำทางด้านบน (Top Navigation Bar)
-        add(createTopNavBar(), BorderLayout.NORTH);
+        JPanel root = new JPanel(null);
+        root.setBackground(BG);
+        setContentPane(root);
 
-        // 2. CardLayout สำหรับสลับหน้า
-        cardLayout = new CardLayout();
-        contentPanel = new JPanel(cardLayout);
+        root.add(createNavbar());
 
-        add(contentPanel, BorderLayout.CENTER);
+        JLabel title = label("ค้นหาห้องพักว่าง", Font.BOLD, 24, TEXT);
+        title.setBounds(40, 76, 500, 36);
+        root.add(title);
+
+        JLabel sub = label("เลือกห้องพักที่เหมาะกับไลฟ์สไตล์ของคุณ พร้อมเข้าอยู่วันนี้", Font.PLAIN, 12, TEXT_GRAY);
+        sub.setBounds(40, 114, 500, 18);
+        root.add(sub);
+
+        root.add(createFilterCard());
+
+        grid = new JPanel(null);
+        grid.setBackground(BG);
+        loadRoomCards("", "ทั้งหมด", "ทั้งหมด");
+
+        scroll = new JScrollPane(grid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(null);
+        scroll.getViewport().setBackground(BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
+        scroll.getVerticalScrollBar().setUI(new ThinScrollBarUI());
+        scroll.setBounds(40, 250, 1004 + 16, 410);
+        root.add(scroll);
+
         setVisible(true);
     }
 
-    private JPanel createTopNavBar() {
-        JPanel nav = new JPanel(new BorderLayout());
-        nav.setBackground(Color.WHITE);
-        nav.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(225, 230, 235)));
-        nav.setPreferredSize(new Dimension(1180, 65));
+    private void loadRoomCards(String keyword, String typeF, String priceF) {
+        grid.removeAll();
+        List<GuestLogic.RoomViewModel> rooms = GuestLogic.getFilteredRooms(keyword, typeF, priceF);
 
-        // โลโก้ KU Dormitory
-        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 14));
-        logoPanel.setOpaque(false);
-        JLabel logoBadge = new JLabel("KU", SwingConstants.CENTER);
-        logoBadge.setOpaque(true);
-        logoBadge.setBackground(new Color(14, 121, 115));
-        logoBadge.setForeground(Color.WHITE);
-        logoBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        logoBadge.setPreferredSize(new Dimension(36, 36));
+        int cardW = 235, cardH = 308, gap = 18, cols = 4;
+        int rowsCount = Math.max(1, (rooms.size() + cols - 1) / cols);
+        grid.setPreferredSize(new Dimension(cols * cardW + (cols - 1) * gap,
+                rowsCount * cardH + (rowsCount - 1) * gap + 24));
 
-        JLabel title = new JLabel("KU Dormitory");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        title.setForeground(new Color(23, 32, 53));
-        logoPanel.add(logoBadge);
-        logoPanel.add(title);
+        for (int i = 0; i < rooms.size(); i++) {
+            int x = (i % cols) * (cardW + gap);
+            int y = (i / cols) * (cardH + gap);
+            grid.add(createRoomCard(rooms.get(i), i, x, y));
+        }
+        grid.revalidate();
+        grid.repaint();
+    }
 
-        // ปุ่มเมนู
-        JPanel menuPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 16));
-        menuPanel.setOpaque(false);
+    private JPanel createNavbar() {
+        JPanel nav = new JPanel(null);
+        nav.setBackground(WHITE);
+        nav.setBounds(0, 0, 1100, 56);
+        nav.setBorder(new MatteBorder(0, 0, 1, 0, BORDER));
 
-        JButton btnSearch = createNavButton("ค้นหาห้องพัก");
-        JButton btnContact = createNavButton("ติดต่อเรา");
-        JButton btnLogin = createNavButton("เข้าสู่ระบบ");
-        JButton btnSignUp = new JButton("สมัครสมาชิก");
+        JPanel logo = new RoundedPanel(PRIMARY, null, 8);
+        logo.setLayout(new GridBagLayout());
+        logo.setBounds(40, 15, 26, 26);
+        logo.add(label("KU", Font.BOLD, 11, WHITE));
+        nav.add(logo);
 
-        btnSignUp.setFont(new Font("Tahoma", Font.BOLD, 13));
-        btnSignUp.setForeground(Color.WHITE);
-        btnSignUp.setBackground(new Color(14, 121, 115));
-        btnSignUp.setFocusPainted(false);
-        btnSignUp.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JLabel brand = label("KU Dormitory", Font.BOLD, 15, TEXT);
+        brand.setBounds(74, 15, 140, 26);
+        nav.add(brand);
 
-        btnSearch.addActionListener(e -> showSearchPage());
-        btnContact.addActionListener(e -> cardLayout.show(contentPanel, "CONTACT"));
-        btnLogin.addActionListener(e -> {
-            dispose();
-            new LoginUI().setVisible(true);
-        });
-        btnSignUp.addActionListener(e -> {
-            dispose();
-            new SignUpUI().setVisible(true);
-        });
+        LogicLogin.User u = LogicLogin.getCurrentUser();
+        if (u != null) {
+            String name = (u.fullName == null || u.fullName.isEmpty()) ? u.username : u.fullName;
+            JLabel lblName = label(name, Font.BOLD, 13, TEXT);
+            lblName.setHorizontalAlignment(SwingConstants.RIGHT);
+            lblName.setBounds(700, 15, 250, 26);
+            nav.add(lblName);
 
-        menuPanel.add(btnSearch);
-        menuPanel.add(btnContact);
-        menuPanel.add(btnLogin);
-        menuPanel.add(btnSignUp);
+            JButton btnLogout = flatButton("ออกจากระบบ", false);
+            btnLogout.setBounds(960, 12, 100, 32);
+            btnLogout.addActionListener(e -> {
+                LogicLogin.logout();
+                DataStore.setCurrentLoginUser("Guest");
+                LoginUI login = new LoginUI();
+                login.setLocation(getLocation());
+                login.setVisible(true);
+                dispose();
+            });
+            nav.add(btnLogout);
+        } else {
+            JButton btnLogin = flatButton("เข้าสู่ระบบ", true);
+            btnLogin.setBounds(960, 12, 100, 32);
+            btnLogin.addActionListener(e -> {
+                LoginUI login = new LoginUI();
+                login.setLocation(getLocation());
+                login.setVisible(true);
+                dispose();
+            });
+            nav.add(btnLogin);
+        }
 
-        nav.add(logoPanel, BorderLayout.WEST);
-        nav.add(menuPanel, BorderLayout.EAST);
         return nav;
     }
 
-    private JButton createNavButton(String text) {
+    private JPanel createFilterCard() {
+        RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
+        card.setLayout(null);
+        card.setBounds(40, 148, 1004, 86);
+
+        card.add(fieldLabel("ประเภทห้องพัก", 16, 14));
+        cbType = combo(new String[]{"ทั้งหมด", "ห้องพัดลม", "ห้องแอร์"});
+        cbType.setBounds(16, 34, 450, 36);
+        card.add(cbType);
+
+        card.add(fieldLabel("ช่วงราคาต่อเดือน", 484, 14));
+        cbPrice = combo(new String[]{"ทั้งหมด", "ต่ำกว่า 3,000 บาท", "3,000 บาทขึ้นไป"});
+        cbPrice.setBounds(484, 34, 390, 36);
+        card.add(cbPrice);
+
+        btnSearch = flatButton("ค้นหา", true);
+        btnSearch.setBounds(894, 34, 94, 36);
+        btnSearch.addActionListener(e -> {
+            loadRoomCards("", (String) cbType.getSelectedItem(), (String) cbPrice.getSelectedItem());
+        });
+        card.add(btnSearch);
+
+        return card;
+    }
+
+    private JPanel createRoomCard(GuestLogic.RoomViewModel room, int index, int x, int y) {
+        int w = 235;
+        RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
+        card.setLayout(null);
+        card.setBounds(x, y, w, 308);
+
+        String roomNumOnly = room.numberText.replace("ห้อง ", "");
+        RoomImage img = new RoomImage("img/room_" + roomNumOnly + ".png", w - 2, 130);
+        img.setBounds(1, 1, w - 2, 130);
+        card.add(img);
+
+        JLabel name = label(room.numberText, Font.BOLD, 16, TEXT);
+        name.setBounds(16, 142, 100, 24);
+        card.add(name);
+
+        JPanel badge = statusBadge(room.statusLabel);
+        badge.setLocation(w - 16 - badge.getWidth(), 145);
+        card.add(badge);
+
+        JLabel type = label(room.typeShort, Font.BOLD, 12, PRIMARY);
+        type.setBounds(16, 172, w - 32, 18);
+        card.add(type);
+
+        JLabel floor = label(room.floorText, Font.PLAIN, 10, TEXT_GRAY);
+        floor.setBounds(16, 190, w - 32, 16);
+        card.add(floor);
+
+        JLabel price = label(room.priceText, Font.BOLD, 18, TEXT);
+        int pw = price.getFontMetrics(price.getFont()).stringWidth(room.priceText);
+        price.setBounds(16, 214, pw + 4, 26);
+        card.add(price);
+
+        JLabel perMonth = label("/ เดือน", Font.PLAIN, 10, TEXT_LIGHT);
+        perMonth.setBounds(16 + pw + 8, 220, 60, 18);
+        card.add(perMonth);
+
+        JButton btn = flatButton("ดูรายละเอียด", false);
+        btn.setBounds(16, 256, w - 32, 36);
+        card.add(btn);
+
+        // เมื่อคลิกปุ่มดูรายละเอียด ให้ส่งข้อมูลไปเปิดหน้า RoomGuestUI
+        btn.addActionListener(e -> {
+            RoomGuestUI detailUI = new RoomGuestUI(room.numberText, room.typeShort, room.priceText, room.statusLabel);
+            detailUI.setLocation(getLocation());
+            detailUI.setVisible(true);
+            dispose();
+        });
+
+        return card;
+    }
+
+    private static JPanel statusBadge(String status) {
+        Color bg = status.contains("ว่าง") ? new Color(209, 250, 229) : (status.contains("มีผู้เช่า") ? new Color(254, 226, 226) : new Color(254, 243, 199));
+        Color fg = status.contains("ว่าง") ? new Color(4, 120, 87) : (status.contains("มีผู้เช่า") ? new Color(220, 38, 38) : new Color(180, 83, 9));
+        
+        JPanel badge = new JPanel(new GridBagLayout()) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        badge.setOpaque(false);
+        JLabel lbl = label(status, Font.BOLD, 10, fg);
+        badge.add(lbl);
+        badge.setSize(lbl.getFontMetrics(lbl.getFont()).stringWidth(status) + 16, 20);
+        return badge;
+    }
+
+    private static JLabel fieldLabel(String text, int x, int y) {
+        JLabel l = label(text, Font.PLAIN, 11, TEXT);
+        l.setBounds(x, y, 200, 16);
+        return l;
+    }
+
+    public static JLabel label(String text, int style, int size, Color color) {
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("Tahoma", style, size));
+        l.setForeground(color);
+        return l;
+    }
+
+    private static JComboBox<String> combo(String[] items) {
+        JComboBox<String> cb = new JComboBox<>(items);
+        cb.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        cb.setForeground(TEXT);
+        cb.setFocusable(false);
+        cb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cb.setBackground(WHITE);
+        return cb;
+    }
+
+    public static class RoundedPanel extends JPanel {
+        private final Color bgColor;
+        private final Color borderColor;
+        private final int radius;
+
+        public RoundedPanel(Color bgColor, Color borderColor, int radius) {
+            this.bgColor = bgColor;
+            this.borderColor = borderColor;
+            this.radius = radius;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth(), h = getHeight();
+            if (bgColor != null) {
+                g2.setColor(bgColor);
+                g2.fillRoundRect(0, 0, w - 1, h - 1, radius, radius);
+            }
+            if (borderColor != null) {
+                g2.setColor(borderColor);
+                g2.drawRoundRect(0, 0, w - 1, h - 1, radius, radius);
+            }
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    public static JButton flatButton(String text, boolean isPrimary) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Tahoma", Font.PLAIN, 13));
-        btn.setForeground(new Color(81, 97, 123));
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
+        btn.setFont(new Font("Tahoma", Font.BOLD, 12));
+        btn.setForeground(isPrimary ? WHITE : TEXT);
+        btn.setBackground(isPrimary ? PRIMARY : new Color(241, 245, 249));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }
 
-    public void showSearchPage() {
-        cardLayout.show(contentPanel, "SEARCH");
+    static class ThinScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        @Override protected void configureScrollBarColors() {
+            thumbColor = new Color(209, 213, 219);
+            trackColor = BG;
+        }
+        @Override protected JButton createDecreaseButton(int o) { return zeroButton(); }
+        @Override protected JButton createIncreaseButton(int o) { return zeroButton(); }
+        private JButton zeroButton() {
+            JButton b = new JButton();
+            b.setPreferredSize(new Dimension(0, 0));
+            return b;
+        }
     }
 
-    public void showDetailPage(RoomData room) {
-        cardLayout.show(contentPanel, "DETAIL");
+    static class RoomImage extends JPanel {
+        private final Image photo;
+
+        RoomImage(String path, int width, int height) {
+            this.photo = ImageLoader.load(path, "img/room_101.png");
+            setOpaque(false);
+            setPreferredSize(new Dimension(width, height));
+            setSize(width, height);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth(), h = getHeight();
+            
+            if (w > 0 && h > 0) {
+                g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
+            }
+
+            if (photo != null) {
+                g2.drawImage(photo, 0, 0, w, h, null);
+            } else {
+                g2.setColor(new Color(245, 240, 232));
+                g2.fillRect(0, 0, w, h);
+            }
+            g2.dispose();
+        }
     }
+
 }

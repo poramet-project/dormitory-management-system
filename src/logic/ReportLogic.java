@@ -1,6 +1,5 @@
 package logic;
 
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -42,10 +41,12 @@ public class ReportLogic {
 
         List<DataStore.Complaint> list = DataStore.complaintsForUser(currentUser.userId);
         for (DataStore.Complaint c : list) {
+            String displayCategory = c.category; // แสดงหมวดหมู่แบบเต็มเพื่อความถูกต้อง
+
             rows.add(new Object[]{
                     c.id,
                     DataStore.thaiDate(c.date),
-                    c.category.split(" ")[0],
+                    displayCategory,
                     c.topic,
                     c.statusThai()
             });

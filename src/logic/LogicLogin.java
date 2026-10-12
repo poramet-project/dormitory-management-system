@@ -101,6 +101,78 @@ public class LogicLogin {
         return null;
     }
 
+    /**
+     * หลังจองห้องสำเร็จ: อัปเดตแถวของผู้ใช้ใน users.csv ให้เป็น TENANT พร้อมเลขห้อง
+     * และอัปเดตผู้ใช้ปัจจุบันในหน่วยความจำด้วย
+     */
+    public static synchronized boolean assignRoom(String userId, String roomId) {
+        try {
+            Path path = null;
+            for (String p : CSV_PATHS) {
+                if (Files.exists(Paths.get(p))) { path = Paths.get(p); break; }
+            }
+            if (path == null) return false;
+
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return false;
+
+            String headerLine = lines.get(0).replace("\uFEFF", "").trim().toLowerCase();
+            int off = headerLine.startsWith("userid") ? 1 : 0;
+
+            boolean changed = false;
+            List<String> out = new ArrayList<>();
+            User updated = null;
+            for (int i = 0; i < lines.size(); i++) {
+                String raw = lines.get(i);
+                String line = raw.replace("\uFEFF", "").trim();
+                if (i == 0 || line.isEmpty() || line.startsWith("#")) { out.add(raw); continue; }
+
+                String[] c = line.split(",", -1);
+                boolean mine = (off == 1)
+                        ? c[0].trim().equalsIgnoreCase(userId)
+                        : c[0].trim().equalsIgnoreCase(userId);   // รูปแบบเก่า: คอลัมน์แรกคือ username
+                if (!mine || c.length < off + 2) { out.add(raw); continue; }
+
+                // ขยายให้ครบคอลัมน์ role/roomId
+                String[] n = new String[Math.max(c.length, off + 6)];
+                for (int k = 0; k < n.length; k++) n[k] = k < c.length ? c[k] : "";
+                n[off + 4] = "TENANT";
+                n[off + 5] = roomId;
+                out.add(String.join(",", n));
+                changed = true;
+                updated = new User(n[0].trim().isEmpty() || off == 0 ? "" : n[0].trim(),
+                        n[off].trim(), n[off + 1].trim(), n[off + 2].trim(),
+                        n[off + 3].trim(), "TENANT", roomId);
+            }
+            if (!changed) return false;
+
+            Files.write(path, (String.join(System.lineSeparator(), out) + System.lineSeparator())
+                    .getBytes(StandardCharsets.UTF_8));
+            // อัปเดตผู้ใช้ปัจจุบันเฉพาะเมื่อเป็นคนเดียวกัน (กรณี admin อนุมัติให้คนอื่นต้องไม่ทับ session ของ admin)
+            if (updated != null && currentUser != null
+                    && (userId.equalsIgnoreCase(currentUser.userId) || userId.equalsIgnoreCase(currentUser.username))) {
+                currentUser = updated;
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /** หาผู้ใช้จาก userId (หรือ username กรณีไฟล์รูปแบบเก่า) คืน null ถ้าไม่พบ */
+    public static User findUser(String idOrUsername) {
+        if (idOrUsername == null) return null;
+        try {
+            for (User u : loadUsers()) {
+                if (idOrUsername.equalsIgnoreCase(u.userId) || idOrUsername.equalsIgnoreCase(u.username)) return u;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /** แปลง role เป็นหน้าจอที่ต้องเปิด: "ADMIN", "TENANT" หรือ "GUEST" (APPLICANT/GUEST/อื่น ๆ) */
     public static String screenFor(String role) {
         switch (role) {
