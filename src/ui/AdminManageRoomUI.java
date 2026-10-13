@@ -12,7 +12,7 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.util.List;
 
-public class AdminManageRoomUI extends JFrame {
+public class AdminManageRoomUI extends JPanel {
 
     static final Color PRIMARY    = AdminUI.PRIMARY;
     static final Color BG         = AdminUI.BG;
@@ -38,22 +38,12 @@ public class AdminManageRoomUI extends JFrame {
     private String selectedRoomId = "";
 
     public AdminManageRoomUI() {
-        setTitle("KU Dormitory - จัดการห้องพัก");
-        setSize(1100, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
-        setVisible(true);
+        setLayout(null);
+        setBackground(BG);
 
-        JPanel root = new JPanel(null);
-        root.setBackground(BG);
-        setContentPane(root);
-
-        root.add(AdminUI.createSidebar(this, 1));
-        root.add(AdminUI.createHeader("จัดการห้องพัก"));
-        createToolbar(root);
-        root.add(createTable());
-        root.add(createFormPanel());
+        createToolbar();
+        add(createTable());
+        add(createFormPanel());
 
         loadTableData();
         initActions();
@@ -67,18 +57,18 @@ public class AdminManageRoomUI extends JFrame {
         }
     }
 
-    private void createToolbar(JPanel root) {
+    private void createToolbar() {
         searchField = new RoundField("ระบุเลขห้อง...", WHITE, true);
-        searchField.setBounds(210, 80, 170, 34);
-        root.add(searchField);
+        searchField.setBounds(20, 20, 170, 34);
+        add(searchField);
 
         statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ห้องว่าง", "มีผู้เช่า", "อยู่ระหว่างปรับปรุง"}, WHITE);
-        statusFilter.setBounds(390, 80, 150, 34);
-        root.add(statusFilter);
+        statusFilter.setBounds(200, 20, 150, 34);
+        add(statusFilter);
 
         btnAdd = new FlatButton("+  เพิ่มห้องใหม่", true);
-        btnAdd.setBounds(620, 79, 130, 36);
-        root.add(btnAdd);
+        btnAdd.setBounds(430, 19, 130, 36);
+        add(btnAdd);
     }
 
     private JScrollPane createTable() {
@@ -112,14 +102,14 @@ public class AdminManageRoomUI extends JFrame {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
         scroll.getViewport().setBackground(WHITE);
-        scroll.setBounds(210, 130, 540, 500);
+        scroll.setBounds(20, 70, 540, 510);
         return scroll;
     }
 
     private JPanel createFormPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
-        p.setBounds(770, 60, 330, 640);
+        p.setBounds(580, 0, 330, 640);
         p.setBorder(new MatteBorder(0, 1, 0, 0, BORDER));
 
         formTitle = AdminUI.label("รายละเอียดห้องพัก", Font.BOLD, 16, TEXT);

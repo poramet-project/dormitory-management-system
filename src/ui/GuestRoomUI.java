@@ -9,25 +9,20 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
-public class GuestRoomUI extends JFrame {
+public class GuestRoomUI extends JPanel {
     private final GuestRoomLogic logic;
+    private final GuestUI mainUI;
 
-    public GuestRoomUI() {
-        this("ห้อง 101", "ห้องพัดลม", "2,800", "ว่าง");
+    public GuestRoomUI(GuestUI mainUI) {
+        this(mainUI, "ห้อง 101", "ห้องพัดลม", "2,800", "ว่าง");
     }
 
-    public GuestRoomUI(String roomName, String roomType, String roomPrice, String roomStatus) {
+    public GuestRoomUI(GuestUI mainUI, String roomName, String roomType, String roomPrice, String roomStatus) {
+        this.mainUI = mainUI;
         this.logic = new GuestRoomLogic(roomName, roomType, roomPrice, roomStatus);
 
-        setTitle("KU Dormitory - รายละเอียด " + logic.getRoomName());
-        setSize(1100, 750);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
-
-        JPanel root = new JPanel(null);
-        root.setBackground(GuestUI.BG);
-        setContentPane(root);
+        setLayout(null);
+        setBackground(GuestUI.BG);
 
         // --- Navbar ---
         JPanel nav = new JPanel(null);
@@ -38,10 +33,9 @@ public class GuestRoomUI extends JFrame {
         JButton btnBack = GuestUI.flatButton("← ย้อนกลับ", false);
         btnBack.setBounds(40, 12, 100, 32);
         btnBack.addActionListener(e -> {
-            GuestUI guest = new GuestUI();
-            guest.setLocation(getLocation());
-            guest.setVisible(true);
-            dispose();
+            if (this.mainUI != null) {
+                this.mainUI.showListView();
+            }
         });
         nav.add(btnBack);
 
@@ -57,7 +51,7 @@ public class GuestRoomUI extends JFrame {
             lblName.setBounds(780, 15, 280, 26);
             nav.add(lblName);
         }
-        root.add(nav);
+        add(nav);
 
         // --- การ์ดบน: แสดงรูปภาพและข้อมูลห้อง ---
         GuestUI.ShadowCardPanel topCard = new GuestUI.ShadowCardPanel(GuestUI.WHITE, GuestUI.BORDER, 12);
@@ -97,7 +91,7 @@ public class GuestRoomUI extends JFrame {
         lblPrice.setBounds(280, 128, 400, 26);
         topCard.add(lblPrice);
 
-        root.add(topCard);
+        add(topCard);
 
         // --- การ์ดล่าง: เฟอร์นิเจอร์ ---
         GuestUI.ShadowCardPanel bottomCard = new GuestUI.ShadowCardPanel(GuestUI.WHITE, GuestUI.BORDER, 12);
@@ -121,7 +115,7 @@ public class GuestRoomUI extends JFrame {
             bottomCard.add(itemLbl);
         }
 
-        root.add(bottomCard);
+        add(bottomCard);
 
         // --- ปุ่มกดจองห้องพัก ---
         JButton btnBook = GuestUI.flatButton("จองห้องพักนี้", true);
@@ -132,7 +126,6 @@ public class GuestRoomUI extends JFrame {
             btnBook.setFont(baseFont.deriveFont(Font.BOLD, 14f));
         }
 
-        // สถานะปุ่มตาม User ปัจจุบัน
         if (logic.isPendingByCurrentUser()) {
             btnBook.setEnabled(false);
             btnBook.setText("รอการอนุมัติการจองห้องพักนี้");
@@ -154,9 +147,11 @@ public class GuestRoomUI extends JFrame {
                         "แจ้งเตือนการจองห้อง", JOptionPane.YES_NO_OPTION);
                 if (res == JOptionPane.YES_OPTION) {
                     LoginUI login = new LoginUI();
-                    login.setLocation(getLocation());
+                    if (this.mainUI != null) {
+                        login.setLocation(this.mainUI.getLocation());
+                        this.mainUI.dispose();
+                    }
                     login.setVisible(true);
-                    dispose();
                 }
                 return;
             }
@@ -167,10 +162,9 @@ public class GuestRoomUI extends JFrame {
                     JOptionPane.showMessageDialog(this,
                             "ส่งคำขอจองห้องพักหมายเลข " + roomNumOnly + " เรียบร้อยแล้ว\nกรุณารอผู้ดูแลระบบ (Admin) อนุมัติ",
                             "รออนุมัติ", JOptionPane.INFORMATION_MESSAGE);
-                    GuestUI guest = new GuestUI();
-                    guest.setLocation(getLocation());
-                    guest.setVisible(true);
-                    dispose();
+                    if (this.mainUI != null) {
+                        this.mainUI.showListView();
+                    }
                     break;
                 case PENDING_EXISTS:
                     JOptionPane.showMessageDialog(this, "คุณมีคำขอจองที่รอการอนุมัติอยู่แล้ว\nกรุณารอ Admin พิจารณาก่อนจองห้องอื่น",
@@ -193,9 +187,7 @@ public class GuestRoomUI extends JFrame {
                             "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
             }
         });
-        root.add(btnBook);
-
-        setVisible(true);
+        add(btnBook);
     }
 
     static class RoomImage extends JPanel {

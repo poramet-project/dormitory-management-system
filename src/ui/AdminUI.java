@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AdminUI extends JFrame {
@@ -26,26 +27,74 @@ public class AdminUI extends JFrame {
 
     static final String FONT_NAME = "Tahoma";
 
+    private final CardLayout cardLayout;
+    private final JPanel centerCardsPanel;
+    private final JLabel headerTitleLabel;
+    private final List<MenuItem> menuItems = new ArrayList<>();
+
+    private static final String[] PAGE_KEYS = {
+            "DASHBOARD", "ROOMS", "TENANTS", "BOOKINGS", "MOVES", "PROBLEMS"
+    };
+
+    private static final String[] PAGE_TITLES = {
+            "แผงควบคุมหลักผู้ดูแลหอพัก",
+            "จัดการห้องพัก",
+            "ทะเบียนผู้เช่าและสัญญาเช่า",
+            "พิจารณาคำขอจองห้อง",
+            "พิจารณาคำขอย้ายห้อง",
+            "จัดการคำร้องเรียนและงานแจ้งซ่อม"
+    };
+
     public AdminUI() {
         setTitle("KU Dormitory - แผงควบคุมผู้ดูแล");
         setSize(1100, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
-        setVisible(true);
 
         JPanel root = new JPanel(null);
         root.setBackground(BG);
         setContentPane(root);
 
-        root.add(createSidebar(this, 0));
-        root.add(createHeader("แผงควบคุมหลักผู้ดูแลหอพัก"));
-        createStatCards(root);
-        root.add(createChartCard());
-        root.add(createRequestCard());
+        // Sidebar
+        root.add(buildSidebar());
+
+        // Header
+        JPanel header = createHeader(PAGE_TITLES[0]);
+        headerTitleLabel = (JLabel) header.getClientProperty("titleLabel");
+        root.add(header);
+
+        // CardLayout ตรงกลางสำหรับสลับหน้า
+        cardLayout = new CardLayout();
+        centerCardsPanel = new JPanel(cardLayout);
+        centerCardsPanel.setBounds(190, 60, 910, 640);
+        centerCardsPanel.setOpaque(false);
+
+        // เพิ่มการ์ดของแต่ละหน้าย่อยที่เป็น JPanel
+        centerCardsPanel.add(buildDashboardContent(), "DASHBOARD");
+        centerCardsPanel.add(new AdminManageRoomUI(), "ROOMS");
+        centerCardsPanel.add(new AdminManageTenantUI(), "TENANTS");
+        centerCardsPanel.add(new AdminManageBookingUI(), "BOOKINGS");
+        centerCardsPanel.add(new AdminManageMoveUI(), "MOVES");
+        centerCardsPanel.add(new AdminManageProblemUI(), "PROBLEMS");
+
+        root.add(centerCardsPanel);
+        setVisible(true);
     }
 
-    static JPanel createSidebar(JFrame frame, int activeIndex) {
+    public void showPage(int index) {
+        cardLayout.show(centerCardsPanel, PAGE_KEYS[index]);
+        if (headerTitleLabel != null) {
+            headerTitleLabel.setText(PAGE_TITLES[index]);
+        }
+        setTitle("KU Dormitory - " + PAGE_TITLES[index]);
+
+        for (int i = 0; i < menuItems.size(); i++) {
+            menuItems.get(i).setSelected(i == index);
+        }
+    }
+
+    private JPanel buildSidebar() {
         JPanel side = new JPanel(null);
         side.setBackground(WHITE);
         side.setBounds(0, 0, 190, 700);
@@ -64,24 +113,26 @@ public class AdminUI extends JFrame {
 
         String[] menus = {
                 "Dashboard ผู้ดูแล", "จัดการห้องพัก", "ผู้เช่า/สัญญา",
-                "คำขอจองห้อง", "คำขอย้ายห้อง", "คำร้อง/แจ้งซ่อม", "รายงาน"
+                "คำขอจองห้อง", "คำขอย้ายห้อง", "คำร้อง/แจ้งซ่อม"
         };
         for (int i = 0; i < menus.length; i++) {
             final int index = i;
-            MenuItem item = new MenuItem(menus[i], i, i == activeIndex,
-                    () -> onMenuClick(frame, index));
+            MenuItem item = new MenuItem(menus[i], i, i == 0, () -> showPage(index));
             item.setBounds(14, 62 + i * 36, 162, 32);
             side.add(item);
+            menuItems.add(item);
         }
 
-        JLabel logout = label("ออกจากระบบ", Font.BOLD, 12, RED);
+        JLabel logout = label("Logout", Font.BOLD, 12, RED);
         logout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         logout.setBounds(28, 600, 140, 24);
         logout.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
-                int confirm = JOptionPane.showConfirmDialog(frame, "คุณต้องการออกจากระบบใช่หรือไม่?", "ยืนยันการออกจากระบบ", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(AdminUI.this,
+                        "คุณต้องการออกจากระบบใช่หรือไม่?", "ยืนยันการออกจากระบบ", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    goTo(frame, new LoginUI());
+                    dispose();
+                    new LoginUI().setVisible(true);
                 }
             }
         });
@@ -89,29 +140,24 @@ public class AdminUI extends JFrame {
         return side;
     }
 
-    static void onMenuClick(JFrame current, int index) {
-        if (current instanceof AdminUI       && index == 0) return;
-        if (current instanceof AdminManageRoomUI   && index == 1) return;
-
-        switch (index) {
-            case 0: goTo(current, new AdminUI()); break;
-            case 1: goTo(current, new AdminManageRoomUI()); break;
-            default: comingSoon(current);
-        }
+    private JPanel buildDashboardContent() {
+        JPanel p = new JPanel(null);
+        p.setOpaque(false);
+        createStatCards(p);
+        p.add(createChartCard());
+        p.add(createRequestCard());
+        return p;
     }
 
-    static void goTo(JFrame current, JFrame next) {
-        next.setLocation(current.getLocation());
-        next.setVisible(true);
-        current.dispose();
+    public static JPanel createSidebar(JFrame frame, int activeIndex) {
+        JPanel side = new JPanel(null);
+        side.setBackground(WHITE);
+        side.setBounds(0, 0, 190, 700);
+        side.setBorder(new MatteBorder(0, 0, 0, 1, BORDER));
+        return side;
     }
 
-    static void comingSoon(JFrame current) {
-        JOptionPane.showMessageDialog(current, "หน้านี้กำลังอยู่ระหว่างพัฒนา",
-                "KU Dormitory", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    static JPanel createHeader(String pageTitle) {
+    public static JPanel createHeader(String pageTitle) {
         JPanel header = new JPanel(null);
         header.setBackground(WHITE);
         header.setBounds(190, 0, 910, 60);
@@ -120,6 +166,7 @@ public class AdminUI extends JFrame {
         JLabel title = label(pageTitle, Font.BOLD, 17, TEXT);
         title.setBounds(22, 0, 400, 60);
         header.add(title);
+        header.putClientProperty("titleLabel", title);
 
         AvatarPanel avatar = new AvatarPanel();
         avatar.setBounds(715, 13, 34, 34);
@@ -137,7 +184,7 @@ public class AdminUI extends JFrame {
     }
 
     private void createStatCards(JPanel root) {
-        int x = 210, y = 78, w = 202, h = 88, gap = 16;
+        int x = 20, y = 18, w = 202, h = 88, gap = 16;
         int total = AdminLogic.getTotalRooms();
         int avail = AdminLogic.getAvailableRoomsCount();
         int occupied = AdminLogic.getOccupiedRoomsCount();
@@ -150,8 +197,7 @@ public class AdminUI extends JFrame {
         root.add(statCard("คำขอรอพิจารณา", pending + " รายการ", PRIMARY, "ตรวจสอบรายการรอดำเนินการ", x + (w + gap) * 3, y, w, h));
     }
 
-    private JPanel statCard(String title, String value, Color valueColor, String sub,
-                            int x, int y, int w, int h) {
+    private JPanel statCard(String title, String value, Color valueColor, String sub, int x, int y, int w, int h) {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
         card.setBounds(x, y, w, h);
@@ -173,7 +219,7 @@ public class AdminUI extends JFrame {
     private JPanel createChartCard() {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
-        card.setBounds(210, 182, 520, 250);
+        card.setBounds(20, 122, 520, 250);
 
         JLabel title = label("อัตราการเข้าพักรายเดือน", Font.BOLD, 14, TEXT);
         title.setBounds(16, 14, 300, 20);
@@ -200,7 +246,7 @@ public class AdminUI extends JFrame {
     private JPanel createRequestCard() {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
-        card.setBounds(746, 182, 320, 470);
+        card.setBounds(556, 122, 320, 470);
 
         JLabel title = label("คำร้องรอดำเนินการ", Font.BOLD, 14, TEXT);
         title.setBounds(16, 14, 200, 22);
@@ -231,8 +277,7 @@ public class AdminUI extends JFrame {
         return card;
     }
 
-    private JPanel requestItem(String tag, Color tagBg, Color tagFg, String room,
-                               String desc, String time, int y) {
+    private JPanel requestItem(String tag, Color tagBg, Color tagFg, String room, String desc, String time, int y) {
         RoundedPanel item = new RoundedPanel(ITEM_BG, BORDER, 10);
         item.setLayout(null);
         item.setBounds(14, y, 292, 60);
@@ -354,7 +399,7 @@ public class AdminUI extends JFrame {
     static class MenuItem extends JPanel {
         private final String text;
         private final int iconType;
-        private final boolean active;
+        private boolean active;
         private boolean hover;
 
         MenuItem(String text, int iconType, boolean active, Runnable onClick) {
@@ -368,6 +413,11 @@ public class AdminUI extends JFrame {
                 @Override public void mouseExited(MouseEvent e)  { hover = false; repaint(); }
                 @Override public void mouseClicked(MouseEvent e) { onClick.run(); }
             });
+        }
+
+        void setSelected(boolean s) {
+            this.active = s;
+            repaint();
         }
 
         @Override

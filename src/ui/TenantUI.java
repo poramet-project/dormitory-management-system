@@ -168,7 +168,7 @@ public class TenantUI extends JFrame {
         }
         menuItems.get(0).setSelected(true);
 
-        JLabel logoutBtn = label("🚪 ออกจากระบบ", 13, Font.PLAIN, new Color(200, 50, 50));
+        JLabel logoutBtn = label("Logout", 13, Font.PLAIN, new Color(200, 50, 50));
         logoutBtn.setBounds(20, 620, 150, 30);
         logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         logoutBtn.addMouseListener(new MouseAdapter() {

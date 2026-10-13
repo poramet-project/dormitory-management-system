@@ -28,6 +28,11 @@ public class GuestUI extends JFrame {
     private JPanel grid;
     private JScrollPane scroll;
 
+    // CardLayout สำหรับสลับหน้ารายการและหน้ารายละเอียดแบบ TenantUI
+    private final CardLayout cardLayout;
+    private final JPanel cardsContainer;
+    private final JPanel detailCardWrapper;
+
     public GuestUI() {
         this.logic = new GuestLogic();
 
@@ -37,9 +42,23 @@ public class GuestUI extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
+        cardLayout = new CardLayout();
+        cardsContainer = new JPanel(cardLayout);
+
+        // การ์ด 1: หน้ารายการค้นหาห้องพัก
+        cardsContainer.add(createListPanel(), "LIST");
+
+        // การ์ด 2: คอนเทนเนอร์สำหรับใส่ GuestRoomUI
+        detailCardWrapper = new JPanel(new BorderLayout());
+        cardsContainer.add(detailCardWrapper, "DETAIL");
+
+        setContentPane(cardsContainer);
+        setVisible(true);
+    }
+
+    private JPanel createListPanel() {
         JPanel root = new JPanel(null);
         root.setBackground(BG);
-        setContentPane(root);
 
         // 1. หัวเรื่อง
         JLabel title = label("ค้นหาห้องพักว่าง", Font.BOLD, 24, TEXT);
@@ -58,7 +77,6 @@ public class GuestUI extends JFrame {
         scroll = new JScrollPane(grid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
         scroll.getViewport().setBackground(BG);
-        // ป้องกันรูปภาพลอยทะลุขึ้นมาทับ Filter/Navbar ด้านบน
         scroll.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
 
         scroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -75,12 +93,34 @@ public class GuestUI extends JFrame {
         JPanel nav = createNavbar();
         root.add(nav);
 
-        // จัดลำดับ Z-Order ให้ Navbar และ Filter อยู่เลเยอร์บนสุด
         root.setComponentZOrder(nav, 0);
         root.setComponentZOrder(filterCard, 1);
         root.setComponentZOrder(scroll, 2);
 
-        setVisible(true);
+        return root;
+    }
+
+    /**
+     * เปลี่ยนไปแสดงหน้ารายละเอียดห้องพักโดยไม่เปิดหน้าต่างใหม่
+     */
+    public void showDetailView(GuestLogic.RoomViewModel room) {
+        detailCardWrapper.removeAll();
+        GuestRoomUI detailUI = new GuestRoomUI(this, room.numberText, room.typeShort, room.priceText, room.statusLabel);
+        detailCardWrapper.add(detailUI, BorderLayout.CENTER);
+        detailCardWrapper.revalidate();
+        detailCardWrapper.repaint();
+
+        setTitle("KU Dormitory - รายละเอียด " + room.numberText);
+        cardLayout.show(cardsContainer, "DETAIL");
+    }
+
+    /**
+     * ย้อนกลับมาแสดงหน้ารายการค้นหาห้องพัก
+     */
+    public void showListView() {
+        loadRoomCards();
+        setTitle("KU Dormitory - ค้นหาห้องพัก");
+        cardLayout.show(cardsContainer, "LIST");
     }
 
     private void loadRoomCards() {
@@ -124,8 +164,9 @@ public class GuestUI extends JFrame {
             lblName.setBounds(650, 15, 280, 26);
             nav.add(lblName);
 
-            JButton btnLogout = flatButton("ออกจากระบบ", false);
+            JButton btnLogout = flatButton("Logout", false);
             btnLogout.setBounds(940, 12, 120, 32);
+            btnLogout.setForeground(new Color(220, 38, 38));
             btnLogout.addActionListener(e -> {
                 logic.performLogout();
                 LoginUI login = new LoginUI();
@@ -135,7 +176,7 @@ public class GuestUI extends JFrame {
             });
             nav.add(btnLogout);
         } else {
-            JButton btnLogin = flatButton("เข้าสู่ระบบ", true);
+            JButton btnLogin = flatButton("Login", true);
             btnLogin.setBounds(940, 12, 120, 32);
             btnLogin.addActionListener(e -> {
                 LoginUI login = new LoginUI();
@@ -152,7 +193,6 @@ public class GuestUI extends JFrame {
     private JPanel createFilterCard() {
         ShadowCardPanel card = new ShadowCardPanel(WHITE, BORDER, 12);
         card.setLayout(null);
-        // ปรับการ์ดขยายความสูงเป็น 96px ไม่ให้โดนกินขอบ
         card.setBounds(40, 140, 1004, 96);
 
         card.add(fieldLabel("ประเภทห้องพัก", 20, 14));
@@ -217,12 +257,7 @@ public class GuestUI extends JFrame {
         btn.setBounds(16, 270, w - 32, 38);
         card.add(btn);
 
-        btn.addActionListener(e -> {
-            GuestRoomUI detailUI = new GuestRoomUI(room.numberText, room.typeShort, room.priceText, room.statusLabel);
-            detailUI.setLocation(getLocation());
-            detailUI.setVisible(true);
-            dispose();
-        });
+        btn.addActionListener(e -> showDetailView(room));
 
         // --- Animation Spring Bounce 60 FPS ---
         final Timer[] animTimer = new Timer[1];
@@ -324,7 +359,6 @@ public class GuestUI extends JFrame {
         return l;
     }
 
-    // --- ดึงฟอนต์ Tahoma จาก UIManager ใน Main.java ---
     public static JLabel label(String text, int style, int size, Color color) {
         JLabel l = new JLabel(text);
         Font baseFont = UIManager.getFont("Label.font");
@@ -337,7 +371,6 @@ public class GuestUI extends JFrame {
         return l;
     }
 
-    // --- ดึงฟอนต์ Tahoma จาก UIManager และปรับขนาดฟอนต์เมนูค้นหาเป็น 14px ---
     private static JComboBox<String> combo(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
         Font baseFont = UIManager.getFont("ComboBox.font");
@@ -404,7 +437,6 @@ public class GuestUI extends JFrame {
         }
     }
 
-    // --- ดึงฟอนต์ Tahoma จาก UIManager ---
     public static JButton flatButton(String text, boolean isPrimary) {
         JButton btn = new JButton(text);
         Font baseFont = UIManager.getFont("Button.font");
