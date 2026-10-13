@@ -38,6 +38,8 @@ public class AdminManageProblemUI extends JPanel {
         add(createTable());
         add(createDetailPanel());
         bindSelection();
+        initActions();
+        refreshData();
     }
 
     private void createToolbar() {
@@ -53,18 +55,14 @@ public class AdminManageProblemUI extends JPanel {
         typeFilter.setBounds(20, 64, 155, 30);
         add(typeFilter);
 
-        int total = logic.getAllProblems().size();
-        lblCount = AdminUI.label("แสดง " + total + " จาก " + total + " รายการ • เลือกแถวเพื่อดูรายละเอียด",
-                Font.PLAIN, 11, TEXT_GRAY);
+        lblCount = AdminUI.label("แสดง 0 รายการ • เลือกแถวเพื่อดูรายละเอียด", Font.PLAIN, 11, TEXT_GRAY);
         lblCount.setBounds(185, 64, 375, 30);
         add(lblCount);
     }
 
     private JScrollPane createTable() {
         String[] columns = {"เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ"};
-        Object[][] rows = logic.getTableRows();
-
-        tableModel = new DefaultTableModel(rows, columns) {
+        tableModel = new DefaultTableModel(new Object[0][0], columns) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
 
@@ -82,10 +80,6 @@ public class AdminManageProblemUI extends JPanel {
         table.getTableHeader().setDefaultRenderer(new HeaderRenderer());
         table.getTableHeader().setPreferredSize(new Dimension(0, 36));
         table.getTableHeader().setReorderingAllowed(false);
-        table.setRowSelectionInterval(0, 0);
-
-        int[] widths = {46, 110, 40, 118, 86, 140};
-        for (int i = 0; i < widths.length; i++) table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -95,9 +89,6 @@ public class AdminManageProblemUI extends JPanel {
     }
 
     private JPanel createDetailPanel() {
-        List<AdminManageProblemLogic.ProblemModel> list = logic.getAllProblems();
-        AdminManageProblemLogic.ProblemModel pModel = list.get(0);
-
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
         p.setBounds(580, 0, 330, 640);
@@ -107,22 +98,21 @@ public class AdminManageProblemUI extends JPanel {
         detailTitle.setBounds(20, 20, 276, 24);
         p.add(detailTitle);
 
-        detailSub = AdminUI.label(pModel.id + " • " + pModel.topic, Font.PLAIN, 11, TEXT_GRAY);
+        detailSub = AdminUI.label("- • แจ้งซ่อม", Font.PLAIN, 11, TEXT_GRAY);
         detailSub.setBounds(20, 46, 276, 18);
         p.add(detailSub);
         p.add(divider(78));
 
-        lblName     = detailRow(p, "ผู้ยื่นคำขอ", pModel.name, 94);
-        lblPhone    = detailRow(p, "เบอร์โทรศัพท์", pModel.phone, 122);
-        lblRoom     = detailRow(p, "ห้องพัก", pModel.room, 150);
-        lblCategory = detailRow(p, "หมวดหมู่", pModel.category, 178);
-        lblTopic    = detailRow(p, "เรื่อง", pModel.topic, 206);
-        lblDate     = detailRow(p, "วันที่แจ้ง", pModel.date, 234);
-        lblStatus   = detailRow(p, "สถานะ (ผู้เช่าอัปเดต)", pModel.status, 262);
+        lblName     = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
+        lblPhone    = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
+        lblRoom     = detailRow(p, "ห้องพัก", "-", 150);
+        lblCategory = detailRow(p, "หมวดหมู่", "-", 178);
+        lblTopic    = detailRow(p, "เรื่อง", "-", 206);
+        lblDate     = detailRow(p, "วันที่แจ้ง", "-", 234);
+        lblStatus   = detailRow(p, "สถานะ", "-", 262);
 
         p.add(fieldLabel("รายละเอียดปัญหา", 294));
         txtDescription = textArea(false);
-        txtDescription.setText(pModel.desc);
         p.add(areaScroll(txtDescription, 316, 84));
 
         AdminUI.RoundedPanel note = new AdminUI.RoundedPanel(AdminUI.PRIMARY_BG, AdminUI.PRIMARY_BG, 10);
@@ -142,6 +132,19 @@ public class AdminManageProblemUI extends JPanel {
         return p;
     }
 
+    public void refreshData() {
+        tableModel.setDataVector(logic.getTableRows(), new String[]{"เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ"});
+        int[] widths = {46, 110, 40, 118, 86, 140};
+        for (int i = 0; i < widths.length; i++) table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+
+        int total = logic.getAllProblems().size();
+        lblCount.setText("แสดง " + total + " จาก " + total + " รายการ • เลือกแถวเพื่อดูรายละเอียด");
+
+        if (table.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        }
+    }
+
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
@@ -158,6 +161,19 @@ public class AdminManageProblemUI extends JPanel {
                     lblDate.setText(p.date);
                     lblStatus.setText(p.status);
                     txtDescription.setText(p.desc);
+                }
+            }
+        });
+    }
+
+    private void initActions() {
+        btnAccept.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row != -1) {
+                String complaintId = String.valueOf(tableModel.getValueAt(row, 0));
+                if (logic.acceptProblem(complaintId)) {
+                    JOptionPane.showMessageDialog(this, "รับเรื่องและปรับสถานะเป็น 'ช่างกำลังเข้าตรวจสอบ' เรียบร้อย", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                    refreshData();
                 }
             }
         });

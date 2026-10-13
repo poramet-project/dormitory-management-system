@@ -34,7 +34,7 @@ public class AdminManageRoomUI extends JPanel {
     JComboBox<String> cbType;
     JRadioButton rbAvailable, rbOccupied, rbMaintenance;
     JButton btnCancel, btnSave;
-    
+
     private String selectedRoomId = "";
 
     public AdminManageRoomUI() {
@@ -49,7 +49,7 @@ public class AdminManageRoomUI extends JPanel {
         initActions();
     }
 
-    private void loadTableData() {
+    public void loadTableData() {
         tableModel.setRowCount(0);
         List<AdminManageRoomLogic.RoomModel> rooms = AdminManageRoomLogic.getAllRooms();
         for (AdminManageRoomLogic.RoomModel r : rooms) {
@@ -73,7 +73,7 @@ public class AdminManageRoomUI extends JPanel {
 
     private JScrollPane createTable() {
         String[] columns = {"รหัส", "เลขห้อง", "ชั้น", "ประเภท", "ราคา/เดือน", "สถานะ", "การจัดการ"};
-        
+
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -177,8 +177,8 @@ public class AdminManageRoomUI extends JPanel {
                 txtRent.setText(rent);
                 cbType.setSelectedItem(type);
 
-                if ("ห้องว่าง".equals(status)) rbAvailable.setSelected(true);
-                else if ("มีผู้เช่า".equals(status)) rbOccupied.setSelected(true);
+                if (status.contains("ว่าง")) rbAvailable.setSelected(true);
+                else if (status.contains("มีผู้เช่า")) rbOccupied.setSelected(true);
                 else rbMaintenance.setSelected(true);
             }
         });
@@ -192,11 +192,13 @@ public class AdminManageRoomUI extends JPanel {
                 String num = txtNumber.getText().trim();
                 int rent = Integer.parseInt(txtRent.getText().trim().replace(",", ""));
                 String type = (String) cbType.getSelectedItem();
-                String status = rbAvailable.isSelected() ? "ห้องว่าง" : (rbOccupied.isSelected() ? "มีผู้เช่า" : "อยู่ระหว่างปรับปรุง");
+                String status = rbAvailable.isSelected() ? "AVAILABLE" : (rbOccupied.isSelected() ? "OCCUPIED" : "MAINTENANCE");
 
+                // บันทึก/อัปเดตเฉพาะไฟล์ rooms.csv เท่านั้น
                 AdminManageRoomLogic.saveOrUpdateRoom(selectedRoomId, num, type, rent, status);
+                
                 loadTableData();
-                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องเรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องพักใน rooms.csv เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "ข้อมูลไม่ถูกต้อง: " + ex.getMessage(), "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
             }

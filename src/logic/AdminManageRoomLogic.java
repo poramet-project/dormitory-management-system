@@ -1,14 +1,12 @@
 package logic;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/** Logic สำหรับจัดการห้องพัก (อ่าน/เพิ่ม/อัปเดตข้อมูลใน rooms.csv) */
+/**
+ * Logic สำหรับจัดการห้องพัก (อ่าน/เพิ่ม/อัปเดต ข้อมูลเฉพาะไฟล์ rooms.csv เท่านั้น)
+ */
 public class AdminManageRoomLogic {
 
     public static class RoomModel {
@@ -40,39 +38,31 @@ public class AdminManageRoomLogic {
         return list;
     }
 
-    /** บันทึกหรืออัปเดตข้อมูลห้องพักลงใน rooms.csv */
+    /**
+     * บันทึกหรืออัปเดตข้อมูลห้องพักเฉพาะไฟล์ rooms.csv
+     */
     public static void saveOrUpdateRoom(String roomId, String roomNumber, String roomType, int rent, String status) throws IOException {
-        Path file = DataStore.file("rooms.csv").toPath();
-        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        List<String> newLines = new ArrayList<>();
-
-        boolean updated = false;
-        String header = lines.isEmpty() ? "roomId,roomNumber,roomType,baseRent,status" : lines.get(0);
-        newLines.add(header);
-
-        // แปลงประเภทห้องกลับเป็นค่าดั้งเดิมใน CSV
         String typeVal = roomType.contains("แอร์") ? "Air" : "Fan";
-        String statusVal = status.equals("ว่าง") ? "AVAILABLE" : (status.equals("มีผู้เช่า") ? "OCCUPIED" : "MAINTENANCE");
-
-        for (int i = 1; i < lines.size(); i++) {
-            String line = lines.get(i).trim();
-            if (line.isEmpty() || line.startsWith("#")) continue;
-            String[] parts = line.split(",", -1);
-            if (parts.length > 0 && parts[0].trim().equalsIgnoreCase(roomId)) {
-                // แทนที่ข้อมูลเดิม
-                newLines.add(String.join(",", roomId, roomNumber, typeVal, String.valueOf(rent), statusVal));
-                updated = true;
-            } else {
-                newLines.add(line);
-            }
+        
+        // แปลงค่าสถานะภาษาไทย/อังกฤษ ให้เป็น Enum ใน rooms.csv
+        String statusVal;
+        if (status.contains("ว่าง") || "AVAILABLE".equalsIgnoreCase(status)) {
+            statusVal = "AVAILABLE";
+        } else if (status.contains("มีผู้เช่า") || "OCCUPIED".equalsIgnoreCase(status)) {
+            statusVal = "OCCUPIED";
+        } else {
+            statusVal = "MAINTENANCE";
         }
 
-        // ถ้าไม่พบ ID เดิม ให้เพิ่มเป็นรายการใหม่
-        if (!updated) {
-            String newId = "R" + roomNumber;
-            newLines.add(String.join(",", newId, roomNumber, typeVal, String.valueOf(rent), statusVal));
+        // หากเป็นห้องใหม่ที่ยังไม่มี ID ให้สร้าง ID ขึ้นมาใหม่ เช่น R101
+        if (DataStore.blank(roomId)) {
+            roomId = "R" + roomNumber;
         }
 
-        Files.write(file, newLines, StandardCharsets.UTF_8);
+        // อัปเดตข้อมูลเฉพาะไฟล์ rooms.csv
+        DataStore.updateCell("rooms.csv", "roomId", roomId, "roomNumber", roomNumber);
+        DataStore.updateCell("rooms.csv", "roomId", roomId, "roomType", typeVal);
+        DataStore.updateCell("rooms.csv", "roomId", roomId, "baseRent", String.valueOf(rent));
+        DataStore.setRoomStatus(roomId, statusVal);
     }
 }

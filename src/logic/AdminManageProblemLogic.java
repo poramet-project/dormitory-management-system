@@ -2,6 +2,7 @@ package logic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class AdminManageProblemLogic {
 
@@ -23,10 +24,29 @@ public class AdminManageProblemLogic {
 
     public List<ProblemModel> getAllProblems() {
         List<ProblemModel> list = new ArrayList<>();
-        list.add(new ProblemModel("C004", "อนันต์ มุ่งมั่น", "086-111-2233", "201", "12 ต.ค. 2569", "กำลังดำเนินการ", "เครื่องปรับอากาศ", "-", "แอร์เสีย"));
-        list.add(new ProblemModel("C003", "กิตติพงษ์ รักสงบ", "089-876-5432", "101", "9 ต.ค. 2569", "กำลังดำเนินการ", "เครื่องปรับอากาศ", "-", "แอร์เสีย"));
-        list.add(new ProblemModel("C002", "กิตติพงษ์ รักสงบ", "089-876-5432", "101", "9 ต.ค. 2569", "กำลังดำเนินการ", "ระบบประปา", "ท่อน้ำทิ้งตรงพื้นห้องน้ำตันครับ เวลาอาบน้ำแล้วน้ำไม่ยอมลง เอ่อท่วมขึ้นมาเกือบล้นห้องเลยครับ", "ท่อน้ำตัน"));
-        list.add(new ProblemModel("C001", "กิตติพงษ์ รักสงบ", "089-876-5432", "101", "9 ต.ค. 2569", "กำลังดำเนินการ", "เครื่องปรับอากาศ / พัดลม", "เปิด 16 องศายังไม่เย็นเลยครับ", "แอร์ไม่เย็น"));
+        List<Map<String, String>> rows = DataStore.readTable(DataStore.COMPLAINTS_FILE);
+        for (Map<String, String> m : rows) {
+            String id = m.getOrDefault("complaintId", "-");
+            String userId = m.getOrDefault("userId", "-");
+            String roomId = m.getOrDefault("roomId", "-");
+            String category = m.getOrDefault("category", "-");
+            String topic = m.getOrDefault("topic", "-");
+            String desc = m.getOrDefault("description", "-");
+            String dateRaw = m.getOrDefault("requestDate", "-");
+            String statusRaw = m.getOrDefault("status", "PENDING");
+
+            LoginLogic.User u = LoginLogic.findUser(userId);
+            String name = u != null ? u.fullName : userId;
+            String phone = u != null ? u.phone : "-";
+
+            DataStore.Room r = DataStore.room(roomId);
+            String roomNum = r != null ? r.number : roomId;
+
+            String statusThai = "IN_PROGRESS".equalsIgnoreCase(statusRaw) ? "ช่างกำลังเข้าตรวจสอบ" :
+                               ("RESOLVED".equalsIgnoreCase(statusRaw) ? "เสร็จสิ้น" : "กำลังดำเนินการ");
+
+            list.add(new ProblemModel(id, name, phone, roomNum, DataStore.thaiDate(dateRaw), statusThai, category, desc, topic));
+        }
         return list;
     }
 
@@ -38,5 +58,9 @@ public class AdminManageProblemLogic {
             rows[i] = new Object[]{p.id, p.name, p.room, p.topic, p.date, p.status};
         }
         return rows;
+    }
+
+    public boolean acceptProblem(String complaintId) {
+        return DataStore.updateCell(DataStore.COMPLAINTS_FILE, "complaintId", complaintId, "status", "IN_PROGRESS");
     }
 }
