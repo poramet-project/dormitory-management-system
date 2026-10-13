@@ -26,16 +26,16 @@ public class GuestRoomUI extends JFrame {
         setResizable(false);
 
         JPanel root = new JPanel(null);
-        root.setBackground(AdminUI.BG);
+        root.setBackground(GuestUI.BG);
         setContentPane(root);
 
-        // --- Navbar ด้านบน ---
+        // --- Navbar ---
         JPanel nav = new JPanel(null);
-        nav.setBackground(AdminUI.WHITE);
+        nav.setBackground(GuestUI.WHITE);
         nav.setBounds(0, 0, 1100, 56);
-        nav.setBorder(new MatteBorder(0, 0, 1, 0, AdminUI.BORDER));
+        nav.setBorder(new MatteBorder(0, 0, 1, 0, GuestUI.BORDER));
 
-        JButton btnBack = new AdminManageRoomUI.FlatButton("← ย้อนกลับ", false);
+        JButton btnBack = GuestUI.flatButton("← ย้อนกลับ", false);
         btnBack.setBounds(40, 12, 100, 32);
         btnBack.addActionListener(e -> {
             GuestUI guest = new GuestUI();
@@ -45,22 +45,22 @@ public class GuestRoomUI extends JFrame {
         });
         nav.add(btnBack);
 
-        JLabel brand = AdminUI.label("รายละเอียดห้องพัก", Font.BOLD, 16, AdminUI.TEXT);
+        JLabel brand = GuestUI.label("รายละเอียดห้องพัก", Font.BOLD, 16, GuestUI.TEXT);
         brand.setBounds(160, 14, 250, 26);
         nav.add(brand);
 
         LoginLogic.User cu = logic.getCurrentUser();
         if (cu != null) {
             String shown = (cu.fullName == null || cu.fullName.isEmpty()) ? cu.username : cu.fullName;
-            JLabel lblName = AdminUI.label(shown, Font.BOLD, 13, AdminUI.TEXT);
+            JLabel lblName = GuestUI.label(shown, Font.BOLD, 13, GuestUI.TEXT);
             lblName.setHorizontalAlignment(SwingConstants.RIGHT);
             lblName.setBounds(780, 15, 280, 26);
             nav.add(lblName);
         }
         root.add(nav);
 
-        // --- การ์ดบน: แสดงรูปภาพขนาดใหญ่และข้อมูลหลักของห้อง ---
-        AdminUI.RoundedPanel topCard = new AdminUI.RoundedPanel(AdminUI.WHITE, AdminUI.BORDER, 12);
+        // --- การ์ดบน: แสดงรูปภาพและข้อมูลห้อง ---
+        GuestUI.ShadowCardPanel topCard = new GuestUI.ShadowCardPanel(GuestUI.WHITE, GuestUI.BORDER, 12);
         topCard.setLayout(null);
         topCard.setBounds(70, 76, 960, 190);
 
@@ -69,7 +69,7 @@ public class GuestRoomUI extends JFrame {
         bigImg.setBounds(16, 16, 240, 158);
         topCard.add(bigImg);
 
-        JLabel lblTitle = AdminUI.label("ห้องพักหมายเลข " + roomNumOnly, Font.BOLD, 20, AdminUI.TEXT);
+        JLabel lblTitle = GuestUI.label("ห้องพักหมายเลข " + roomNumOnly, Font.BOLD, 22, GuestUI.TEXT);
         lblTitle.setBounds(280, 20, 400, 28);
         topCard.add(lblTitle);
 
@@ -85,26 +85,26 @@ public class GuestRoomUI extends JFrame {
             }
         };
         badgeWrap.setOpaque(false);
-        badgeWrap.setBounds(280, 56, 140, 26);
-        badgeWrap.add(AdminUI.label(logic.getRoomType(), Font.BOLD, 12, AdminUI.PRIMARY));
+        badgeWrap.setBounds(280, 56, 130, 26);
+        badgeWrap.add(GuestUI.label(logic.getRoomType(), Font.BOLD, 12, GuestUI.PRIMARY));
         topCard.add(badgeWrap);
 
-        JLabel lblSubInfo = AdminUI.label("อาคารหอพักนักศึกษา • ชั้น " + logic.getFloorChar() + " • สถานะห้อง: " + logic.getRoomStatus(), Font.PLAIN, 12, AdminUI.TEXT_GRAY);
-        lblSubInfo.setBounds(280, 94, 600, 20);
+        JLabel lblSubInfo = GuestUI.label("อาคารหอพักนักศึกษา  •  ชั้น " + logic.getFloorChar() + "  •  สถานะห้อง: " + logic.getRoomStatus(), Font.PLAIN, 13, GuestUI.TEXT_GRAY);
+        lblSubInfo.setBounds(280, 96, 600, 20);
         topCard.add(lblSubInfo);
 
-        JLabel lblPrice = AdminUI.label("อัตราค่าเช่า: " + logic.getRoomPrice() + " / เดือน", Font.BOLD, 16, AdminUI.PRIMARY);
-        lblPrice.setBounds(280, 128, 400, 24);
+        JLabel lblPrice = GuestUI.label("อัตราค่าเช่า: " + logic.getRoomPrice() + " / เดือน", Font.BOLD, 18, GuestUI.PRIMARY);
+        lblPrice.setBounds(280, 128, 400, 26);
         topCard.add(lblPrice);
 
         root.add(topCard);
 
-        // --- การ์ดล่าง: รายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้อง ---
-        AdminUI.RoundedPanel bottomCard = new AdminUI.RoundedPanel(AdminUI.WHITE, AdminUI.BORDER, 12);
+        // --- การ์ดล่าง: เฟอร์นิเจอร์ ---
+        GuestUI.ShadowCardPanel bottomCard = new GuestUI.ShadowCardPanel(GuestUI.WHITE, GuestUI.BORDER, 12);
         bottomCard.setLayout(null);
         bottomCard.setBounds(70, 280, 960, 210);
 
-        JLabel furnTitle = AdminUI.label("รายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้อง", Font.BOLD, 15, AdminUI.TEXT);
+        JLabel furnTitle = GuestUI.label("รายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้อง", Font.BOLD, 15, GuestUI.TEXT);
         furnTitle.setBounds(24, 20, 400, 22);
         bottomCard.add(furnTitle);
 
@@ -116,7 +116,7 @@ public class GuestRoomUI extends JFrame {
             int fx = col == 0 ? 30 : 500;
             int fy = 56 + (row * 34);
 
-            JLabel itemLbl = AdminUI.label(items[i], Font.PLAIN, 13, new Color(55, 65, 81));
+            JLabel itemLbl = GuestUI.label(items[i], Font.PLAIN, 13, new Color(51, 65, 85));
             itemLbl.setBounds(fx, fy, 420, 24);
             bottomCard.add(itemLbl);
         }
@@ -124,12 +124,27 @@ public class GuestRoomUI extends JFrame {
         root.add(bottomCard);
 
         // --- ปุ่มกดจองห้องพัก ---
-        JButton btnBook = new AdminManageRoomUI.FlatButton("จองห้องพักนี้", true);
-        btnBook.setBounds(70, 508, 960, 44);
-        if (!logic.isAvailable()) {
+        JButton btnBook = GuestUI.flatButton("จองห้องพักนี้", true);
+        btnBook.setBounds(70, 508, 960, 46);
+        
+        Font baseFont = UIManager.getFont("Button.font");
+        if (baseFont != null) {
+            btnBook.setFont(baseFont.deriveFont(Font.BOLD, 14f));
+        }
+
+        // สถานะปุ่มตาม User ปัจจุบัน
+        if (logic.isPendingByCurrentUser()) {
+            btnBook.setEnabled(false);
+            btnBook.setText("รอการอนุมัติการจองห้องพักนี้");
+            btnBook.setBackground(new Color(254, 240, 138));
+            btnBook.setForeground(new Color(133, 77, 14));
+        } else if (!logic.isAvailable()) {
             btnBook.setEnabled(false);
             btnBook.setText("ห้องนี้ไม่ว่าง");
+            btnBook.setBackground(new Color(203, 213, 225));
+            btnBook.setForeground(new Color(100, 116, 139));
         }
+
         btnBook.addActionListener(e -> {
             LoginLogic.User user = logic.getCurrentUser();
 
@@ -195,19 +210,23 @@ public class GuestRoomUI extends JFrame {
 
         @Override
         protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            
             int w = getWidth(), h = getHeight();
 
             if (w > 0 && h > 0) {
-                g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
-            }
+                g2.clipRect(0, 0, w, h);
+                g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 12, 12));
 
-            if (photo != null) {
-                g2.drawImage(photo, 0, 0, w, h, null);
-            } else {
-                g2.setColor(new Color(245, 240, 232));
-                g2.fillRect(0, 0, w, h);
+                if (photo != null) {
+                    g2.drawImage(photo, 0, 0, w, h, this);
+                } else {
+                    g2.setColor(new Color(241, 245, 249));
+                    g2.fillRect(0, 0, w, h);
+                }
             }
             g2.dispose();
         }

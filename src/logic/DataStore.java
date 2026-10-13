@@ -12,8 +12,6 @@ import java.util.Map;
 
 /**
  * ศูนย์กลางอ่าน/เขียนไฟล์ CSV ของระบบ (rooms, contracts, room_transfers, complaints, bookings)
- * - อ่านตามชื่อ header ไม่ใช่ตำแหน่งคอลัมน์ จึงไม่พังเวลาเพิ่ม/สลับคอลัมน์
- * - รองรับค่าที่ครอบด้วย "..." และมีเครื่องหมายจุลภาคอยู่ข้างใน
  */
 public final class DataStore {
     private DataStore() {
@@ -44,7 +42,6 @@ public final class DataStore {
 
     private static final String[] DIRS = { "src/data/", "data/", "DMS/src/data/", "src/", "" };
 
-    /** หาไฟล์ตามชื่อ ถ้าไม่เจอที่ไหนเลยจะใช้ data/<name> */
     public static File file(String name) {
         for (String d : DIRS) {
             File f = new File(d + name);
@@ -84,10 +81,6 @@ public final class DataStore {
         return out.toArray(new String[0]);
     }
 
-    /**
-     * อ่านทั้งตาราง คืนเป็นรายการของ Map(ชื่อคอลัมน์ -> ค่า)
-     * ข้ามบรรทัดว่างและบรรทัดขึ้นต้นด้วย #
-     */
     public static synchronized List<Map<String, String>> readTable(String name) {
         List<Map<String, String>> rows = new ArrayList<>();
         File f = file(name);
@@ -130,7 +123,6 @@ public final class DataStore {
         return v;
     }
 
-    /** เพิ่มหนึ่งแถวท้ายไฟล์ ถ้าไฟล์ว่างจะเขียน header ให้ก่อน */
     public static synchronized void appendRow(String name, String header, String... values) throws IOException {
         File f = file(name);
         if (f.getParentFile() != null)
@@ -152,9 +144,6 @@ public final class DataStore {
         Files.write(f.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * สร้างรหัสถัดไป เช่น nextId("complaints.csv","complaintId","C",3) -> C001, C002 ...
-     */
     public static synchronized String nextId(String name, String idColumn, String prefix, int digits) {
         int max = 0;
         for (Map<String, String> m : readTable(name)) {
@@ -171,7 +160,6 @@ public final class DataStore {
 
     // ===================== ตัวช่วยทั่วไป =====================
 
-    /** null / ว่าง / "-" ถือว่าไม่มีค่า */
     public static boolean blank(String s) {
         if (s == null)
             return true;
@@ -194,7 +182,6 @@ public final class DataStore {
     private static final String[] TH_MONTHS = { "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
             "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค." };
 
-    /** "2027-05-31" -> "31 พ.ค. 2570" */
     public static String thaiDate(String iso) {
         try {
             LocalDate d = LocalDate.parse(iso.trim());
@@ -222,6 +209,19 @@ public final class DataStore {
         for (Map<String, String> m : readTable(BOOKINGS_FILE)) {
             if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", "")) &&
                 m.getOrDefault("fullName", "").equalsIgnoreCase(fullName.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** เช็คว่า User รายนี้เป็นเจ้าของคำขอจองที่กำลัง PENDING ของห้องนี้หรือไม่ */
+    public static boolean isRoomPendingByUser(String roomId, String fullName) {
+        if (blank(roomId) || blank(fullName)) return false;
+        for (Map<String, String> m : readTable(BOOKINGS_FILE)) {
+            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", "")) &&
+                roomId.equalsIgnoreCase(m.getOrDefault("roomId", "")) &&
+                fullName.trim().equalsIgnoreCase(m.getOrDefault("fullName", "").trim())) {
                 return true;
             }
         }
@@ -261,11 +261,11 @@ public final class DataStore {
         public String statusThai() {
             switch (status) {
                 case "AVAILABLE":
+                case "RESERVED":
+                case "PENDING":
                     return "ห้องว่าง";
                 case "OCCUPIED":
                     return "มีผู้เช่า";
-                case "RESERVED":
-                    return "รออนุมัติการจอง";
                 case "MAINTENANCE":
                 case "UNDER_RENOVATION":
                     return "อยู่ระหว่างปรับปรุง";
@@ -274,7 +274,6 @@ public final class DataStore {
             }
         }
 
-        /** ชั้น: ตัดเลข 2 หลักท้ายของเลขห้องออก เช่น 101 -> 1, 205 -> 2, 1205 -> 12 */
         public String floor() {
             if (number.isEmpty() || !number.matches("\\d+"))
                 return "-";
@@ -307,11 +306,10 @@ public final class DataStore {
         return null;
     }
 
-    /** ห้องที่ว่างและย้ายเข้าได้ (ตัดห้องของตัวเองออก) */
     public static List<Room> availableRooms(String excludeRoomId) {
         List<Room> list = new ArrayList<>();
         for (Room r : rooms()) {
-            if (r.status.equals("AVAILABLE")
+            if (!r.status.equals("OCCUPIED")
                     && !r.id.equalsIgnoreCase(excludeRoomId == null ? "" : excludeRoomId.trim())) {
                 list.add(r);
             }
@@ -368,9 +366,6 @@ public final class DataStore {
         return list;
     }
 
-    /**
-     * สัญญาของผู้ใช้ (จับคู่ด้วย userId ถ้าไม่มี userId ใช้ roomId) เลือกฉบับ ACTIVE ก่อน
-     */
     public static Contract contractFor(LoginLogic.User user) {
         if (user == null)
             return null;
@@ -388,12 +383,10 @@ public final class DataStore {
         return best;
     }
 
-    /** บันทึกสัญญาแบบ ACTIVE ทันที (ใช้กรณี admin สร้างเอง) */
     public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent) {
         return saveContract(userId, roomId, monthlyRent, "ACTIVE");
     }
 
-    /** บันทึกสัญญา/คำขอจองลงใน contracts.csv ด้วยสถานะที่ระบุ (เช่น PENDING) คืน true ถ้าเขียนสำเร็จ */
     public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent, String status) {
         try {
             String contractId = nextId(CONTRACTS_FILE, "contractId", "CNT", 3);
@@ -408,7 +401,6 @@ public final class DataStore {
         }
     }
 
-    /** ผู้ใช้คนนี้มีคำขอจองที่รออนุมัติอยู่หรือไม่ */
     public static boolean hasPendingBooking(String userId) {
         if (blank(userId))
             return false;
@@ -419,7 +411,6 @@ public final class DataStore {
         return false;
     }
 
-    /** คำขอจองทั้งหมดที่รอ admin อนุมัติ */
     public static List<Contract> pendingContracts() {
         List<Contract> list = new ArrayList<>();
         for (Contract c : contracts()) {
@@ -429,7 +420,6 @@ public final class DataStore {
         return list;
     }
 
-    /** admin อนุมัติ: สัญญา ACTIVE (เริ่มนับจากวันนี้), ห้อง OCCUPIED, ผู้ใช้เป็น TENANT */
     public static synchronized boolean approveBooking(String contractId) {
         Contract c = null;
         for (Contract x : pendingContracts()) {
@@ -450,7 +440,6 @@ public final class DataStore {
         return true;
     }
 
-    /** admin ปฏิเสธ: สัญญา REJECTED และปล่อยห้องกลับเป็น AVAILABLE */
     public static synchronized boolean rejectBooking(String contractId) {
         Contract c = null;
         for (Contract x : pendingContracts()) {
@@ -467,7 +456,6 @@ public final class DataStore {
         return true;
     }
 
-    /** ผู้ใช้คนนี้มีสัญญา ACTIVE อยู่แล้วหรือไม่ */
     public static boolean hasActiveContract(String userId) {
         if (blank(userId))
             return false;
@@ -478,7 +466,6 @@ public final class DataStore {
         return false;
     }
 
-    /** หาห้องจากเลขห้อง เช่น "101" */
     public static Room roomByNumber(String number) {
         if (blank(number))
             return null;
@@ -489,12 +476,10 @@ public final class DataStore {
         return null;
     }
 
-    /** เปลี่ยนสถานะห้องใน rooms.csv (เช่น AVAILABLE -> RESERVED -> OCCUPIED) */
     public static synchronized boolean setRoomStatus(String roomId, String newStatus) {
         return updateCell("rooms.csv", "roomId", roomId, "status", newStatus);
     }
 
-    /** แก้ค่าหนึ่งช่องในไฟล์ CSV: หาแถวที่คอลัมน์ keyCol = keyVal แล้วเปลี่ยนคอลัมน์ col เป็น newVal */
     public static synchronized boolean updateCell(String name, String keyCol, String keyVal, String col, String newVal) {
         File f = file(name);
         if (!f.exists())
@@ -546,7 +531,6 @@ public final class DataStore {
 
     // ===================== คำขอย้ายห้อง =====================
 
-    /** ผู้ใช้คนนี้มีคำขอย้ายห้องที่ยังรอพิจารณา (PENDING) อยู่หรือไม่ */
     public static boolean hasPendingTransfer(String userId) {
         if (blank(userId))
             return false;
@@ -589,7 +573,6 @@ public final class DataStore {
         }
     }
 
-    /** ดึงประวัติการแจ้งซ่อมทั้งหมดของผู้ใช้คนนี้ */
     public static List<Complaint> complaintsForUser(String userId) {
         List<Complaint> list = new ArrayList<>();
         if (blank(userId))

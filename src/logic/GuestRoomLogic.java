@@ -20,18 +20,15 @@ public class GuestRoomLogic {
     public String getRoomPrice() { return roomPrice; }
     public String getRoomStatus() { return roomStatus; }
 
-    /** ดึงเลขห้องอย่างเดียว เช่น "101" จาก "ห้อง 101" */
     public String getRoomNumberOnly() {
         return roomName.replace("ห้อง ", "").trim();
     }
 
-    /** ดึงข้อมูลชั้นของห้องพัก */
     public char getFloorChar() {
         String num = getRoomNumberOnly();
         return num.isEmpty() ? '1' : num.charAt(0);
     }
 
-    /** ดึงรายการเฟอร์นิเจอร์และอุปกรณ์ประจำห้องแยกตามประเภทห้องพัก */
     public String[] getFurnitureList() {
         if (roomType != null && (roomType.contains("แอร์") || roomType.equalsIgnoreCase("Air"))) {
             return new String[]{
@@ -55,44 +52,44 @@ public class GuestRoomLogic {
         }
     }
 
-    /** ตรวจสอบสถานะว่าห้องว่างหรือไม่ */
     public boolean isAvailable() {
-        return roomStatus != null && roomStatus.contains("ว่าง");
+        return roomStatus == null || !roomStatus.contains("มีผู้เช่า");
     }
 
-    /** ดึงผู้ใช้ปัจจุบัน */
     public LoginLogic.User getCurrentUser() {
         return LoginLogic.getCurrentUser();
     }
 
-    /** ส่งคำขอจองห้องพัก */
+    /** เช็คว่า User ปัจจุบันเป็นคนส่งคำขอจองห้องนี้ค้างไว้หรือไม่ */
+    public boolean isPendingByCurrentUser() {
+        LoginLogic.User u = getCurrentUser();
+        if (u == null) return false;
+        String fullName = DataStore.blank(u.fullName) ? u.username : u.fullName;
+        DataStore.Room r = DataStore.roomByNumber(getRoomNumberOnly());
+        return r != null && DataStore.isRoomPendingByUser(r.id, fullName);
+    }
+
     public BookResult bookRoom(LoginLogic.User user) {
         if (user == null) return BookResult.ROOM_NOT_FOUND;
 
-        // 1. ตรวจสอบว่าผู้ใช้มีห้องพักอยู่แล้วหรือไม่
         if (!DataStore.blank(user.roomId)) {
             return BookResult.ALREADY_HAS_ROOM;
         }
 
-        String roomNumOnly = getRoomNumberOnly();
-        DataStore.Room r = DataStore.roomByNumber(roomNumOnly);
-        if (r == null || !r.status.equalsIgnoreCase("AVAILABLE")) {
-            return BookResult.ROOM_NOT_AVAILABLE;
-        }
-
-        // 2. ตรวจสอบว่ามีคำขอจองค้างอยู่แล้วหรือไม่
         String fullName = DataStore.blank(user.fullName) ? user.username : user.fullName;
-        if (DataStore.hasPendingBookingByName(fullName)) {
+        if (DataStore.hasPendingBookingByName(fullName) || DataStore.hasPendingBooking(user.userId)) {
             return BookResult.PENDING_EXISTS;
         }
 
-        // 3. บันทึกข้อมูลคำขอจองลงใน bookings.csv
+        String roomNumOnly = getRoomNumberOnly();
+        DataStore.Room r = DataStore.roomByNumber(roomNumOnly);
+        if (r == null || "OCCUPIED".equalsIgnoreCase(r.status)) {
+            return BookResult.ROOM_NOT_AVAILABLE;
+        }
+
         String phone = DataStore.blank(user.phone) ? "-" : user.phone;
         boolean saved = DataStore.saveBooking(r.id, fullName, phone);
         if (!saved) return BookResult.ROOM_NOT_FOUND;
-
-        // 4. อัปเดตสถานะห้องใน rooms.csv ให้เป็น RESERVED
-        DataStore.setRoomStatus(r.id, "RESERVED");
 
         return BookResult.OK;
     }
