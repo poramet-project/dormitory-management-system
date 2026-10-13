@@ -1,83 +1,133 @@
 package logic;
 
-import java.io.IOException;
-import java.time.LocalDate;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
-/** Logic ของหน้าแจ้งซ่อม/ร้องเรียน (ไม่มี Swing) */
 public class TenantReportLogic {
 
-    public enum Status { EMPTY_TOPIC, NO_USER, SUCCESS }
-
-    public static class Result {
-        public final Status status;
-        public final String complaintId; // มีค่าเมื่อ SUCCESS
-
-        Result(Status status, String complaintId) {
-            this.status = status;
-            this.complaintId = complaintId;
-        }
-    }
-
+    public static final String[] STEPS = {"รับเรื่อง", "ดำเนินการ", "เสร็จสิ้น"};
     public static final String[] CATEGORIES = {
-            "ระบบประปา",
-            "ระบบไฟฟ้า",
-            "เครื่องปรับอากาศ",
-            "เฟอร์นิเจอร์",
-            "อื่นๆ"
+            "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ", "เฟอร์นิเจอร์", "อินเทอร์เน็ต", "อื่น ๆ"
     };
 
-    private final LoginLogic.User currentUser;
+    public static class ReportItem {
+        public String id;
+        public String date;
+        public String category;
+        public String title;
+        public String detail;
+        public String appointment;
+        public boolean allowEnter;
+        public int step; // 0=รับเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น
 
-    public TenantReportLogic(LoginLogic.User user) {
-        this.currentUser = user;
+        public ReportItem(String id, String date, String category, String title, 
+                          String detail, String appointment, boolean allowEnter, int step) {
+            this.id = id;
+            this.date = date;
+            this.category = category;
+            this.title = title;
+            this.detail = detail;
+            this.appointment = appointment;
+            this.allowEnter = allowEnter;
+            this.step = step;
+        }
+
+        public String getStatusText() {
+            if (step >= 0 && step < STEPS.length) {
+                return STEPS[step];
+            }
+            return "-";
+        }
     }
 
-    /** แถวข้อมูลประวัติสำหรับแสดงในตาราง */
-    public List<Object[]> historyRows() {
-        List<Object[]> rows = new ArrayList<>();
-        if (currentUser == null) return rows;
+    private final List<ReportItem> reportList = new ArrayList<>();
 
-        List<DataStore.Complaint> list = DataStore.complaintsForUser(currentUser.userId);
-        for (DataStore.Complaint c : list) {
-            String displayCategory = c.category; // แสดงหมวดหมู่แบบเต็มเพื่อความถูกต้อง
-
-            rows.add(new Object[]{
-                    c.id,
-                    DataStore.thaiDate(c.date),
-                    displayCategory,
-                    c.topic,
-                    c.statusThai()
-            });
-        }
-        return rows;
+    public TenantReportLogic() {
+        initSampleData();
     }
 
-    /** ตรวจสอบและบันทึกเรื่องใหม่ลง complaints.csv */
-    public Result submit(String category, String topic, String desc) throws IOException {
-        if (topic.isEmpty()) {
-            return new Result(Status.EMPTY_TOPIC, null);
-        }
-        if (currentUser == null || DataStore.blank(currentUser.userId)) {
-            return new Result(Status.NO_USER, null);
-        }
+    private void initSampleData() {
+        reportList.add(new ReportItem("R-001", "02/10/2026", "ระบบประปา", "ก๊อกน้ำอ่างล้างหน้ารั่ว", 
+                "น้ำหยดตลอดเวลา", "05/10/26 10:00", true, 2));
+        reportList.add(new ReportItem("R-002", "08/10/2026", "ระบบไฟฟ้า", "ไฟห้องน้ำไม่ติด", 
+                "หลอดไฟกระพริบแล้วดับไป", "12/10/26 14:00", false, 1));
+        reportList.add(new ReportItem("R-003", "10/10/2026", "เฟอร์นิเจอร์", "บานพับตู้เสื้อผ้าหลุด", 
+                "น็อตหลุดปิดประตูไม่ได้", "14/10/26 09:00", true, 0));
+    }
 
-        String complaintId = DataStore.nextId(DataStore.COMPLAINTS_FILE, "complaintId", "C", 3);
-        String todayIso = LocalDate.now().toString();
+    public static String[] buildTimeSlots(int startHour, int endHour) {
+        String[] slots = new String[endHour - startHour];
+        for (int h = startHour; h < endHour; h++) {
+            slots[h - startHour] = String.format("%02d:00 - %02d:00 น.", h, h + 1);
+        }
+        return slots;
+    }
 
-        DataStore.appendRow(
-                DataStore.COMPLAINTS_FILE,
-                DataStore.COMPLAINTS_HEADER,
-                complaintId,
-                currentUser.userId,
-                DataStore.blank(currentUser.roomId) ? "-" : currentUser.roomId,
-                category,
-                topic,
-                desc,
-                todayIso,
-                "PENDING"
-        );
-        return new Result(Status.SUCCESS, complaintId);
+    public List<ReportItem> getReportList() {
+        return reportList;
+    }
+
+    public ReportItem getReportAt(int index) {
+        if (index >= 0 && index < reportList.size()) {
+            return reportList.get(index);
+        }
+        return null;
+    }
+
+    public Object[][] getTableData() {
+        Object[][] data = new Object[reportList.size()][6];
+        for (int i = 0; i < reportList.size(); i++) {
+            ReportItem item = reportList.get(i);
+            data[i] = new Object[]{
+                    item.id,
+                    item.date,
+                    item.category,
+                    item.title,
+                    item.appointment,
+                    item.getStatusText()
+            };
+        }
+        return data;
+    }
+
+    public ReportItem addNewReport(String category, String title, String detail, Date date, String timeSlot, boolean allowEnter) {
+        String id = String.format("R-%03d", reportList.size() + 1);
+        String today = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        String appointDate = new SimpleDateFormat("dd/MM/yy").format(date);
+        String slot = timeSlot.split(" ")[0];
+        String appointment = appointDate + " " + slot;
+
+        ReportItem newItem = new ReportItem(id, today, category, title, detail, appointment, allowEnter, 0);
+        reportList.add(newItem);
+        return newItem;
+    }
+
+    public boolean advanceStep(int index) {
+        if (index >= 0 && index < reportList.size()) {
+            ReportItem item = reportList.get(index);
+            if (item.step < STEPS.length - 1) {
+                item.step++;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Date getTomorrowDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        return cal.getTime();
+    }
+
+    public Date getMinSelectableDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 }

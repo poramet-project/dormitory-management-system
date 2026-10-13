@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-
 public class TenantUI extends JFrame {
 
     static final Color TEAL = new Color(0x12756B);
@@ -59,13 +58,13 @@ public class TenantUI extends JFrame {
         setMinimumSize(new Dimension(980, 650));
         setLocationRelativeTo(null);
 
-        // ---- 1. หา user ปัจจุบัน (อยู่ใน TenantLogic) ----
+        // ---- 1. หา user ปัจจุบัน ----
         this.logic = new TenantLogic();
         final LoginLogic.User u = logic.user();
 
         JPanel root = new JPanel(new BorderLayout());
 
-        // ---- 2. Sidebar ด้านซ้าย (คงอยู่ตลอดเวลา) ----
+        // ---- 2. Sidebar ด้านซ้าย ----
         root.add(buildSidebar(), BorderLayout.WEST);
 
         // ---- 3. ฝั่งขวา (TopBar + Content Cards) ----
@@ -75,13 +74,12 @@ public class TenantUI extends JFrame {
         cardLayout = new CardLayout();
         centerCardsPanel = new JPanel(cardLayout);
 
-        // สร้างแต่ละหน้าแบบปลอดภัย: ถ้าหน้าไหนพัง จะแสดงข้อความ error ในหน้านั้น
-        // แทนที่จะทำให้ทั้งหน้าต่างไม่ขึ้น
+        // เชื่อมโยงแต่ละหน้า (JPanel) เข้ากับ CardLayout
         homePage = safePage("HOME", () -> new TenantHome(this, u));
         centerCardsPanel.add(homePage, "HOME");
         centerCardsPanel.add(safePage("ROOM", () -> new TenantMyRoomUI(u)), "ROOM");
         centerCardsPanel.add(safePage("CONTRACT", () -> new TenantContractUI(u)), "CONTRACT");
-        centerCardsPanel.add(safePage("REPORT", () -> new TenantReportUI(u)), "REPORT");
+        centerCardsPanel.add(safePage("REPORT", () -> new TenantReportUI()), "REPORT"); // เชื่อม TenantReportUI ตัวใหม่
         centerCardsPanel.add(safePage("TRANSFER", () -> new TenantRoomChangeUI(u)), "TRANSFER");
 
         rightContainer.add(centerCardsPanel, BorderLayout.CENTER);
@@ -91,9 +89,6 @@ public class TenantUI extends JFrame {
         setVisible(true);
     }
 
-    /**
-     * สร้างหน้า ถ้า constructor ของหน้านั้นโยน Exception จะคืนหน้าแสดง error แทน
-     */
     private Component safePage(String name, Callable<? extends Component> factory) {
         try {
             return factory.call();
@@ -119,7 +114,6 @@ public class TenantUI extends JFrame {
     }
 
     public void showPage(String pageName, int menuIndex) {
-        // กลับมาหน้าหลักทุกครั้ง ให้โหลดจำนวนแจ้งซ่อมใหม่
         if ("HOME".equals(pageName) && homePage instanceof TenantHome) {
             ((TenantHome) homePage).refresh();
         }
@@ -181,7 +175,6 @@ public class TenantUI extends JFrame {
         });
         side.add(logoutBtn);
 
-        // ให้ปุ่มออกจากระบบอยู่ติดขอบล่างเสมอ แม้ย่อ/ขยายหน้าต่าง
         side.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -416,23 +409,17 @@ public class TenantUI extends JFrame {
         }
     }
 
-    /**
-     * คลาส RoomImage ค้นหาไฟล์รูปภาพตามเลขห้อง
-     */
     static class RoomImage extends JComponent {
         private final Image img;
 
         RoomImage(String roomId) {
             if (roomId != null && !roomId.trim().isEmpty()) {
                 String cleanRoom = roomId.trim();
-                
-                // ตัดตัวอักษร R ออก เหลือเฉพาะตัวเลข (เช่น R101 -> 101)
                 String roomNum = cleanRoom.replaceAll("[^0-9]", "");
                 if (roomNum.isEmpty()) {
                     roomNum = cleanRoom;
                 }
 
-                // ค้นหาทั้งแบบมี/ไม่มี R และนามสกุล .jpg / .png
                 this.img = loadImage(
                     "src/img/room_" + roomNum + ".jpg", 
                     "src/img/room_" + roomNum + ".png",

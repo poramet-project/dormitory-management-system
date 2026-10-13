@@ -35,7 +35,6 @@ public class TenantHome extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
-    /** อ่านจำนวนแจ้งซ่อมจาก complaints.csv ใหม่ แล้วอัปเดตตัวเลขบนการ์ด (เรียกทุกครั้งที่กลับมาหน้าหลัก) */
     public void refresh() {
         logic.reloadRepairStats();
         if (totalLbl != null)  totalLbl.setText(logic.repairTotalText());
@@ -53,7 +52,6 @@ public class TenantHome extends JPanel {
         card.setMaximumSize(new Dimension(860, 190));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ดึง roomId จาก user เพื่อสร้าง RoomImage
         String roomId = (user != null) ? user.roomId : null;
         TenantUI.RoomImage img = new TenantUI.RoomImage(roomId);
         img.setPreferredSize(new Dimension(260, 150));
@@ -65,7 +63,6 @@ public class TenantHome extends JPanel {
 
         JLabel roomLbl = TenantUI.label(logic.roomDisplay(), 26, Font.BOLD, TenantUI.TEXT);
 
-        // ขยายขนาดความกว้างป้ายจาก 90 เป็น 150 เพื่อให้แสดง "ห้องแอร์" หรือ "ห้องพัดลม" ได้เต็ม ไม่บีบหาย
         TenantUI.Pill typePill = new TenantUI.Pill(logic.pillText(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
         typePill.setPreferredSize(new Dimension(150, 25));
         typePill.setMaximumSize(new Dimension(150, 25));
@@ -138,7 +135,7 @@ public class TenantHome extends JPanel {
         TenantUI.RoundButton btn = new TenantUI.RoundButton("แจ้งซ่อม / ร้องเรียน");
         btn.setMaximumSize(new Dimension(820, 36));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.addActionListener(e -> mainUI.showPage("REPORT", 3));
+        btn.addActionListener(e -> mainUI.showPage("REPORT", 3)); // สลับไปหน้าแจ้งซ่อม
         card.add(btn);
 
         return card;
