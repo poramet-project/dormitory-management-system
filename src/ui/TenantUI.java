@@ -50,6 +50,7 @@ public class TenantUI extends JFrame {
     private final List<MenuItem> menuItems = new ArrayList<>();
     private final TenantLogic logic;
     private Component homePage;
+    private Component reportPage;
 
     public TenantUI() {
         super("KU Dormitory");
@@ -79,7 +80,8 @@ public class TenantUI extends JFrame {
         centerCardsPanel.add(homePage, "HOME");
         centerCardsPanel.add(safePage("ROOM", () -> new TenantMyRoomUI(u)), "ROOM");
         centerCardsPanel.add(safePage("CONTRACT", () -> new TenantContractUI(u)), "CONTRACT");
-        centerCardsPanel.add(safePage("REPORT", () -> new TenantReportUI()), "REPORT"); // เชื่อม TenantReportUI ตัวใหม่
+        reportPage = safePage("REPORT", () -> new TenantReportUI(u));
+        centerCardsPanel.add(reportPage, "REPORT");
         centerCardsPanel.add(safePage("TRANSFER", () -> new TenantRoomChangeUI(u)), "TRANSFER");
 
         rightContainer.add(centerCardsPanel, BorderLayout.CENTER);
@@ -116,6 +118,9 @@ public class TenantUI extends JFrame {
     public void showPage(String pageName, int menuIndex) {
         if ("HOME".equals(pageName) && homePage instanceof TenantHome) {
             ((TenantHome) homePage).refresh();
+        }
+        if ("REPORT".equals(pageName) && reportPage instanceof TenantReportUI) {
+            ((TenantReportUI) reportPage).refresh();
         }
         cardLayout.show(centerCardsPanel, pageName);
         for (int i = 0; i < menuItems.size(); i++) {

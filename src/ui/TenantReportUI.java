@@ -1,5 +1,6 @@
 package ui;
 
+import logic.LoginLogic;
 import logic.TenantReportLogic;
 
 import javax.swing.*;
@@ -48,20 +49,43 @@ public class TenantReportUI extends JPanel {
     private JTextArea taDetail;
     private JSpinner spDate;
     private JComboBox<String> cbTime;
-    private JCheckBox chkAllowEnter;
 
-    public TenantReportUI() {
-        this.logic = new TenantReportLogic();
+    public TenantReportUI(LoginLogic.User user) {
+        this.logic = new TenantReportLogic(user);
         setLayout(new BorderLayout());
         setBackground(BG);
 
-        // นำ Content ใส่โดยตรง ไม่ต้องมี Header ซ้ำกับ TenantUI
         add(buildContent(), BorderLayout.CENTER);
 
-        // เลือกแถวแรกเริ่มต้น
         if (table.getRowCount() > 0) {
-            table.setRowSelectionInterval(0, 0);
+            table.setRowSelectionInterval(table.getRowCount() - 1, table.getRowCount() - 1);
+        } else {
+            refreshTracking();
         }
+    }
+
+    /** โหลดข้อมูลจากไฟล์ใหม่ (เรียกตอนสลับมาหน้านี้ เพื่อให้เห็นสถานะที่ Admin อัปเดต) */
+    public void refresh() {
+        TenantReportLogic.ReportItem cur = logic.getReportAt(table.getSelectedRow());
+        logic.reload();
+        reloadTable(cur != null ? cur.id : null);
+    }
+
+    private void reloadTable(String keepId) {
+        model.setRowCount(0);
+        for (Object[] row : logic.getTableData()) model.addRow(row);
+
+        int sel = model.getRowCount() - 1;
+        if (keepId != null) {
+            for (int i = 0; i < logic.getReportList().size(); i++) {
+                if (logic.getReportList().get(i).id.equals(keepId)) { sel = i; break; }
+            }
+        }
+        if (sel >= 0) {
+            table.setRowSelectionInterval(sel, sel);
+            table.scrollRectToVisible(table.getCellRect(sel, 0, true));
+        }
+        refreshTracking();
     }
 
     // =====================================================================
@@ -217,6 +241,7 @@ public class TenantReportUI extends JPanel {
             lblTicket.setText("ยังไม่ได้เลือกรายการ");
             lblAppoint.setText("");
             lblStepNow.setText(" ");
+            btnNextStep.setText("ยืนยันว่าซ่อมเสร็จสิ้น");
             btnNextStep.setEnabled(false);
             return;
         }
@@ -225,31 +250,36 @@ public class TenantReportUI extends JPanel {
         lblTicket.setText(item.id + " · " + item.title);
         lblAppoint.setText("นัด: " + item.appointment);
 
-        if (item.step >= TenantReportLogic.STEPS.length - 1) {
+        if (item.step == 0) {
+            lblStepNow.setText("ขั้นตอนปัจจุบัน: รับเรื่อง (รอผู้ดูแลรับเรื่อง)");
+            btnNextStep.setText("รอผู้ดูแลรับเรื่อง");
+            btnNextStep.setEnabled(false);
+        } else if (item.step == 1) {
+            lblStepNow.setText("ขั้นตอนปัจจุบัน: ช่างกำลังดำเนินการ");
+            btnNextStep.setText("ยืนยันว่าซ่อมเสร็จสิ้น");
+            btnNextStep.setEnabled(true);
+        } else {
             lblStepNow.setText("ดำเนินการเสร็จสิ้นแล้ว");
             btnNextStep.setText("เสร็จสิ้นแล้ว");
             btnNextStep.setEnabled(false);
-        } else {
-            lblStepNow.setText("ขั้นตอนปัจจุบัน: " + TenantReportLogic.STEPS[item.step]);
-            btnNextStep.setText("ยืนยัน: " + TenantReportLogic.STEPS[item.step + 1]);
-            btnNextStep.setEnabled(true);
         }
     }
 
     private void confirmNextStep() {
         int r = table.getSelectedRow();
         TenantReportLogic.ReportItem item = logic.getReportAt(r);
-        if (item == null || item.step >= TenantReportLogic.STEPS.length - 1) return;
+        if (item == null || item.step != 1) return;
 
-        String next = TenantReportLogic.STEPS[item.step + 1];
         int ok = JOptionPane.showConfirmDialog(this,
-                "ยืนยันว่ารายการ " + item.id + " ดำเนินการถึงขั้น \"" + next + "\" แล้วใช่หรือไม่?",
-                "ยืนยันขั้นตอน", JOptionPane.YES_NO_OPTION);
+                "ยืนยันว่ารายการ " + item.id + " ซ่อมเสร็จสิ้นแล้วใช่หรือไม่?",
+                "ยืนยันการซ่อมเสร็จสิ้น", JOptionPane.YES_NO_OPTION);
         if (ok != JOptionPane.YES_OPTION) return;
 
-        if (logic.advanceStep(r)) {
-            model.setValueAt(next, r, 5);
-            refreshTracking();
+        String id = item.id;
+        if (logic.confirmResolved(r)) {
+            reloadTable(id);
+        } else {
+            JOptionPane.showMessageDialog(this, "บันทึกสถานะไม่สำเร็จ", "ผิดพลาด", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -336,20 +366,20 @@ public class TenantReportUI extends JPanel {
         c.gridwidth = 1; c.gridy = 1; c.insets = new Insets(0, 0, 4, 8);
         c.gridx = 0; c.weightx = 0.5; box.add(fieldLabel("วันที่"), c);
         c.gridx = 1; c.weightx = 0.5; c.insets = new Insets(0, 0, 4, 0); box.add(fieldLabel("เวลา"), c);
-        c.gridy = 2; c.insets = new Insets(0, 0, 8, 8);
+        c.gridy = 2; c.insets = new Insets(0, 0, 0, 8);
         c.gridx = 0; box.add(spDate, c);
-        c.gridx = 1; c.insets = new Insets(0, 0, 8, 0); box.add(cbTime, c);
+        c.gridx = 1; c.insets = new Insets(0, 0, 0, 0); box.add(cbTime, c);
 
-        chkAllowEnter = new JCheckBox("<html>อนุญาตให้เจ้าหน้าที่เข้าห้องได้<br>หากไม่อยู่ในเวลานัด</html>");
-        chkAllowEnter.setFont(font(Font.PLAIN, 12));
-        chkAllowEnter.setForeground(TEXT);
-        chkAllowEnter.setOpaque(false);
-        c.gridx = 0; c.gridy = 3; c.gridwidth = 2; c.insets = new Insets(0, 0, 0, 0);
-        box.add(chkAllowEnter, c);
         return box;
     }
 
     private void submitForm() {
+        if (!logic.hasRoom()) {
+            JOptionPane.showMessageDialog(this, "คุณยังไม่มีห้องพัก จึงยังแจ้งซ่อมไม่ได้",
+                    "ไม่สามารถแจ้งซ่อมได้", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         String title = tfTitle.getText().trim();
         if (title.isEmpty()) {
             JOptionPane.showMessageDialog(this, "กรุณากรอกเรื่องที่ต้องการแจ้ง", "ข้อมูลไม่ครบ", JOptionPane.WARNING_MESSAGE);
@@ -361,27 +391,22 @@ public class TenantReportUI extends JPanel {
         String detail = taDetail.getText().trim();
         Date date = (Date) spDate.getValue();
         String timeSlot = (String) cbTime.getSelectedItem();
-        boolean allowEnter = chkAllowEnter.isSelected();
 
-        TenantReportLogic.ReportItem newItem = logic.addNewReport(category, title, detail, date, timeSlot, allowEnter);
+        try {
+            TenantReportLogic.ReportItem newItem =
+                    logic.addNewReport(category, title, detail, date, timeSlot);
+            reloadTable(newItem != null ? newItem.id : null);
 
-        model.addRow(new Object[]{
-                newItem.id,
-                newItem.date,
-                newItem.category,
-                newItem.title,
-                newItem.appointment,
-                newItem.getStatusText()
-        });
-
-        int last = model.getRowCount() - 1;
-        table.setRowSelectionInterval(last, last);
-        table.scrollRectToVisible(table.getCellRect(last, 0, true));
-
-        tfTitle.setText("");
-        taDetail.setText("");
-        chkAllowEnter.setSelected(false);
-        JOptionPane.showMessageDialog(this, "ส่งเรื่องแจ้งซ่อม " + newItem.id + " เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+            tfTitle.setText("");
+            taDetail.setText("");
+            JOptionPane.showMessageDialog(this,
+                    "ส่งเรื่องแจ้งซ่อม " + (newItem != null ? newItem.id : "") + " เรียบร้อยแล้ว",
+                    "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+        } catch (java.io.IOException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "บันทึกไม่สำเร็จ: " + ex.getMessage(),
+                    "ผิดพลาด", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private JPanel sectionTitle(String title, String sub) {
