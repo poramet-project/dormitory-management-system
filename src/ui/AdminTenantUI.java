@@ -24,6 +24,8 @@ public class AdminTenantUI extends JPanel {
 
     private final AdminTenantLogic logic = new AdminTenantLogic();
 
+    JComboBox<String> statusFilter;
+    JLabel lblCount;
     JTable table;
     DefaultTableModel tableModel;
     JLabel detailSub, tenantName;
@@ -46,8 +48,17 @@ public class AdminTenantUI extends JPanel {
     }
 
     private void createToolbar() {
+        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ใช้งานอยู่", "รออนุมัติ", "หมดอายุ", "ยกเลิกสัญญา"}, WHITE);
+        statusFilter.setBounds(20, 20, 170, 34);
+        add(statusFilter);
+
+        lblCount = AdminUI.label("แสดง 0 รายการ", Font.PLAIN, 12, TEXT_GRAY);
+        lblCount.setBounds(198, 20, 192, 34);
+        lblCount.setVerticalAlignment(SwingConstants.CENTER);
+        add(lblCount);
+
         btnAdd = new AdminRoomUI.FlatButton("+ ทำสัญญาใหม่", true);
-        btnAdd.setBounds(20, 20, 140, 36);
+        btnAdd.setBounds(400, 19, 160, 36);
         add(btnAdd);
     }
 
@@ -68,7 +79,7 @@ public class AdminTenantUI extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
         scroll.getViewport().setBackground(WHITE);
-        scroll.setBounds(20, 70, 540, 500);
+        scroll.setBounds(20, 70, 540, 510);
         return scroll;
     }
 
@@ -117,33 +128,99 @@ public class AdminTenantUI extends JPanel {
     }
 
     public void refreshData() {
-        tableModel.setDataVector(logic.getTableRows(), new String[]{"ชื่อผู้เช่า", "ห้อง", "เริ่มสัญญา", "สิ้นสุดสัญญา", "สถานะ", "การจัดการ"});
-        if (table.getRowCount() > 0) table.setRowSelectionInterval(0, 0);
+        tableModel.setRowCount(0);
+        List<AdminTenantLogic.TenantModel> all = logic.getAllTenants();
+        String filter = (statusFilter != null && statusFilter.getSelectedItem() != null)
+                ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
+
+        int matched = 0;
+        for (AdminTenantLogic.TenantModel t : all) {
+            boolean match = false;
+            if ("สถานะทั้งหมด".equals(filter)) {
+                match = true;
+            } else if ("ใช้งานอยู่".equals(filter) && t.status.contains("Active")) {
+                match = true;
+            } else if ("รออนุมัติ".equals(filter) && t.status.contains("Pending")) {
+                match = true;
+            } else if ("หมดอายุ".equals(filter) && t.status.contains("Expired")) {
+                match = true;
+            } else if ("ยกเลิกสัญญา".equals(filter) && t.status.contains("Terminated")) {
+                match = true;
+            }
+
+            if (match) {
+                tableModel.addRow(new Object[]{t.name, t.room, t.startDate, t.endDate, t.status, ""});
+                matched++;
+            }
+        }
+
+        int[] widths = {120, 60, 95, 95, 110, 60};
+        for (int i = 0; i < widths.length && i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        }
+
+        if (lblCount != null) {
+            lblCount.setText("แสดง " + matched + " รายการ จากทั้งหมด " + all.size() + " รายการ");
+        }
+
+        if (table.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        } else {
+            clearDetailPanel();
+        }
+    }
+
+    private void clearDetailPanel() {
+        currentTenant = null;
+        detailSub.setText("-");
+        tenantName.setText("-");
+        lblContractId.setText("-");
+        lblStatus.setText("-");
+        lblPhone.setText("-");
+        lblRoomType.setText("-");
+        lblRent.setText("-");
+        lblDeposit.setText("-");
+        lblStart.setText("-");
+        lblEnd.setText("-");
+
+        if (btnEdit != null) btnEdit.setEnabled(false);
+        if (btnRenew != null) btnRenew.setEnabled(false);
+        if (btnTerminate != null) btnTerminate.setEnabled(false);
     }
 
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
-                List<AdminTenantLogic.TenantModel> list = logic.getAllTenants();
-                if (row < list.size()) {
-                    currentTenant = list.get(row);
-                    tenantName.setText(currentTenant.name);
-                    detailSub.setText(currentTenant.id + " • ห้อง " + currentTenant.room);
-                    lblContractId.setText(currentTenant.id);
-                    lblStatus.setText(currentTenant.status);
-                    lblPhone.setText(currentTenant.phone);
-                    lblRoomType.setText(currentTenant.roomType);
-                    lblRent.setText(currentTenant.rent);
-                    lblDeposit.setText(currentTenant.deposit);
-                    lblStart.setText(currentTenant.startDate);
-                    lblEnd.setText(currentTenant.endDate);
+                String tenantNameText = String.valueOf(tableModel.getValueAt(row, 0));
+                String roomText = String.valueOf(tableModel.getValueAt(row, 1));
+                for (AdminTenantLogic.TenantModel t : logic.getAllTenants()) {
+                    if (t.name.equals(tenantNameText) && t.room.equals(roomText)) {
+                        currentTenant = t;
+                        tenantName.setText(currentTenant.name);
+                        detailSub.setText(currentTenant.id + " • ห้อง " + currentTenant.room);
+                        lblContractId.setText(currentTenant.id);
+                        lblStatus.setText(currentTenant.status);
+                        lblPhone.setText(currentTenant.phone);
+                        lblRoomType.setText(currentTenant.roomType);
+                        lblRent.setText(currentTenant.rent);
+                        lblDeposit.setText(currentTenant.deposit);
+                        lblStart.setText(currentTenant.startDate);
+                        lblEnd.setText(currentTenant.endDate);
+
+                        if (btnEdit != null) btnEdit.setEnabled(true);
+                        if (btnRenew != null) btnRenew.setEnabled(true);
+                        if (btnTerminate != null) btnTerminate.setEnabled(true);
+                        break;
+                    }
                 }
             }
         });
     }
 
     private void initActions() {
+        statusFilter.addActionListener(e -> refreshData());
+
         // 1. ปุ่มทำสัญญาใหม่
         btnAdd.addActionListener(e -> showFormDialog(null));
 
@@ -278,5 +355,20 @@ public class AdminTenantUI extends JPanel {
             setForeground(col == 0 ? TEXT : (col == 1 ? PRIMARY : TEXT_GRAY));
             return this;
         }
+    }
+
+    private static JComboBox<String> styledCombo(String[] items, Color bg) {
+        JComboBox<String> cb = new JComboBox<>(items);
+        cb.setFont(AdminUI.font(Font.PLAIN, 12));
+        cb.setForeground(TEXT);
+        cb.setBackground(bg);
+        cb.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER), new EmptyBorder(0, 6, 0, 0)));
+        cb.setFocusable(false);
+        cb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cb.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override protected JButton createArrowButton() { return new AdminRoomUI.ChevronButton(); }
+        });
+        return cb;
     }
 }

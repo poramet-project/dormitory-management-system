@@ -78,9 +78,10 @@ public class AdminRoomLogic {
                 }
             }
 
-            // บันทึกห้องใหม่ต่อท้ายไฟล์ rooms.csv ผ่าน DataStore.appendRow
+            // บันทึกห้องใหม่ต่อท้ายไฟล์ rooms.csv แล้วจัดเรียงลำดับห้องทันที
             String header = "roomId,roomNumber,roomType,baseRent,status";
             DataStore.appendRow("rooms.csv", header, newRoomId, targetNumber, typeVal, String.valueOf(rent), statusVal);
+            DataStore.sortRoomsFile();
             return true;
         }
 
@@ -106,6 +107,8 @@ public class AdminRoomLogic {
         DataStore.updateCell("rooms.csv", "roomId", roomId, "roomNumber", targetNumber);
         DataStore.updateCell("rooms.csv", "roomId", roomId, "roomType", typeVal);
         DataStore.updateCell("rooms.csv", "roomId", roomId, "baseRent", String.valueOf(rent));
-        return DataStore.setRoomStatus(roomId, statusVal);
+        boolean ok = DataStore.setRoomStatus(roomId, statusVal);
+        DataStore.sortRoomsFile();
+        return ok;
     }
 }

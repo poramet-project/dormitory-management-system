@@ -26,6 +26,7 @@ public class AdminRoomUI extends JPanel {
     public static final Color ROW_SELECT = new Color(240, 253, 250);
 
     JComboBox<String> statusFilter;
+    JLabel lblCount;
     JButton btnAdd;
     JTable table;
     DefaultTableModel tableModel;
@@ -58,6 +59,7 @@ public class AdminRoomUI extends JPanel {
                                 ? (String) statusFilter.getSelectedItem() 
                                 : "สถานะทั้งหมด";
 
+        int matched = 0;
         for (AdminRoomLogic.RoomModel r : rooms) {
             boolean matchFilter = false;
             if ("สถานะทั้งหมด".equals(selectedFilter)) {
@@ -72,14 +74,38 @@ public class AdminRoomUI extends JPanel {
 
             if (matchFilter) {
                 tableModel.addRow(new Object[]{r.id, r.number, r.floor, r.type, r.rent, r.statusThai});
+                matched++;
             }
         }
+
+        if (lblCount != null) {
+            lblCount.setText("แสดง " + matched + " รายการ จากทั้งหมด " + rooms.size() + " รายการ");
+        }
+
+        if (table.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        } else {
+            clearForm();
+        }
+    }
+
+    private void clearForm() {
+        selectedRoomId = "";
+        if (txtNumber != null) txtNumber.setText("");
+        if (formSub != null) formSub.setText("เลือกห้องจากตารางเพื่อแก้ไขข้อมูล");
+        if (txtRent != null) txtRent.setText("");
+        if (btnSave != null) btnSave.setEnabled(false);
     }
 
     private void createToolbar() {
         statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ห้องว่าง", "มีผู้เช่า", "ปิดปรับปรุง"}, WHITE);
         statusFilter.setBounds(20, 20, 180, 34);
         add(statusFilter);
+
+        lblCount = AdminUI.label("แสดง 0 รายการ", Font.PLAIN, 12, TEXT_GRAY);
+        lblCount.setBounds(215, 20, 205, 34);
+        lblCount.setVerticalAlignment(SwingConstants.CENTER);
+        add(lblCount);
 
         btnAdd = new FlatButton("+  เพิ่มห้องใหม่", true);
         btnAdd.setBounds(430, 19, 130, 36);
@@ -201,6 +227,7 @@ public class AdminRoomUI extends JPanel {
                     previousStatus = "MAINTENANCE";
                     rbMaintenance.setSelected(true);
                 }
+                btnSave.setEnabled(true);
             }
         });
 

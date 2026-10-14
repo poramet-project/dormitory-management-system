@@ -286,6 +286,41 @@ public final class DataStore {
         }
     }
 
+    public static int compareRoomNumbers(String n1, String n2) {
+        if (n1 == null) n1 = "";
+        if (n2 == null) n2 = "";
+        try {
+            int num1 = Integer.parseInt(n1.replaceAll("\\D+", ""));
+            int num2 = Integer.parseInt(n2.replaceAll("\\D+", ""));
+            if (num1 != num2) return Integer.compare(num1, num2);
+        } catch (Exception ignored) {}
+        return n1.compareToIgnoreCase(n2);
+    }
+
+    /** เรียงลำดับข้อมูลห้องพักใน rooms.csv ตามลำดับชั้นและเลขห้องพักอย่างสวยงาม */
+    public static synchronized void sortRoomsFile() {
+        File f = file("rooms.csv");
+        if (!f.exists()) return;
+        List<Map<String, String>> rows = readTable("rooms.csv");
+        rows.sort((a, b) -> compareRoomNumbers(a.getOrDefault("roomNumber", ""), b.getOrDefault("roomNumber", "")));
+
+        StringBuilder sb = new StringBuilder("roomId,roomNumber,roomType,baseRent,status");
+        String nl = System.lineSeparator();
+        sb.append(nl);
+        for (Map<String, String> m : rows) {
+            sb.append(csvEscape(m.getOrDefault("roomId", ""))).append(',')
+              .append(csvEscape(m.getOrDefault("roomNumber", ""))).append(',')
+              .append(csvEscape(m.getOrDefault("roomType", ""))).append(',')
+              .append(csvEscape(m.getOrDefault("baseRent", ""))).append(',')
+              .append(csvEscape(m.getOrDefault("status", ""))).append(nl);
+        }
+        try {
+            Files.write(f.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static List<Room> rooms() {
         List<Room> list = new ArrayList<>();
         for (Map<String, String> m : readTable("rooms.csv")) {
@@ -293,6 +328,7 @@ public final class DataStore {
             if (!r.id.isEmpty())
                 list.add(r);
         }
+        list.sort((a, b) -> compareRoomNumbers(a.number, b.number));
         return list;
     }
 

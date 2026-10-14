@@ -12,12 +12,12 @@ import java.util.List;
 
 public class AdminReportUI extends JPanel {
 
-    static final Color PRIMARY    = AdminUI.PRIMARY;
-    static final Color BG         = AdminUI.BG;
-    static final Color WHITE      = AdminUI.WHITE;
-    static final Color BORDER     = AdminUI.BORDER;
-    static final Color TEXT       = AdminUI.TEXT;
-    static final Color TEXT_GRAY  = AdminUI.TEXT_GRAY;
+    static final Color PRIMARY = AdminUI.PRIMARY;
+    static final Color BG = AdminUI.BG;
+    static final Color WHITE = AdminUI.WHITE;
+    static final Color BORDER = AdminUI.BORDER;
+    static final Color TEXT = AdminUI.TEXT;
+    static final Color TEXT_GRAY = AdminUI.TEXT_GRAY;
     static final Color ROW_SELECT = AdminRoomUI.ROW_SELECT;
 
     private final AdminReportLogic logic = new AdminReportLogic();
@@ -43,27 +43,28 @@ public class AdminReportUI extends JPanel {
     }
 
     private void createToolbar() {
-        searchField = new AdminRoomUI.RoundField("ค้นหาเลขคำร้อง ชื่อ หรือห้อง...", WHITE, true);
-        searchField.setBounds(20, 20, 280, 34);
-        add(searchField);
-
-        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "รับเรื่อง", "ดำเนินการ", "เสร็จสิ้น"});
-        statusFilter.setBounds(310, 20, 250, 34);
-        add(statusFilter);
-
-        typeFilter = styledCombo(new String[]{"หมวดหมู่ทั้งหมด", "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ", "เฟอร์นิเจอร์", "อื่นๆ"});
-        typeFilter.setBounds(20, 64, 155, 30);
+        typeFilter = styledCombo(new String[] { "หมวดหมู่ทั้งหมด", "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ",
+                "เฟอร์นิเจอร์", "อื่นๆ" });
+        typeFilter.setBounds(20, 20, 160, 34);
         add(typeFilter);
 
-        lblCount = AdminUI.label("แสดง 0 รายการ • เลือกแถวเพื่อดูรายละเอียด", Font.PLAIN, 11, TEXT_GRAY);
-        lblCount.setBounds(185, 64, 375, 30);
+        statusFilter = styledCombo(new String[] { "สถานะทั้งหมด", "รอดำเนินการ", "ช่างกำลังเข้าตรวจสอบ", "เสร็จสิ้น" });
+        statusFilter.setBounds(190, 20, 170, 34);
+        add(statusFilter);
+
+        lblCount = AdminUI.label("แสดง 0 รายการ", Font.PLAIN, 12, TEXT_GRAY);
+        lblCount.setBounds(370, 20, 190, 34);
+        lblCount.setVerticalAlignment(SwingConstants.CENTER);
         add(lblCount);
     }
 
     private JScrollPane createTable() {
-        String[] columns = {"เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ"};
+        String[] columns = { "เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ" };
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
 
         table = new JTable(tableModel);
@@ -84,7 +85,7 @@ public class AdminReportUI extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
         scroll.getViewport().setBackground(WHITE);
-        scroll.setBounds(20, 105, 540, 490);
+        scroll.setBounds(20, 70, 540, 510);
         return scroll;
     }
 
@@ -103,67 +104,135 @@ public class AdminReportUI extends JPanel {
         p.add(detailSub);
         p.add(divider(78));
 
-        lblName     = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
-        lblPhone    = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
-        lblRoom     = detailRow(p, "ห้องพัก", "-", 150);
+        lblName = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
+        lblPhone = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
+        lblRoom = detailRow(p, "ห้องพัก", "-", 150);
         lblCategory = detailRow(p, "หมวดหมู่", "-", 178);
-        lblTopic    = detailRow(p, "เรื่อง", "-", 206);
-        lblDate     = detailRow(p, "วันที่แจ้ง", "-", 234);
-        lblStatus   = detailRow(p, "สถานะ", "-", 262);
+        lblTopic = detailRow(p, "เรื่อง", "-", 206);
+        lblDate = detailRow(p, "วันที่แจ้ง", "-", 234);
+        lblStatus = detailRow(p, "สถานะ", "-", 262);
 
         p.add(fieldLabel("รายละเอียดปัญหา", 294));
         txtDescription = textArea(false);
-        p.add(areaScroll(txtDescription, 316, 84));
+        p.add(areaScroll(txtDescription, 316, 160));
 
-        
+        p.add(divider(494));
 
-        btnAccept = new AdminRoomUI.FlatButton("รับเรื่อง", true);
-        btnAccept.setBounds(20, 546, 276, 38);
+        JLabel lblNotice = AdminUI.label("* หมายเหตุ: ผู้เช่าจะเป็นผู้กดยืนยันเมื่อซ่อมเสร็จสิ้น", Font.PLAIN, 11, TEXT_GRAY);
+        lblNotice.setBounds(20, 502, 276, 18);
+        p.add(lblNotice);
+
+        btnAccept = new AdminRoomUI.FlatButton("รับเรื่อง (ส่งช่างเข้าตรวจสอบ)", true);
+        btnAccept.setBounds(20, 528, 276, 42);
         p.add(btnAccept);
         return p;
     }
 
     public void refreshData() {
-        tableModel.setDataVector(logic.getTableRows(), new String[]{"เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ"});
-        int[] widths = {46, 110, 40, 118, 86, 140};
-        for (int i = 0; i < widths.length; i++) table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        tableModel.setRowCount(0);
+        List<AdminReportLogic.ProblemModel> all = logic.getAllProblems();
 
-        int total = logic.getAllProblems().size();
-        lblCount.setText("แสดง " + total + " จาก " + total + " รายการ • เลือกแถวเพื่อดูรายละเอียด");
+        String selCat = (typeFilter != null && typeFilter.getSelectedItem() != null)
+                ? (String) typeFilter.getSelectedItem() : "หมวดหมู่ทั้งหมด";
+        String selStatus = (statusFilter != null && statusFilter.getSelectedItem() != null)
+                ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
+
+        java.util.List<AdminReportLogic.ProblemModel> filtered = new java.util.ArrayList<>();
+        for (AdminReportLogic.ProblemModel p : all) {
+            boolean matchCat = "หมวดหมู่ทั้งหมด".equals(selCat);
+            if (!matchCat) {
+                if ("อื่นๆ".equals(selCat)) {
+                    matchCat = p.category == null || p.category.contains("อื่น")
+                            || (!p.category.contains("ประปา") && !p.category.contains("ไฟฟ้า")
+                            && !p.category.contains("ปรับอากาศ") && !p.category.contains("แอร์")
+                            && !p.category.contains("เฟอร์นิเจอร์"));
+                } else if (p.category != null) {
+                    String cleanKey = selCat.replace("ระบบ", "").replace("เครื่อง", "").trim();
+                    matchCat = p.category.contains(cleanKey) || selCat.contains(p.category);
+                }
+            }
+
+            boolean matchStatus = "สถานะทั้งหมด".equals(selStatus) || selStatus.equalsIgnoreCase(p.status);
+
+            if (matchCat && matchStatus) {
+                filtered.add(p);
+                tableModel.addRow(new Object[] { p.id, p.name, p.room, p.topic, p.date, p.status });
+            }
+        }
+
+        int[] widths = { 46, 110, 40, 118, 86, 140 };
+        for (int i = 0; i < widths.length; i++)
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+
+        if (lblCount != null) {
+            lblCount.setText("แสดง " + filtered.size() + " รายการ จากทั้งหมด " + all.size() + " รายการ");
+        }
 
         if (table.getRowCount() > 0) {
             table.setRowSelectionInterval(0, 0);
+        } else {
+            clearDetailPanel();
         }
+    }
+
+    private void clearDetailPanel() {
+        detailSub.setText("- • แจ้งซ่อม");
+        lblName.setText("-");
+        lblPhone.setText("-");
+        lblRoom.setText("-");
+        lblCategory.setText("-");
+        lblTopic.setText("-");
+        lblDate.setText("-");
+        lblStatus.setText("-");
+        txtDescription.setText("");
+        if (btnAccept != null) btnAccept.setEnabled(false);
     }
 
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
-                List<AdminReportLogic.ProblemModel> list = logic.getAllProblems();
-                if (row < list.size()) {
-                    AdminReportLogic.ProblemModel p = list.get(row);
-                    detailSub.setText(p.id + " • " + p.topic);
-                    lblName.setText(p.name);
-                    lblPhone.setText(p.phone);
-                    lblRoom.setText(p.room);
-                    lblCategory.setText(p.category);
-                    lblTopic.setText(p.topic);
-                    lblDate.setText(p.date);
-                    lblStatus.setText(p.status);
-                    txtDescription.setText(p.desc);
+                String complaintId = String.valueOf(tableModel.getValueAt(row, 0));
+                for (AdminReportLogic.ProblemModel p : logic.getAllProblems()) {
+                    if (p.id.equals(complaintId)) {
+                        detailSub.setText(p.id + " • " + p.topic);
+                        lblName.setText(p.name);
+                        lblPhone.setText(p.phone);
+                        lblRoom.setText(p.room);
+                        lblCategory.setText(p.category);
+                        lblTopic.setText(p.topic);
+                        lblDate.setText(p.date);
+                        lblStatus.setText(p.status);
+                        txtDescription.setText(p.desc);
+
+                        boolean isPending = "รอดำเนินการ".equalsIgnoreCase(p.status) || "PENDING".equalsIgnoreCase(p.status);
+                        if (btnAccept != null) btnAccept.setEnabled(isPending);
+                        break;
+                    }
                 }
             }
         });
     }
 
     private void initActions() {
+        typeFilter.addActionListener(e -> refreshData());
+        statusFilter.addActionListener(e -> refreshData());
+
         btnAccept.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
                 String complaintId = String.valueOf(tableModel.getValueAt(row, 0));
-                if (logic.acceptProblem(complaintId)) {
-                    JOptionPane.showMessageDialog(this, "รับเรื่องและปรับสถานะเป็น ช่างกำลังเข้าตรวจสอบ", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "ยืนยันการรับเรื่องแจ้งซ่อม " + complaintId + " เพื่อส่งช่างเข้าตรวจสอบ?",
+                    "ยืนยันการรับเรื่อง",
+                    JOptionPane.YES_NO_OPTION
+                );
+                if (confirm == JOptionPane.YES_OPTION && logic.acceptProblem(complaintId)) {
+                    JOptionPane.showMessageDialog(this,
+                            "รับเรื่องและปรับสถานะเป็น 'ช่างกำลังเข้าตรวจสอบ' เรียบร้อยแล้ว\n(สถานะจะเปลี่ยนเป็น 'เสร็จสิ้น' เมื่อผู้เช่ายืนยัน)",
+                            "สำเร็จ",
+                            JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
                 }
             }
@@ -221,34 +290,45 @@ public class AdminReportUI extends JPanel {
         cb.setBorder(BorderFactory.createLineBorder(BORDER));
         cb.setFocusable(false);
         cb.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
-            @Override protected JButton createArrowButton() { return new AdminRoomUI.ChevronButton(); }
+            @Override
+            protected JButton createArrowButton() {
+                return new AdminRoomUI.ChevronButton();
+            }
         });
         return cb;
     }
 
     static class HeaderRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row, int col) {
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
             super.getTableCellRendererComponent(t, value, selected, focus, row, col);
             setFont(AdminUI.font(Font.PLAIN, 11));
             setForeground(TEXT_GRAY);
             setBackground(WHITE);
-            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER), new EmptyBorder(0, 8, 0, 8)));
+            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER),
+                    new EmptyBorder(0, 8, 0, 8)));
             return this;
         }
     }
 
     static class CellRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row, int col) {
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
             Color rowBg = selected ? ROW_SELECT : WHITE;
             if (col == 5) {
                 String status = String.valueOf(value);
                 Color bg = new Color(254, 243, 199), fg = new Color(180, 83, 9);
                 if (status.equals("อนุมัติ") || status.equals("เสร็จสิ้น")) {
-                    bg = new Color(209, 250, 229); fg = new Color(4, 120, 87);
+                    bg = new Color(209, 250, 229);
+                    fg = new Color(4, 120, 87);
                 } else if (status.equals("ปฏิเสธ")) {
-                    bg = new Color(254, 226, 226); fg = AdminUI.RED;
+                    bg = new Color(254, 226, 226);
+                    fg = AdminUI.RED;
                 } else if (status.equals("ช่างกำลังเข้าตรวจสอบ")) {
-                    bg = AdminUI.PRIMARY_BG; fg = PRIMARY;
+                    bg = AdminUI.PRIMARY_BG;
+                    fg = PRIMARY;
                 }
                 AdminUI.Badge badge = new AdminUI.Badge(status, bg, fg);
                 badge.setPreferredSize(badge.getSize());

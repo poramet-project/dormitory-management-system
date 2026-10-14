@@ -13,14 +13,14 @@ import java.util.List;
 
 public class GuestUI extends JFrame {
 
-    public static final Color PRIMARY       = new Color(13, 148, 136); // Teal 600
+    public static final Color PRIMARY = new Color(13, 148, 136); // Teal 600
     public static final Color PRIMARY_HOVER = new Color(15, 118, 110); // Teal 700
-    public static final Color BG            = new Color(248, 250, 252); // Slate 50
-    public static final Color WHITE         = Color.WHITE;
-    public static final Color BORDER        = new Color(226, 232, 240); // Slate 200
-    public static final Color TEXT          = new Color(15, 23, 42);   // Slate 900
-    public static final Color TEXT_GRAY     = new Color(100, 116, 139); // Slate 500
-    public static final Color TEXT_LIGHT    = new Color(148, 163, 184); // Slate 400
+    public static final Color BG = new Color(248, 250, 252); // Slate 50
+    public static final Color WHITE = Color.WHITE;
+    public static final Color BORDER = new Color(226, 232, 240); // Slate 200
+    public static final Color TEXT = new Color(15, 23, 42); // Slate 900
+    public static final Color TEXT_GRAY = new Color(100, 116, 139); // Slate 500
+    public static final Color TEXT_LIGHT = new Color(148, 163, 184); // Slate 400
 
     private final GuestLogic logic;
     private JComboBox<String> cbType, cbPrice;
@@ -69,7 +69,8 @@ public class GuestUI extends JFrame {
         grid.setBackground(BG);
         loadRoomCards();
 
-        scroll = new JScrollPane(grid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll = new JScrollPane(grid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
         scroll.getViewport().setBackground(BG);
         scroll.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
@@ -116,7 +117,7 @@ public class GuestUI extends JFrame {
 
         int cardW = 235, cardH = 328, gap = 18, cols = 4;
         int rowsCount = Math.max(1, (rooms.size() + cols - 1) / cols);
-        
+
         grid.setPreferredSize(new Dimension(cols * cardW + (cols - 1) * gap,
                 rowsCount * cardH + (rowsCount - 1) * gap + 40));
 
@@ -211,10 +212,9 @@ public class GuestUI extends JFrame {
         card.setBounds(x, y, w, h);
 
         String roomNumOnly = room.numberText.replace("ห้อง ", "");
-        
-        // 🟢 เลือกรูป fallback ตามประเภทห้อง หากไม่มีรูปเฉพาะของห้องนั้น
-        String defaultImg = (room.typeShort != null && room.typeShort.contains("แอร์")) ? "img/room_201.png" : "img/room_101.png";
-        RoomImage img = new RoomImage(new String[]{"img/room_" + roomNumOnly + ".png", defaultImg}, w - 16, 132);
+
+        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg หากไม่มีจะแสดงกรอบว่างๆ
+        RoomImage img = new RoomImage(new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, w - 16, 132);
         img.setBounds(8, 8, w - 16, 132);
         card.add(img);
 
@@ -251,8 +251,8 @@ public class GuestUI extends JFrame {
 
         // Animation Spring Bounce
         final Timer[] animTimer = new Timer[1];
-        final float[] targetOffsetY = {0f};
-        final float[] currentOffsetY = {0f};
+        final float[] targetOffsetY = { 0f };
+        final float[] currentOffsetY = { 0f };
 
         MouseAdapter hoverAdapter = new MouseAdapter() {
             @Override
@@ -260,7 +260,8 @@ public class GuestUI extends JFrame {
                 card.setHovered(true);
                 targetOffsetY[0] = -7f;
 
-                if (animTimer[0] != null && animTimer[0].isRunning()) animTimer[0].stop();
+                if (animTimer[0] != null && animTimer[0].isRunning())
+                    animTimer[0].stop();
 
                 animTimer[0] = new Timer(16, evt -> {
                     float diff = targetOffsetY[0] - currentOffsetY[0];
@@ -288,7 +289,8 @@ public class GuestUI extends JFrame {
                 card.setHovered(false);
                 targetOffsetY[0] = 0f;
 
-                if (animTimer[0] != null && animTimer[0].isRunning()) animTimer[0].stop();
+                if (animTimer[0] != null && animTimer[0].isRunning())
+                    animTimer[0].stop();
 
                 animTimer[0] = new Timer(16, evt -> {
                     float diff = targetOffsetY[0] - currentOffsetY[0];
@@ -319,12 +321,16 @@ public class GuestUI extends JFrame {
         boolean isAvailable = status.contains("ว่าง");
         boolean isOccupied = status.contains("มีผู้เช่า");
 
-        Color bg = isAvailable ? new Color(240, 253, 244) : (isOccupied ? new Color(254, 242, 242) : new Color(254, 252, 232));
-        Color fg = isAvailable ? new Color(22, 101, 52) : (isOccupied ? new Color(153, 27, 27) : new Color(133, 77, 14));
-        Color dotColor = isAvailable ? new Color(34, 197, 94) : (isOccupied ? new Color(239, 68, 68) : new Color(234, 179, 8));
+        Color bg = isAvailable ? new Color(240, 253, 244)
+                : (isOccupied ? new Color(254, 242, 242) : new Color(254, 252, 232));
+        Color fg = isAvailable ? new Color(22, 101, 52)
+                : (isOccupied ? new Color(153, 27, 27) : new Color(133, 77, 14));
+        Color dotColor = isAvailable ? new Color(34, 197, 94)
+                : (isOccupied ? new Color(239, 68, 68) : new Color(234, 179, 8));
 
         JPanel badge = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2)) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(bg);
@@ -449,6 +455,7 @@ public class GuestUI extends JFrame {
                     btn.setBackground(isPrimary ? PRIMARY_HOVER : new Color(226, 232, 240));
                 }
             }
+
             @Override
             public void mouseExited(MouseEvent e) {
                 if (btn.isEnabled()) {
@@ -460,12 +467,22 @@ public class GuestUI extends JFrame {
     }
 
     static class ThinScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
-        @Override protected void configureScrollBarColors() {
+        @Override
+        protected void configureScrollBarColors() {
             thumbColor = new Color(203, 213, 225);
             trackColor = BG;
         }
-        @Override protected JButton createDecreaseButton(int o) { return zeroButton(); }
-        @Override protected JButton createIncreaseButton(int o) { return zeroButton(); }
+
+        @Override
+        protected JButton createDecreaseButton(int o) {
+            return zeroButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int o) {
+            return zeroButton();
+        }
+
         private JButton zeroButton() {
             JButton b = new JButton();
             b.setPreferredSize(new Dimension(0, 0));
@@ -473,6 +490,7 @@ public class GuestUI extends JFrame {
         }
     }
 
+    // 🟢 Component รูปภาพพร้อมการแสดงกรอบว่างแบบครอบคลุม
     static class RoomImage extends JPanel {
         private final Image photo;
 
@@ -489,7 +507,7 @@ public class GuestUI extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            
+
             int w = getWidth(), h = getHeight();
 
             if (w > 0 && h > 0) {
@@ -499,18 +517,32 @@ public class GuestUI extends JFrame {
                 if (photo != null) {
                     g2.drawImage(photo, 0, 0, w, h, this);
                 } else {
-                    g2.setColor(new Color(241, 245, 249));
+                    // 🟢 ทำเป็นกรอบว่างๆ สำหรับห้องที่ไม่มีรูปภาพ
+                    g2.setColor(new Color(248, 250, 252));
                     g2.fillRect(0, 0, w, h);
+
+                    // วาดเส้นขอบประแสดงกรอบว่าง
+                    float[] dash = { 6.0f, 4.0f };
+                    g2.setStroke(
+                            new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g2.setColor(new Color(203, 213, 225));
+                    g2.drawRoundRect(1, 1, w - 3, h - 3, 10, 10);
+
+                    // วาดไอคอนกล้อง
+                    g2.setStroke(new BasicStroke(1.5f));
                     g2.setColor(new Color(148, 163, 184));
-                    
+                    int cx = w / 2, cy = h / 2 - 8;
+                    g2.drawRoundRect(cx - 14, cy - 10, 28, 20, 4, 4);
+                    g2.drawOval(cx - 5, cy - 5, 10, 10);
+
+                    // ข้อความระบุ
                     Font baseFont = UIManager.getFont("Label.font");
                     if (baseFont != null) {
-                        g2.setFont(baseFont.deriveFont(Font.PLAIN, 12f));
+                        g2.setFont(baseFont.deriveFont(Font.PLAIN, 11f));
                     }
-                    
-                    String msg = "ไม่มีรูปภาพ";
+                    String msg = "ไม่มีรูปภาพห้องพัก";
                     FontMetrics fm = g2.getFontMetrics();
-                    g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, (h + fm.getAscent()) / 2 - 2);
+                    g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, cy + 24);
                 }
             }
             g2.dispose();

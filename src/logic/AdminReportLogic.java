@@ -46,7 +46,7 @@ public class AdminReportLogic {
             String roomNum = r != null ? r.number : roomId;
 
             String statusThai = "IN_PROGRESS".equalsIgnoreCase(statusRaw) ? "ช่างกำลังเข้าตรวจสอบ" :
-                               ("RESOLVED".equalsIgnoreCase(statusRaw) ? "เสร็จสิ้น" : "กำลังดำเนินการ");
+                               ("RESOLVED".equalsIgnoreCase(statusRaw) ? "เสร็จสิ้น" : "รอดำเนินการ");
 
             list.add(new ProblemModel(id, name, phone, roomNum, DataStore.thaiDate(dateRaw), statusThai, category, desc, topic));
         }
@@ -65,5 +65,9 @@ public class AdminReportLogic {
 
     public boolean acceptProblem(String complaintId) {
         return DataStore.updateCell(DataStore.COMPLAINTS_FILE, "complaintId", complaintId, "status", "IN_PROGRESS");
+    }
+
+    public boolean resolveProblem(String complaintId) {
+        return DataStore.updateCell(DataStore.COMPLAINTS_FILE, "complaintId", complaintId, "status", "RESOLVED");
     }
 }

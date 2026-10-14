@@ -59,10 +59,9 @@ public class GuestRoomUI extends JPanel {
         topCard.setBounds(70, 76, 960, 190);
 
         String roomNumOnly = logic.getRoomNumberOnly();
-        
-        // 🟢 เลือกรูป fallback ตามประเภทห้อง หากไม่มีรูปเฉพาะของห้องนั้น
-        String defaultImg = (logic.getRoomType() != null && logic.getRoomType().contains("แอร์")) ? "img/room_201.png" : "img/room_101.png";
-        RoomImage bigImg = new RoomImage(new String[]{"img/room_" + roomNumOnly + ".png", defaultImg}, 240, 158);
+
+        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg หากไม่มีจะแสดงกรอบว่างๆ
+        RoomImage bigImg = new RoomImage(new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, 240, 158);
         bigImg.setBounds(16, 16, 240, 158);
         topCard.add(bigImg);
 
@@ -72,7 +71,8 @@ public class GuestRoomUI extends JPanel {
 
         // Badge ประเภทห้อง
         JPanel badgeWrap = new JPanel(new GridBagLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(204, 251, 241));
@@ -86,11 +86,14 @@ public class GuestRoomUI extends JPanel {
         badgeWrap.add(GuestUI.label(logic.getRoomType(), Font.BOLD, 12, GuestUI.PRIMARY));
         topCard.add(badgeWrap);
 
-        JLabel lblSubInfo = GuestUI.label("อาคารหอพักนักศึกษา  •  ชั้น " + logic.getFloorChar() + "  •  สถานะห้อง: " + logic.getRoomStatus(), Font.PLAIN, 13, GuestUI.TEXT_GRAY);
+        JLabel lblSubInfo = GuestUI.label(
+                "อาคารหอพักนักศึกษา  •  ชั้น " + logic.getFloorChar() + "  •  สถานะห้อง: " + logic.getRoomStatus(),
+                Font.PLAIN, 13, GuestUI.TEXT_GRAY);
         lblSubInfo.setBounds(280, 96, 600, 20);
         topCard.add(lblSubInfo);
 
-        JLabel lblPrice = GuestUI.label("อัตราค่าเช่า: " + logic.getRoomPrice() + " / เดือน", Font.BOLD, 18, GuestUI.PRIMARY);
+        JLabel lblPrice = GuestUI.label("อัตราค่าเช่า: " + logic.getRoomPrice() + " / เดือน", Font.BOLD, 18,
+                GuestUI.PRIMARY);
         lblPrice.setBounds(280, 128, 400, 26);
         topCard.add(lblPrice);
 
@@ -123,7 +126,7 @@ public class GuestRoomUI extends JPanel {
         // --- ปุ่มกดจองห้องพัก ---
         JButton btnBook = GuestUI.flatButton("จองห้องพักนี้", true);
         btnBook.setBounds(70, 508, 960, 46);
-        
+
         Font baseFont = UIManager.getFont("Button.font");
         if (baseFont != null) {
             btnBook.setFont(baseFont.deriveFont(Font.BOLD, 14f));
@@ -163,14 +166,16 @@ public class GuestRoomUI extends JPanel {
             switch (result) {
                 case OK:
                     JOptionPane.showMessageDialog(this,
-                            "ส่งคำขอจองห้องพักหมายเลข " + roomNumOnly + " เรียบร้อยแล้ว\nกรุณารอผู้ดูแลระบบ (Admin) อนุมัติ",
+                            "ส่งคำขอจองห้องพักหมายเลข " + roomNumOnly
+                                    + " เรียบร้อยแล้ว\nกรุณารอผู้ดูแลระบบ (Admin) อนุมัติ",
                             "รออนุมัติ", JOptionPane.INFORMATION_MESSAGE);
                     if (this.mainUI != null) {
                         this.mainUI.showListView();
                     }
                     break;
                 case PENDING_EXISTS:
-                    JOptionPane.showMessageDialog(this, "คุณมีคำขอจองที่รอการอนุมัติอยู่แล้ว\nกรุณารอ Admin พิจารณาก่อนจองห้องอื่น",
+                    JOptionPane.showMessageDialog(this,
+                            "คุณมีคำขอจองที่รอการอนุมัติอยู่แล้ว\nกรุณารอ Admin พิจารณาก่อนจองห้องอื่น",
                             "ไม่สามารถจองได้", JOptionPane.WARNING_MESSAGE);
                     break;
                 case ALREADY_HAS_ROOM:
@@ -193,6 +198,7 @@ public class GuestRoomUI extends JPanel {
         add(btnBook);
     }
 
+    // 🟢 Component รูปภาพพร้อมการแสดงกรอบว่างแบบครอบคลุม
     static class RoomImage extends JPanel {
         private final Image photo;
 
@@ -209,7 +215,7 @@ public class GuestRoomUI extends JPanel {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            
+
             int w = getWidth(), h = getHeight();
 
             if (w > 0 && h > 0) {
@@ -219,8 +225,32 @@ public class GuestRoomUI extends JPanel {
                 if (photo != null) {
                     g2.drawImage(photo, 0, 0, w, h, this);
                 } else {
-                    g2.setColor(new Color(241, 245, 249));
+                    // 🟢 ทำเป็นกรอบว่างๆ ขนาดใหญ่สำหรับหน้ารายละเอียดห้อง
+                    g2.setColor(new Color(248, 250, 252));
                     g2.fillRect(0, 0, w, h);
+
+                    // วาดเส้นขอบประ
+                    float[] dash = { 6.0f, 4.0f };
+                    g2.setStroke(
+                            new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g2.setColor(new Color(203, 213, 225));
+                    g2.drawRoundRect(1, 1, w - 3, h - 3, 12, 12);
+
+                    // วาดไอคอนกล้อง
+                    g2.setStroke(new BasicStroke(1.8f));
+                    g2.setColor(new Color(148, 163, 184));
+                    int cx = w / 2, cy = h / 2 - 10;
+                    g2.drawRoundRect(cx - 20, cy - 14, 40, 28, 6, 6);
+                    g2.drawOval(cx - 7, cy - 7, 14, 14);
+
+                    // ข้อความระบุ
+                    Font baseFont = UIManager.getFont("Label.font");
+                    if (baseFont != null) {
+                        g2.setFont(baseFont.deriveFont(Font.PLAIN, 12f));
+                    }
+                    String msg = "ไม่มีรูปภาพประกอบห้องพัก";
+                    FontMetrics fm = g2.getFontMetrics();
+                    g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, cy + 30);
                 }
             }
             g2.dispose();

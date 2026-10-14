@@ -22,6 +22,8 @@ public class AdminRoomChangeUI extends JPanel {
 
     private final AdminRoomChangeLogic logic = new AdminRoomChangeLogic();
 
+    JComboBox<String> statusFilter;
+    JLabel lblCount;
     JTable table;
     DefaultTableModel tableModel;
     JLabel detailTitle, detailSub, applicantName;
@@ -35,12 +37,24 @@ public class AdminRoomChangeUI extends JPanel {
         setLayout(null);
         setBackground(BG);
 
+        createToolbar();
         add(createTable());
         add(createDetailPanel());
 
         bindSelection();
         initActions();
         refreshData();
+    }
+
+    private void createToolbar() {
+        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ"}, WHITE);
+        statusFilter.setBounds(20, 20, 200, 34);
+        add(statusFilter);
+
+        lblCount = AdminUI.label("แสดง 0 รายการ", Font.PLAIN, 12, TEXT_GRAY);
+        lblCount.setBounds(235, 20, 320, 34);
+        lblCount.setVerticalAlignment(SwingConstants.CENTER);
+        add(lblCount);
     }
 
     private JScrollPane createTable() {
@@ -60,7 +74,7 @@ public class AdminRoomChangeUI extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
         scroll.getViewport().setBackground(WHITE);
-        scroll.setBounds(20, 20, 540, 550);
+        scroll.setBounds(20, 70, 540, 510);
         return scroll;
     }
 
@@ -119,32 +133,82 @@ public class AdminRoomChangeUI extends JPanel {
     }
 
     public void refreshData() {
-        tableModel.setDataVector(logic.getTableRows(), new String[]{"เลขคำขอ", "ชื่อผู้เช่า", "การย้ายห้อง", "วันที่ยื่น", "สถานะ"});
-        if (table.getRowCount() > 0) table.setRowSelectionInterval(0, 0);
+        String filter = statusFilter != null ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
+        List<AdminRoomChangeLogic.MoveModel> all = logic.getAllMoves();
+        List<AdminRoomChangeLogic.MoveModel> filtered = new java.util.ArrayList<>();
+
+        for (AdminRoomChangeLogic.MoveModel m : all) {
+            if (filter == null || "สถานะทั้งหมด".equals(filter) || m.status.equalsIgnoreCase(filter) || ("รอพิจารณา".equals(filter) && m.status.contains("รอ"))) {
+                filtered.add(m);
+            }
+        }
+
+        Object[][] rows = new Object[filtered.size()][5];
+        for (int i = 0; i < filtered.size(); i++) {
+            AdminRoomChangeLogic.MoveModel m = filtered.get(i);
+            rows[i] = new Object[]{m.id, m.name, "จากห้อง " + m.oldRoomNum + " ย้ายไป " + m.newRoomNum, m.date, m.status};
+        }
+
+        tableModel.setDataVector(rows, new String[]{"เลขคำขอ", "ชื่อผู้เช่า", "การย้ายห้อง", "วันที่ยื่น", "สถานะ"});
+        if (lblCount != null) {
+            lblCount.setText("แสดง " + filtered.size() + " รายการ จากทั้งหมด " + all.size() + " รายการ");
+        }
+
+        if (table.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        } else {
+            clearDetailPanel();
+        }
+    }
+
+    private void clearDetailPanel() {
+        currentMove = null;
+        if (applicantName != null) applicantName.setText("-");
+        if (detailSub != null) detailSub.setText("- • คำขอย้ายห้อง");
+        if (lblMoveId != null) lblMoveId.setText("-");
+        if (lblStatus != null) lblStatus.setText("-");
+        if (lblPhone != null) lblPhone.setText("-");
+        if (lblOldRoom != null) lblOldRoom.setText("-");
+        if (lblNewRoom != null) lblNewRoom.setText("-");
+        if (lblDate != null) lblDate.setText("-");
+        if (txtReason != null) txtReason.setText("");
+        if (btnApprove != null) btnApprove.setEnabled(false);
+        if (btnReject != null) btnReject.setEnabled(false);
     }
 
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
-                List<AdminRoomChangeLogic.MoveModel> list = logic.getAllMoves();
-                if (row < list.size()) {
-                    currentMove = list.get(row);
-                    applicantName.setText(currentMove.name);
-                    detailSub.setText(currentMove.id + " • ขอย้ายห้อง");
-                    lblMoveId.setText(currentMove.id);
-                    lblStatus.setText(currentMove.status);
-                    lblPhone.setText(currentMove.phone);
-                    lblOldRoom.setText("ห้อง " + currentMove.oldRoomNum);
-                    lblNewRoom.setText("ห้อง " + currentMove.newRoomNum);
-                    lblDate.setText(currentMove.date);
-                    txtReason.setText(currentMove.reason);
+                String moveId = String.valueOf(tableModel.getValueAt(row, 0));
+                for (AdminRoomChangeLogic.MoveModel m : logic.getAllMoves()) {
+                    if (m.id.equalsIgnoreCase(moveId)) {
+                        currentMove = m;
+                        applicantName.setText(currentMove.name);
+                        detailSub.setText(currentMove.id + " • ขอย้ายห้อง");
+                        lblMoveId.setText(currentMove.id);
+                        lblStatus.setText(currentMove.status);
+                        lblPhone.setText(currentMove.phone);
+                        lblOldRoom.setText("ห้อง " + currentMove.oldRoomNum);
+                        lblNewRoom.setText("ห้อง " + currentMove.newRoomNum);
+                        lblDate.setText(currentMove.date);
+                        txtReason.setText(currentMove.reason);
+
+                        boolean isPending = "รอพิจารณา".equalsIgnoreCase(currentMove.status) || "PENDING".equalsIgnoreCase(currentMove.status);
+                        btnApprove.setEnabled(isPending);
+                        btnReject.setEnabled(isPending);
+                        break;
+                    }
                 }
             }
         });
     }
 
     private void initActions() {
+        if (statusFilter != null) {
+            statusFilter.addActionListener(e -> refreshData());
+        }
+
         // ปุ่มอนุมัติคำขอย้ายห้อง
         btnApprove.addActionListener(e -> {
             if (currentMove == null) {
@@ -152,17 +216,15 @@ public class AdminRoomChangeUI extends JPanel {
                 return;
             }
 
-            // Pop-up ยืนยันแบบสั้นกระชับ
             int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "อนุมัติย้ายห้องคุณ " + currentMove.name + " (จากห้อง " + currentMove.oldRoomNum + "ย้ายไป" + currentMove.newRoomNum + ") ?",
+                "อนุมัติย้ายห้องคุณ " + currentMove.name + " (จากห้อง " + currentMove.oldRoomNum + " ย้ายไป " + currentMove.newRoomNum + ") ?",
                 "ยืนยันการอนุมัติ",
                 JOptionPane.YES_NO_OPTION
             );
 
             if (confirm == JOptionPane.YES_OPTION) {
                 if (logic.approveMove(currentMove.id)) {
-                    // Pop-up แจ้งผลสำเร็จแบบสั้น
                     JOptionPane.showMessageDialog(this, "อนุมัติย้ายห้องและออกสัญญาใหม่เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
                 } else {
@@ -212,8 +274,15 @@ public class AdminRoomChangeUI extends JPanel {
             Color rowBg = sel ? ROW_SELECT : WHITE;
             if (col == 4) {
                 String s = String.valueOf(v);
-                boolean approved = s.contains("APPROVED") || s.contains("อนุมัติ");
-                AdminUI.Badge badge = new AdminUI.Badge(s, approved ? new Color(209, 250, 229) : new Color(254, 226, 226), approved ? new Color(4, 120, 87) : new Color(220, 38, 38));
+                Color bg = new Color(254, 243, 199), fg = new Color(180, 83, 9);
+                if (s.contains("APPROVED") || s.contains("อนุมัติ")) {
+                    bg = new Color(209, 250, 229);
+                    fg = new Color(4, 120, 87);
+                } else if (s.contains("REJECTED") || s.contains("ปฏิเสธ")) {
+                    bg = new Color(254, 226, 226);
+                    fg = AdminUI.RED;
+                }
+                AdminUI.Badge badge = new AdminUI.Badge(s, bg, fg);
                 JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
                 cell.setBackground(rowBg); cell.add(badge);
                 return cell;
@@ -221,8 +290,23 @@ public class AdminRoomChangeUI extends JPanel {
             super.getTableCellRendererComponent(t, v, false, false, row, col);
             setBackground(rowBg); setBorder(new EmptyBorder(0, 10, 0, 10));
             setFont(AdminUI.font(col == 0 ? Font.BOLD : Font.PLAIN, 11));
-            setForeground(col == 0 ? TEXT : (col == 2 ? PRIMARY : TEXT_GRAY));
+            setForeground(col == 0 ? PRIMARY : (col == 2 ? PRIMARY : TEXT));
             return this;
         }
+    }
+
+    private static JComboBox<String> styledCombo(String[] items, Color bg) {
+        JComboBox<String> cb = new JComboBox<>(items);
+        cb.setFont(AdminUI.font(Font.PLAIN, 12));
+        cb.setForeground(TEXT);
+        cb.setBackground(bg);
+        cb.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER), new EmptyBorder(0, 6, 0, 0)));
+        cb.setFocusable(false);
+        cb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cb.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override protected JButton createArrowButton() { return new AdminRoomUI.ChevronButton(); }
+        });
+        return cb;
     }
 }

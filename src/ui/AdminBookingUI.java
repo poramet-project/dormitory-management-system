@@ -12,12 +12,12 @@ import java.util.List;
 
 public class AdminBookingUI extends JPanel {
 
-    static final Color PRIMARY    = AdminUI.PRIMARY;
-    static final Color BG         = AdminUI.BG;
-    static final Color WHITE      = AdminUI.WHITE;
-    static final Color BORDER     = AdminUI.BORDER;
-    static final Color TEXT       = AdminUI.TEXT;
-    static final Color TEXT_GRAY  = AdminUI.TEXT_GRAY;
+    static final Color PRIMARY = AdminUI.PRIMARY;
+    static final Color BG = AdminUI.BG;
+    static final Color WHITE = AdminUI.WHITE;
+    static final Color BORDER = AdminUI.BORDER;
+    static final Color TEXT = AdminUI.TEXT;
+    static final Color TEXT_GRAY = AdminUI.TEXT_GRAY;
     static final Color ROW_SELECT = AdminRoomUI.ROW_SELECT;
 
     private final AdminBookingLogic logic = new AdminBookingLogic();
@@ -45,23 +45,23 @@ public class AdminBookingUI extends JPanel {
     }
 
     private void createToolbar() {
-        searchField = new AdminRoomUI.RoundField("ค้นหาเลขคำขอ ชื่อ หรือห้อง...", WHITE, true);
-        searchField.setBounds(20, 20, 280, 34);
-        add(searchField);
-
-        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ"});
-        statusFilter.setBounds(310, 20, 250, 34);
+        statusFilter = styledCombo(new String[] { "สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ" });
+        statusFilter.setBounds(20, 20, 200, 34);
         add(statusFilter);
 
-        lblCount = AdminUI.label("แสดง 0 รายการ • เลือกแถวเพื่อดูรายละเอียด", Font.PLAIN, 11, TEXT_GRAY);
-        lblCount.setBounds(20, 64, 540, 20);
+        lblCount = AdminUI.label("แสดง 0 รายการ", Font.PLAIN, 12, TEXT_GRAY);
+        lblCount.setBounds(235, 20, 320, 34);
+        lblCount.setVerticalAlignment(SwingConstants.CENTER);
         add(lblCount);
     }
 
     private JScrollPane createTable() {
-        String[] columns = {"เลขคำขอ", "ชื่อผู้ยื่น", "ห้อง", "วันที่ยื่น", "สถานะ"};
+        String[] columns = { "เลขคำขอ", "ชื่อผู้ยื่น", "ห้อง", "วันที่ยื่น", "สถานะ" };
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
 
         table = new JTable(tableModel);
@@ -82,7 +82,7 @@ public class AdminBookingUI extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
         scroll.getViewport().setBackground(WHITE);
-        scroll.setBounds(20, 95, 540, 500);
+        scroll.setBounds(20, 70, 540, 510);
         return scroll;
     }
 
@@ -101,10 +101,10 @@ public class AdminBookingUI extends JPanel {
         p.add(detailSub);
         p.add(divider(78));
 
-        lblName   = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
-        lblPhone  = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
-        lblRoom   = detailRow(p, "ห้องพัก", "-", 150);
-        lblDate   = detailRow(p, "วันที่ยื่นคำขอ", "-", 178);
+        lblName = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
+        lblPhone = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
+        lblRoom = detailRow(p, "ห้องพัก", "-", 150);
+        lblDate = detailRow(p, "วันที่ยื่นคำขอ", "-", 178);
         lblStatus = detailRow(p, "สถานะ", "-", 206);
 
         p.add(fieldLabel("ห้องที่ขอจอง", 242));
@@ -128,44 +128,85 @@ public class AdminBookingUI extends JPanel {
     }
 
     public void refreshData() {
-        tableModel.setDataVector(logic.getTableRows(), new String[]{"เลขคำขอ", "ชื่อผู้ยื่น", "ห้อง", "วันที่ยื่น", "สถานะ"});
-        int[] widths = {68, 135, 112, 100, 125};
-        for (int i = 0; i < widths.length; i++) table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        tableModel.setRowCount(0);
+        List<AdminBookingLogic.BookingModel> all = logic.getAllBookings();
+        String filter = (statusFilter != null && statusFilter.getSelectedItem() != null)
+                ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
 
-        int total = logic.getAllBookings().size();
-        lblCount.setText("แสดง " + total + " จาก " + total + " รายการ • เลือกแถวเพื่อดูรายละเอียด");
+        java.util.List<AdminBookingLogic.BookingModel> filtered = new java.util.ArrayList<>();
+        for (AdminBookingLogic.BookingModel b : all) {
+            if ("สถานะทั้งหมด".equals(filter) || filter.equalsIgnoreCase(b.status)) {
+                filtered.add(b);
+                tableModel.addRow(new Object[] { b.id, b.name, b.roomNumber, b.date, b.status });
+            }
+        }
+
+        int[] widths = { 68, 135, 112, 100, 125 };
+        for (int i = 0; i < widths.length; i++)
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+
+        if (lblCount != null) {
+            lblCount.setText("แสดง " + filtered.size() + " รายการ จากทั้งหมด " + all.size() + " รายการ");
+        }
 
         if (table.getRowCount() > 0) {
             table.setRowSelectionInterval(0, 0);
+        } else {
+            clearDetailPanel();
         }
+    }
+
+    private void clearDetailPanel() {
+        currentBooking = null;
+        detailSub.setText("- • จองห้อง");
+        lblName.setText("-");
+        lblPhone.setText("-");
+        lblRoom.setText("-");
+        lblDate.setText("-");
+        lblStatus.setText("-");
+        txtDescription.setText("");
+        txtNote.setText("");
+        if (btnApprove != null) btnApprove.setEnabled(false);
+        if (btnReject != null) btnReject.setEnabled(false);
     }
 
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
-                List<AdminBookingLogic.BookingModel> list = logic.getAllBookings();
-                if (row < list.size()) {
-                    currentBooking = list.get(row);
-                    detailSub.setText(currentBooking.id + " • " + currentBooking.type);
-                    lblName.setText(currentBooking.name);
-                    lblPhone.setText(currentBooking.phone);
-                    lblRoom.setText(currentBooking.roomNumber);
-                    lblDate.setText(currentBooking.date);
-                    lblStatus.setText(currentBooking.status);
-                    txtDescription.setText(currentBooking.roomDetail);
+                String bookingId = String.valueOf(tableModel.getValueAt(row, 0));
+                for (AdminBookingLogic.BookingModel b : logic.getAllBookings()) {
+                    if (b.id.equals(bookingId)) {
+                        currentBooking = b;
+                        detailSub.setText(currentBooking.id + " • " + currentBooking.type);
+                        lblName.setText(currentBooking.name);
+                        lblPhone.setText(currentBooking.phone);
+                        lblRoom.setText(currentBooking.roomNumber);
+                        lblDate.setText(currentBooking.date);
+                        lblStatus.setText(currentBooking.status);
+                        txtDescription.setText(currentBooking.roomDetail);
+
+                        boolean isPending = "รอพิจารณา".equalsIgnoreCase(currentBooking.status) || "PENDING".equalsIgnoreCase(currentBooking.status);
+                        btnApprove.setEnabled(isPending);
+                        btnReject.setEnabled(isPending);
+                        break;
+                    }
                 }
             }
         });
     }
 
     private void initActions() {
+        statusFilter.addActionListener(e -> refreshData());
+
         btnApprove.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row != -1) {
                 String bookingId = String.valueOf(tableModel.getValueAt(row, 0));
                 if (logic.approveBooking(bookingId)) {
-                    JOptionPane.showMessageDialog(this, "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่า (เงินประกัน x 2) เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this,
+                            "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่า (เงินประกัน x 2) เรียบร้อยแล้ว",
+                            "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
                 }
             }
@@ -176,7 +217,8 @@ public class AdminBookingUI extends JPanel {
             if (row != -1) {
                 String bookingId = String.valueOf(tableModel.getValueAt(row, 0));
                 if (logic.rejectBooking(bookingId)) {
-                    JOptionPane.showMessageDialog(this, "ปฏิเสธคำขอเรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "ปฏิเสธคำขอเรียบร้อยแล้ว", "สำเร็จ",
+                            JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
                 }
             }
@@ -234,32 +276,42 @@ public class AdminBookingUI extends JPanel {
         cb.setBorder(BorderFactory.createLineBorder(BORDER));
         cb.setFocusable(false);
         cb.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
-            @Override protected JButton createArrowButton() { return new AdminRoomUI.ChevronButton(); }
+            @Override
+            protected JButton createArrowButton() {
+                return new AdminRoomUI.ChevronButton();
+            }
         });
         return cb;
     }
 
     static class HeaderRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row, int col) {
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
             super.getTableCellRendererComponent(t, value, selected, focus, row, col);
             setFont(AdminUI.font(Font.PLAIN, 11));
             setForeground(TEXT_GRAY);
             setBackground(WHITE);
-            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER), new EmptyBorder(0, 8, 0, 8)));
+            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER),
+                    new EmptyBorder(0, 8, 0, 8)));
             return this;
         }
     }
 
     static class CellRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row, int col) {
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
             Color rowBg = selected ? ROW_SELECT : WHITE;
             if (col == 4) {
                 String status = String.valueOf(value);
                 Color bg = new Color(254, 243, 199), fg = new Color(180, 83, 9);
                 if (status.equals("อนุมัติ") || status.equals("เสร็จสิ้น")) {
-                    bg = new Color(209, 250, 229); fg = new Color(4, 120, 87);
+                    bg = new Color(209, 250, 229);
+                    fg = new Color(4, 120, 87);
                 } else if (status.equals("ปฏิเสธ")) {
-                    bg = new Color(254, 226, 226); fg = AdminUI.RED;
+                    bg = new Color(254, 226, 226);
+                    fg = AdminUI.RED;
                 }
                 AdminUI.Badge badge = new AdminUI.Badge(status, bg, fg);
                 badge.setPreferredSize(badge.getSize());
