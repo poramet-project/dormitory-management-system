@@ -2,6 +2,7 @@ package ui;
 
 import logic.AdminRoomLogic;
 
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
@@ -22,9 +23,8 @@ public class AdminRoomUI extends JPanel {
     static final Color TEXT_GRAY  = AdminUI.TEXT_GRAY;
     static final Color TEXT_LIGHT = AdminUI.TEXT_LIGHT;
     static final Color ITEM_BG    = AdminUI.ITEM_BG;
-    static final Color ROW_SELECT = new Color(240, 253, 250);
+    public static final Color ROW_SELECT = new Color(240, 253, 250);
 
-    JTextField searchField;
     JComboBox<String> statusFilter;
     JButton btnAdd;
     JTable table;
@@ -33,9 +33,10 @@ public class AdminRoomUI extends JPanel {
     JTextField txtNumber, txtRent;
     JComboBox<String> cbType;
     JRadioButton rbAvailable, rbOccupied, rbMaintenance;
-    JButton btnCancel, btnSave;
+    JButton btnSave;
 
     private String selectedRoomId = "";
+    private String previousStatus = "AVAILABLE"; // ตัวแปรสำหรับเก็บสถานะเดิมของห้องพัก
 
     public AdminRoomUI() {
         setLayout(null);
@@ -52,18 +53,32 @@ public class AdminRoomUI extends JPanel {
     public void loadTableData() {
         tableModel.setRowCount(0);
         List<AdminRoomLogic.RoomModel> rooms = AdminRoomLogic.getAllRooms();
+        
+        String selectedFilter = (statusFilter != null && statusFilter.getSelectedItem() != null) 
+                                ? (String) statusFilter.getSelectedItem() 
+                                : "สถานะทั้งหมด";
+
         for (AdminRoomLogic.RoomModel r : rooms) {
-            tableModel.addRow(new Object[]{r.id, r.number, r.floor, r.type, r.rent, r.statusThai, "แก้ไข"});
+            boolean matchFilter = false;
+            if ("สถานะทั้งหมด".equals(selectedFilter)) {
+                matchFilter = true;
+            } else if ("ห้องว่าง".equals(selectedFilter) && "ห้องว่าง".equalsIgnoreCase(r.statusThai)) {
+                matchFilter = true;
+            } else if ("มีผู้เช่า".equals(selectedFilter) && "มีผู้เช่า".equalsIgnoreCase(r.statusThai)) {
+                matchFilter = true;
+            } else if ("ปิดปรับปรุง".equals(selectedFilter) && "ปิดปรับปรุง".equalsIgnoreCase(r.statusThai)) {
+                matchFilter = true;
+            }
+
+            if (matchFilter) {
+                tableModel.addRow(new Object[]{r.id, r.number, r.floor, r.type, r.rent, r.statusThai});
+            }
         }
     }
 
     private void createToolbar() {
-        searchField = new RoundField("ระบุเลขห้อง...", WHITE, true);
-        searchField.setBounds(20, 20, 170, 34);
-        add(searchField);
-
-        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ห้องว่าง", "มีผู้เช่า", "อยู่ระหว่างปรับปรุง"}, WHITE);
-        statusFilter.setBounds(200, 20, 150, 34);
+        statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ห้องว่าง", "มีผู้เช่า", "ปิดปรับปรุง"}, WHITE);
+        statusFilter.setBounds(20, 20, 180, 34);
         add(statusFilter);
 
         btnAdd = new FlatButton("+  เพิ่มห้องใหม่", true);
@@ -72,7 +87,7 @@ public class AdminRoomUI extends JPanel {
     }
 
     private JScrollPane createTable() {
-        String[] columns = {"รหัส", "เลขห้อง", "ชั้น", "ประเภท", "ราคา/เดือน", "สถานะ", "การจัดการ"};
+        String[] columns = {"รหัส", "เลขห้อง", "ชั้น", "ประเภท", "ราคา/เดือน", "สถานะ"};
 
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -95,7 +110,7 @@ public class AdminRoomUI extends JPanel {
         table.getTableHeader().setReorderingAllowed(false);
         table.getTableHeader().setResizingAllowed(false);
 
-        int[] widths = {65, 85, 60, 105, 90, 110, 88};
+        int[] widths = {85, 80, 55, 100, 90, 110};
         TableColumnModel cols = table.getColumnModel();
         for (int i = 0; i < widths.length; i++) cols.getColumn(i).setPreferredWidth(widths[i]);
 
@@ -140,7 +155,7 @@ public class AdminRoomUI extends JPanel {
         p.add(fieldLabel("สถานะห้อง", 288));
         rbAvailable   = radio("ห้องว่าง (Available)");
         rbOccupied    = radio("มีผู้เช่า (Occupied)");
-        rbMaintenance = radio("อยู่ระหว่างปรับปรุง (Maintenance)");
+        rbMaintenance = radio("ปิดปรับปรุง (Maintenance)");
         ButtonGroup group = new ButtonGroup();
         JRadioButton[] radios = {rbAvailable, rbOccupied, rbMaintenance};
         for (int i = 0; i < radios.length; i++) {
@@ -151,18 +166,17 @@ public class AdminRoomUI extends JPanel {
 
         p.add(divider(388));
 
-        btnCancel = new FlatButton("ล้างฟอร์ม", false);
-        btnCancel.setBounds(20, 404, 128, 40);
-        p.add(btnCancel);
-
         btnSave = new FlatButton("บันทึกข้อมูล", true);
-        btnSave.setBounds(158, 404, 138, 40);
+        btnSave.setBounds(20, 404, 276, 40);
         p.add(btnSave);
 
         return p;
     }
 
     private void initActions() {
+        statusFilter.addActionListener(e -> loadTableData());
+
+        // เลือกแถวจากตาราง -> โหลดข้อมูลเข้าแผงแก้ไขฝั่งขวา
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
                 int row = table.getSelectedRow();
@@ -177,15 +191,23 @@ public class AdminRoomUI extends JPanel {
                 txtRent.setText(rent);
                 cbType.setSelectedItem(type);
 
-                if (status.contains("ว่าง")) rbAvailable.setSelected(true);
-                else if (status.contains("มีผู้เช่า")) rbOccupied.setSelected(true);
-                else rbMaintenance.setSelected(true);
+                if (status.equalsIgnoreCase("ห้องว่าง") || status.equalsIgnoreCase("AVAILABLE")) {
+                    previousStatus = "AVAILABLE";
+                    rbAvailable.setSelected(true);
+                } else if (status.equalsIgnoreCase("มีผู้เช่า") || status.equalsIgnoreCase("OCCUPIED")) {
+                    previousStatus = "OCCUPIED";
+                    rbOccupied.setSelected(true);
+                } else {
+                    previousStatus = "MAINTENANCE";
+                    rbMaintenance.setSelected(true);
+                }
             }
         });
 
+        // บันทึกการแก้ไขข้อมูลห้องพัก (แผงขวามือ)
         btnSave.addActionListener(e -> {
             if (selectedRoomId.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "กรุณาเลือกห้องจากตาราง หรือกดเพิ่มห้องใหม่", "แจ้งเตือน", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "กรุณาเลือกห้องจากตารางเพื่อแก้ไขข้อมูล", "แจ้งเตือน", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             try {
@@ -194,33 +216,121 @@ public class AdminRoomUI extends JPanel {
                 String type = (String) cbType.getSelectedItem();
                 String status = rbAvailable.isSelected() ? "AVAILABLE" : (rbOccupied.isSelected() ? "OCCUPIED" : "MAINTENANCE");
 
-                // บันทึก/อัปเดตเฉพาะไฟล์ rooms.csv เท่านั้น
                 AdminRoomLogic.saveOrUpdateRoom(selectedRoomId, num, type, rent, status);
                 
+                previousStatus = status;
                 loadTableData();
-                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องพักใน rooms.csv เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องพักเรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "ไม่อนุญาตให้ดำเนินการ", JOptionPane.ERROR_MESSAGE);
+                resetStatusToPrevious();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "ข้อมูลไม่ถูกต้อง: " + ex.getMessage(), "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        btnAdd.addActionListener(e -> {
-            selectedRoomId = "";
-            txtNumber.setText("");
-            txtRent.setText("2800");
-            cbType.setSelectedIndex(0);
-            rbAvailable.setSelected(true);
-            formSub.setText("เพิ่มห้องพักใหม่ (ระบุข้อมูลแล้วกดบันทึก)");
-            txtNumber.requestFocus();
+        // 🟢 ปุ่มเพิ่มห้องใหม่ -> เรียกใช้งาน Pop-up Dialog
+        btnAdd.addActionListener(e -> showAddRoomDialog());
+    }
+
+    /** 🟢 Pop-up Dialog เฉพาะสำหรับการเพิ่มห้องพักใหม่ */
+    private void showAddRoomDialog() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "เพิ่มห้องพักใหม่", true);
+        dialog.setSize(340, 360);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(null);
+        dialog.getContentPane().setBackground(WHITE);
+
+        JLabel l1 = new JLabel("เลขห้องพัก:"); 
+        l1.setBounds(25, 20, 90, 25); 
+        l1.setFont(AdminUI.font(Font.PLAIN, 12));
+        dialog.add(l1);
+        
+        RoundField txtAddNumber = new RoundField("เช่น 101", ITEM_BG, false);
+        txtAddNumber.setBounds(115, 20, 180, 34); 
+        dialog.add(txtAddNumber);
+
+        JLabel l2 = new JLabel("ประเภทห้อง:"); 
+        l2.setBounds(25, 65, 90, 25); 
+        l2.setFont(AdminUI.font(Font.PLAIN, 12));
+        dialog.add(l2);
+        
+        JComboBox<String> cbAddType = styledCombo(new String[]{"ห้องพัดลม", "ห้องแอร์"}, ITEM_BG);
+        cbAddType.setBounds(115, 65, 180, 34); 
+        dialog.add(cbAddType);
+
+        JLabel l3 = new JLabel("ค่าเช่า/เดือน:"); 
+        l3.setBounds(25, 110, 90, 25); 
+        l3.setFont(AdminUI.font(Font.PLAIN, 12));
+        dialog.add(l3);
+        
+        RoundField txtAddRent = new RoundField("เช่น 3500", ITEM_BG, false);
+        txtAddRent.setText("2800");
+        txtAddRent.setBounds(115, 110, 180, 34); 
+        dialog.add(txtAddRent);
+
+        JLabel l4 = new JLabel("สถานะห้อง:"); 
+        l4.setBounds(25, 155, 90, 25); 
+        l4.setFont(AdminUI.font(Font.PLAIN, 12));
+        dialog.add(l4);
+
+        JRadioButton rbAddAvailable   = radio("ห้องว่าง");
+        JRadioButton rbAddOccupied    = radio("มีผู้เช่า");
+        JRadioButton rbAddMaintenance = radio("ปิดปรับปรุง");
+        
+        ButtonGroup group = new ButtonGroup();
+        group.add(rbAddAvailable); 
+        group.add(rbAddOccupied); 
+        group.add(rbAddMaintenance);
+
+        rbAddAvailable.setBounds(115, 155, 180, 22);
+        rbAddOccupied.setBounds(115, 180, 180, 22);
+        rbAddMaintenance.setBounds(115, 205, 180, 22);
+        rbAddAvailable.setSelected(true);
+
+        dialog.add(rbAddAvailable);
+        dialog.add(rbAddOccupied);
+        dialog.add(rbAddMaintenance);
+
+        JButton btnSaveNew = new FlatButton("บันทึกข้อมูล", true);
+        btnSaveNew.setBounds(25, 255, 270, 40);
+        btnSaveNew.addActionListener(ev -> {
+            try {
+                String num = txtAddNumber.getText().trim();
+                if (num.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "กรุณาระบุเลขห้องพัก", "แจ้งเตือน", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                int rent = Integer.parseInt(txtAddRent.getText().trim().replace(",", ""));
+                String type = (String) cbAddType.getSelectedItem();
+                String status = rbAddAvailable.isSelected() ? "AVAILABLE" : (rbAddOccupied.isSelected() ? "OCCUPIED" : "MAINTENANCE");
+
+                // ส่งค่า roomId เป็น "" เพื่อสร้างห้องใหม่ลงไฟล์ rooms.csv
+                AdminRoomLogic.saveOrUpdateRoom("", num, type, rent, status);
+                
+                JOptionPane.showMessageDialog(dialog, "เพิ่มห้องพักใหม่เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+                loadTableData();
+
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "ไม่สามารถเพิ่มห้องพักได้", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "ข้อมูลไม่ถูกต้อง: " + ex.getMessage(), "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
-        btnCancel.addActionListener(e -> {
-            selectedRoomId = "";
-            txtNumber.setText("");
-            txtRent.setText("");
+        dialog.add(btnSaveNew);
+        dialog.setVisible(true);
+    }
+
+    private void resetStatusToPrevious() {
+        if ("AVAILABLE".equals(previousStatus)) {
             rbAvailable.setSelected(true);
-            formSub.setText("เลือกห้องจากตารางเพื่อแก้ไขข้อมูล");
-        });
+        } else if ("OCCUPIED".equals(previousStatus)) {
+            rbOccupied.setSelected(true);
+        } else {
+            rbMaintenance.setSelected(true);
+        }
     }
 
     private static JLabel fieldLabel(String text, int y) {
@@ -281,12 +391,12 @@ public class AdminRoomUI extends JPanel {
         return cb;
     }
 
-    static class RoundField extends JTextField {
+    public static class RoundField extends JTextField {
         private final String placeholder;
         private final Color bg;
         private final boolean searchIcon;
 
-        RoundField(String placeholder, Color bg, boolean searchIcon) {
+        public RoundField(String placeholder, Color bg, boolean searchIcon) {
             this.placeholder = placeholder;
             this.bg = bg;
             this.searchIcon = searchIcon;
@@ -326,10 +436,10 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
-    static class FlatButton extends JButton {
+    public static class FlatButton extends JButton {
         private final boolean primary;
 
-        FlatButton(String text, boolean primary) {
+        public FlatButton(String text, boolean primary) {
             super(text);
             this.primary = primary;
             setFont(AdminUI.font(Font.BOLD, 12));
@@ -358,8 +468,8 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
-    static class ChevronButton extends JButton {
-        ChevronButton() {
+    public static class ChevronButton extends JButton {
+        public ChevronButton() {
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
@@ -405,7 +515,7 @@ public class AdminRoomUI extends JPanel {
             setFont(AdminUI.font(Font.PLAIN, 11));
             setForeground(TEXT_GRAY);
             setBackground(WHITE);
-            setHorizontalAlignment(col == 4 || col == 6 ? SwingConstants.RIGHT : SwingConstants.LEFT);
+            setHorizontalAlignment(col == 4 ? SwingConstants.RIGHT : SwingConstants.LEFT);
             setBorder(BorderFactory.createCompoundBorder(
                     new MatteBorder(0, 0, 1, 0, BORDER), new EmptyBorder(0, 14, 0, 14)));
             return this;
@@ -418,29 +528,58 @@ public class AdminRoomUI extends JPanel {
             Color rowBg = sel ? ROW_SELECT : WHITE;
 
             if (col == 5) {
-                String s = String.valueOf(v);
+                String s = (v != null) ? String.valueOf(v).trim() : "";
+                
                 Color bg, fg;
-                if (s.contains("ว่าง"))        { bg = new Color(209, 250, 229); fg = new Color(4, 120, 87); }
-                else if (s.contains("มีผู้เช่า")) { bg = new Color(204, 251, 241); fg = PRIMARY; }
-                else                          { bg = new Color(254, 226, 226); fg = new Color(220, 38, 38); }
-                AdminUI.Badge badge = new AdminUI.Badge(s, bg, fg);
-                badge.setPreferredSize(badge.getSize());
-                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 10));
+
+                if ("ห้องว่าง".equalsIgnoreCase(s) || "AVAILABLE".equalsIgnoreCase(s)) {
+                    bg = new Color(209, 250, 229); 
+                    fg = new Color(4, 120, 87);
+                } 
+                else if ("มีผู้เช่า".equalsIgnoreCase(s) || "OCCUPIED".equalsIgnoreCase(s)) {
+                    bg = new Color(224, 242, 254); 
+                    fg = new Color(3, 105, 161);
+                } 
+                else {
+                    bg = new Color(254, 243, 199); 
+                    fg = new Color(180, 83, 9);
+                }
+
+                JPanel badgePanel = new JPanel(new GridBagLayout()) {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2.setColor(bg);
+                        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                        g2.dispose();
+                        super.paintComponent(g);
+                    }
+                };
+                badgePanel.setOpaque(false);
+
+                JLabel lbl = new JLabel(s);
+                lbl.setFont(AdminUI.font(Font.BOLD, 10));
+                lbl.setForeground(fg);
+                badgePanel.add(lbl);
+
+                FontMetrics fm = t.getFontMetrics(lbl.getFont());
+                int badgeW = fm.stringWidth(s) + 16;
+                badgePanel.setPreferredSize(new Dimension(badgeW, 22));
+
+                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 9));
                 cell.setBackground(rowBg);
-                cell.add(badge);
+                cell.add(badgePanel);
                 return cell;
             }
 
             super.getTableCellRendererComponent(t, v, false, false, row, col);
             setBackground(rowBg);
             setBorder(new EmptyBorder(0, 14, 0, 14));
-            setHorizontalAlignment(col == 4 || col == 6 ? SwingConstants.RIGHT : SwingConstants.LEFT);
+            setHorizontalAlignment(col == 4 ? SwingConstants.RIGHT : SwingConstants.LEFT);
             if (col == 0 || col == 1) {
                 setFont(AdminUI.font(Font.BOLD, 12));
                 setForeground(TEXT);
-            } else if (col == 6) {
-                setFont(AdminUI.font(Font.BOLD, 12));
-                setForeground(PRIMARY);
             } else {
                 setFont(AdminUI.font(Font.PLAIN, 12));
                 setForeground(col == 4 ? TEXT : new Color(55, 65, 81));

@@ -71,7 +71,7 @@ public class AdminRoomChangeLogic {
         Object[][] rows = new Object[list.size()][5];
         for (int i = 0; i < list.size(); i++) {
             MoveModel m = list.get(i);
-            rows[i] = new Object[]{m.id, m.name, "ห้อง " + m.oldRoomNum + " ➔ " + m.newRoomNum, m.date, m.status};
+            rows[i] = new Object[]{m.id, m.name, "จากห้อง " + m.oldRoomNum + " ย้ายไป " + m.newRoomNum, m.date, m.status};
         }
         return rows;
     }

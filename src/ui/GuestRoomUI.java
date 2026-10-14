@@ -59,7 +59,10 @@ public class GuestRoomUI extends JPanel {
         topCard.setBounds(70, 76, 960, 190);
 
         String roomNumOnly = logic.getRoomNumberOnly();
-        RoomImage bigImg = new RoomImage("img/room_" + roomNumOnly + ".png", 240, 158);
+        
+        // 🟢 เลือกรูป fallback ตามประเภทห้อง หากไม่มีรูปเฉพาะของห้องนั้น
+        String defaultImg = (logic.getRoomType() != null && logic.getRoomType().contains("แอร์")) ? "img/room_201.png" : "img/room_101.png";
+        RoomImage bigImg = new RoomImage(new String[]{"img/room_" + roomNumOnly + ".png", defaultImg}, 240, 158);
         bigImg.setBounds(16, 16, 240, 158);
         topCard.add(bigImg);
 
@@ -193,8 +196,8 @@ public class GuestRoomUI extends JPanel {
     static class RoomImage extends JPanel {
         private final Image photo;
 
-        RoomImage(String path, int width, int height) {
-            this.photo = ImageLoader.load(path, "img/room_101.png");
+        RoomImage(String[] paths, int width, int height) {
+            this.photo = ImageLoader.load(paths);
             setOpaque(false);
             setPreferredSize(new Dimension(width, height));
             setSize(width, height);

@@ -32,6 +32,14 @@ public class AdminUI extends JFrame {
     private final JLabel headerTitleLabel;
     private final List<MenuItem> menuItems = new ArrayList<>();
 
+    // เก็บอ้างอิงของแต่ละหน้าย่อยเพื่อเรียกสั่ง Refresh ข้อมูลเวลาสลับแท็บ
+    private JPanel dashboardPanel;
+    private AdminRoomUI roomUI;
+    private AdminTenantUI tenantUI;
+    private AdminBookingUI bookingUI;
+    private AdminRoomChangeUI roomChangeUI;
+    private AdminReportUI reportUI;
+
     private static final String[] PAGE_KEYS = {
             "DASHBOARD", "ROOMS", "TENANTS", "BOOKINGS", "MOVES", "PROBLEMS"
     };
@@ -70,18 +78,29 @@ public class AdminUI extends JFrame {
         centerCardsPanel.setBounds(190, 60, 910, 640);
         centerCardsPanel.setOpaque(false);
 
-        // เพิ่มการ์ดของแต่ละหน้าย่อยที่เป็น JPanel
-        centerCardsPanel.add(buildDashboardContent(), "DASHBOARD");
-        centerCardsPanel.add(new AdminRoomUI(), "ROOMS");
-        centerCardsPanel.add(new AdminTenantUI(), "TENANTS");
-        centerCardsPanel.add(new AdminBookingUI(), "BOOKINGS");
-        centerCardsPanel.add(new AdminRoomChangeUI(), "MOVES");
-        centerCardsPanel.add(new AdminReportUI(), "PROBLEMS");
+        // สร้าง Instance ของหน้าย่อยต่าง ๆ
+        dashboardPanel = buildDashboardContent();
+        roomUI         = new AdminRoomUI();
+        tenantUI       = new AdminTenantUI();
+        bookingUI      = new AdminBookingUI();
+        roomChangeUI   = new AdminRoomChangeUI();
+        reportUI       = new AdminReportUI();
+
+        // เพิ่มการ์ดของแต่ละหน้าย่อย
+        centerCardsPanel.add(dashboardPanel, "DASHBOARD");
+        centerCardsPanel.add(roomUI, "ROOMS");
+        centerCardsPanel.add(tenantUI, "TENANTS");
+        centerCardsPanel.add(bookingUI, "BOOKINGS");
+        centerCardsPanel.add(roomChangeUI, "MOVES");
+        centerCardsPanel.add(reportUI, "PROBLEMS");
 
         root.add(centerCardsPanel);
         setVisible(true);
     }
 
+    /**
+     * สลับหน้า และรีเฟรชข้อมูลของหน้านั้น ๆ อัตโนมัติโดยไม่ต้องเปิดโปรแกรมใหม่
+     */
     public void showPage(int index) {
         cardLayout.show(centerCardsPanel, PAGE_KEYS[index]);
         if (headerTitleLabel != null) {
@@ -91,6 +110,31 @@ public class AdminUI extends JFrame {
 
         for (int i = 0; i < menuItems.size(); i++) {
             menuItems.get(i).setSelected(i == index);
+        }
+
+        // 🟢 เรียกอัปเดตข้อมูลใหม่ของหน้านั้น ๆ เมื่อกดเปิด
+        switch (PAGE_KEYS[index]) {
+            case "DASHBOARD":
+                centerCardsPanel.remove(dashboardPanel);
+                dashboardPanel = buildDashboardContent();
+                centerCardsPanel.add(dashboardPanel, "DASHBOARD");
+                cardLayout.show(centerCardsPanel, "DASHBOARD");
+                break;
+            case "ROOMS":
+                if (roomUI != null) roomUI.loadTableData();
+                break;
+            case "TENANTS":
+                if (tenantUI != null) tenantUI.refreshData();
+                break;
+            case "BOOKINGS":
+                if (bookingUI != null) bookingUI.refreshData();
+                break;
+            case "MOVES":
+                if (roomChangeUI != null) roomChangeUI.refreshData();
+                break;
+            case "PROBLEMS":
+                if (reportUI != null) reportUI.refreshData();
+                break;
         }
     }
 
@@ -543,7 +587,4 @@ public class AdminUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AdminUI());
-    }
 }

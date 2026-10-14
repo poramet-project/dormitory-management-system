@@ -155,7 +155,7 @@ public class AdminRoomChangeUI extends JPanel {
             // Pop-up ยืนยันแบบสั้นกระชับ
             int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "อนุมัติย้ายห้องคุณ " + currentMove.name + " (ห้อง " + currentMove.oldRoomNum + " ➔ " + currentMove.newRoomNum + ") ?",
+                "อนุมัติย้ายห้องคุณ " + currentMove.name + " (จากห้อง " + currentMove.oldRoomNum + "ย้ายไป" + currentMove.newRoomNum + ") ?",
                 "ยืนยันการอนุมัติ",
                 JOptionPane.YES_NO_OPTION
             );

@@ -104,7 +104,7 @@ public class AdminTenantUI extends JPanel {
         btnEdit.setBounds(20, 360, 276, 36);
         p.add(btnEdit);
 
-        btnRenew = new AdminRoomUI.FlatButton("ต่ออายุสัญญา (+1 ปี)", true);
+        btnRenew = new AdminRoomUI.FlatButton("ต่ออายุสัญญาเพิ่ม 1 ปี", true);
         btnRenew.setBounds(20, 406, 276, 36);
         p.add(btnRenew);
 

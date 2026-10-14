@@ -28,7 +28,6 @@ public class GuestUI extends JFrame {
     private JPanel grid;
     private JScrollPane scroll;
 
-    // CardLayout สำหรับสลับหน้ารายการและหน้ารายละเอียดแบบ TenantUI
     private final CardLayout cardLayout;
     private final JPanel cardsContainer;
     private final JPanel detailCardWrapper;
@@ -45,10 +44,8 @@ public class GuestUI extends JFrame {
         cardLayout = new CardLayout();
         cardsContainer = new JPanel(cardLayout);
 
-        // การ์ด 1: หน้ารายการค้นหาห้องพัก
         cardsContainer.add(createListPanel(), "LIST");
 
-        // การ์ด 2: คอนเทนเนอร์สำหรับใส่ GuestRoomUI
         detailCardWrapper = new JPanel(new BorderLayout());
         cardsContainer.add(detailCardWrapper, "DETAIL");
 
@@ -60,7 +57,6 @@ public class GuestUI extends JFrame {
         JPanel root = new JPanel(null);
         root.setBackground(BG);
 
-        // 1. หัวเรื่อง
         JLabel title = label("ค้นหาห้องพักว่าง", Font.BOLD, 24, TEXT);
         title.setBounds(40, 72, 500, 32);
         root.add(title);
@@ -69,7 +65,6 @@ public class GuestUI extends JFrame {
         sub.setBounds(40, 108, 500, 20);
         root.add(sub);
 
-        // 2. ตารางการ์ดห้องพัก
         grid = new JPanel(null);
         grid.setBackground(BG);
         loadRoomCards();
@@ -85,11 +80,9 @@ public class GuestUI extends JFrame {
         scroll.setBounds(40, 252, 1004 + 16, 424);
         root.add(scroll);
 
-        // 3. ตัวกรองข้อมูล
         JPanel filterCard = createFilterCard();
         root.add(filterCard);
 
-        // 4. Navbar
         JPanel nav = createNavbar();
         root.add(nav);
 
@@ -100,9 +93,6 @@ public class GuestUI extends JFrame {
         return root;
     }
 
-    /**
-     * เปลี่ยนไปแสดงหน้ารายละเอียดห้องพักโดยไม่เปิดหน้าต่างใหม่
-     */
     public void showDetailView(GuestLogic.RoomViewModel room) {
         detailCardWrapper.removeAll();
         GuestRoomUI detailUI = new GuestRoomUI(this, room.numberText, room.typeShort, room.priceText, room.statusLabel);
@@ -114,9 +104,6 @@ public class GuestUI extends JFrame {
         cardLayout.show(cardsContainer, "DETAIL");
     }
 
-    /**
-     * ย้อนกลับมาแสดงหน้ารายการค้นหาห้องพัก
-     */
     public void showListView() {
         loadRoomCards();
         setTitle("KU Dormitory - ค้นหาห้องพัก");
@@ -224,7 +211,10 @@ public class GuestUI extends JFrame {
         card.setBounds(x, y, w, h);
 
         String roomNumOnly = room.numberText.replace("ห้อง ", "");
-        RoomImage img = new RoomImage("img/room_" + roomNumOnly + ".png", w - 16, 132);
+        
+        // 🟢 เลือกรูป fallback ตามประเภทห้อง หากไม่มีรูปเฉพาะของห้องนั้น
+        String defaultImg = (room.typeShort != null && room.typeShort.contains("แอร์")) ? "img/room_201.png" : "img/room_101.png";
+        RoomImage img = new RoomImage(new String[]{"img/room_" + roomNumOnly + ".png", defaultImg}, w - 16, 132);
         img.setBounds(8, 8, w - 16, 132);
         card.add(img);
 
@@ -259,7 +249,7 @@ public class GuestUI extends JFrame {
 
         btn.addActionListener(e -> showDetailView(room));
 
-        // --- Animation Spring Bounce 60 FPS ---
+        // Animation Spring Bounce
         final Timer[] animTimer = new Timer[1];
         final float[] targetOffsetY = {0f};
         final float[] currentOffsetY = {0f};
@@ -486,8 +476,8 @@ public class GuestUI extends JFrame {
     static class RoomImage extends JPanel {
         private final Image photo;
 
-        RoomImage(String path, int width, int height) {
-            this.photo = ImageLoader.load(path, "img/room_101.png");
+        RoomImage(String[] paths, int width, int height) {
+            this.photo = ImageLoader.load(paths);
             setOpaque(false);
             setPreferredSize(new Dimension(width, height));
             setSize(width, height);
