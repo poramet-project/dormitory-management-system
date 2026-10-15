@@ -81,6 +81,7 @@ public class LoginUI extends JFrame {
             // ต้องตั้ง currentUser ก่อนสร้างหน้า UI เพราะ TenantUI/GuestUI ฯลฯ
             // เรียก LogicLogin.getCurrentUser() ภายใน constructor
             LoginLogic.setCurrentUser(user);
+            DataStore.setCurrentLoginUser(user.username);
 
             JFrame next;
             try {

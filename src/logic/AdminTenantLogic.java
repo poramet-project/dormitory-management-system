@@ -3,6 +3,7 @@ package logic;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 /**
  * AdminTenantLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบทะเบียนผู้เช่าและสัญญาเช่าสำหรับผู้ดูแล
  * ให้บริการดึงรายการสัญญาเช่า ทำสัญญาใหม่ แก้ไขสัญญา ต่ออายุสัญญา และยกเลิกสัญญาเช่า
@@ -117,6 +118,47 @@ public class AdminTenantLogic {
     }
 
     /**
+     * ตรวจสอบว่าห้องพักมีผู้เช่าหรือมีสัญญาเช่าที่เปิดใช้งานอยู่แล้วหรือไม่
+     *
+     * @param roomId รหัสห้องพัก เช่น "R101" หรือ "101"
+     * @return true หากห้องพักมีผู้อาศัยอยู่แล้ว
+     */
+    public static boolean isRoomOccupied(String roomId) {
+        if (DataStore.blank(roomId)) return false;
+        DataStore.Room r = DataStore.room(roomId);
+        if (r == null) r = DataStore.roomByNumber(roomId);
+        String rId = (r != null) ? r.id : roomId.trim();
+        String rNum = (r != null) ? r.number : roomId.trim();
+
+        // 1. ตรวจสอบสถานะห้องพักใน rooms.csv
+        if (r != null && !"AVAILABLE".equalsIgnoreCase(r.status)) {
+            return true;
+        }
+
+        // 2. ตรวจสอบว่ามีสัญญาเช่าสถานะ ACTIVE สำหรับห้องนี้หรือไม่
+        for (DataStore.Contract c : DataStore.contracts()) {
+            if (c.isActive()) {
+                if (c.roomId.equalsIgnoreCase(rId) || c.roomId.equalsIgnoreCase(rNum)) {
+                    return true;
+                }
+            }
+        }
+
+        // 3. ตรวจสอบว่ามีผู้ใช้ใน users.csv ที่เป็น TENANT และผูกกับห้องนี้หรือไม่
+        for (Map<String, String> u : DataStore.readTable("users.csv")) {
+            String role = u.getOrDefault("role", "").trim();
+            String uRoom = u.getOrDefault("roomId", "").trim();
+            if ("TENANT".equalsIgnoreCase(role)) {
+                if (uRoom.equalsIgnoreCase(rId) || uRoom.equalsIgnoreCase(rNum)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * สร้างและบันทึกสัญญาเช่าใหม่เข้าสู่ระบบ
      * พร้อมปรับสถานะห้องพักเป็น OCCUPIED และตั้งค่าบทบาทผู้ใช้งานเป็น TENANT
      *
@@ -124,10 +166,13 @@ public class AdminTenantLogic {
      * @param roomId รหัสห้องพัก
      * @param rent อัตราค่าเช่าต่อเดือน
      * @param deposit เงินประกันสัญญา
-     * @return true หากบันทึกสัญญาสำเร็จ, false หากเกิดข้อผิดพลาด
+     * @return true หากบันทึกสัญญาสำเร็จ, false หากเกิดข้อผิดพลาดหรือห้องมีผู้อาศัยอยู่แล้ว
      */
     public boolean addContract(String userId, String roomId, int rent, int deposit) {
-        boolean ok = DataStore.saveContract(userId, roomId, rent);
+        if (isRoomOccupied(roomId)) {
+            return false;
+        }
+        boolean ok = DataStore.saveContract(userId, roomId, rent, deposit, "ACTIVE");
         if (ok) {
             DataStore.setRoomStatus(roomId, "OCCUPIED");
             LoginLogic.assignRoom(userId, roomId);
@@ -145,9 +190,12 @@ public class AdminTenantLogic {
      * @param newRoomId รหัสห้องใหม่
      * @param rent อัตราค่าเช่าใหม่
      * @param deposit เงินมัดจำประกันใหม่
-     * @return true หากแก้ไขสำเร็จ
+     * @return true หากแก้ไขสำเร็จ, false หากห้องใหม่มีผู้อาศัยอยู่แล้ว
      */
     public boolean updateContract(String contractId, String oldUserId, String newUserId, String oldRoomId, String newRoomId, int rent, int deposit) {
+        if (!oldRoomId.equalsIgnoreCase(newRoomId) && isRoomOccupied(newRoomId)) {
+            return false;
+        }
         DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "userId", newUserId);
         DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "roomId", newRoomId);
         DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "monthlyRent", String.valueOf(rent));

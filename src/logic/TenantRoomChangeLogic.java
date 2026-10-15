@@ -205,7 +205,6 @@ public class TenantRoomChangeLogic {
     public void reload() {
         transferList.clear();
         String currentUserId = userKey();
-        String currentRoomId = roomId();
 
         for (Map<String, String> row : DataStore.readTable(TRANSFER_FILE)) {
             String tId = row.getOrDefault("transferId", "").trim();

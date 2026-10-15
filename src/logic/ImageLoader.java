@@ -20,7 +20,11 @@ public final class ImageLoader {
     private ImageLoader() { }
 
     private static final String[] DIRS = {
-            "", "src/", "img/", "src/img/", "../src/", "../src/img/", "../img/", "DMS/src/img/", "DMS/img/"
+            "", "src/", "img/", "src/img/", "../src/", "../src/img/", "../img/", "DMS/src/img/", "DMS/img/",
+            "dormitory-management-system-main/",
+            "dormitory-management-system-main/src/",
+            "dormitory-management-system-main/img/",
+            "dormitory-management-system-main/src/img/"
     };
 
     /**

@@ -63,7 +63,55 @@ public final class DataStore {
 
     // ===================== หาไฟล์ =====================
 
-    private static final String[] DIRS = { "src/data/", "data/", "DMS/src/data/", "src/", "" };
+    private static final String[] DIRS = {
+            "dormitory-management-system-main/src/data/",
+            "dormitory-management-system-main/data/",
+            "src/data/",
+            "data/",
+            "DMS/src/data/",
+            "dormitory-management-system-main/src/",
+            "src/",
+            "dormitory-management-system-main/",
+            ""
+    };
+
+    private static File cachedDataDir = null;
+
+    /**
+     * ค้นหาไดเรกทอรีที่เก็บไฟล์ข้อมูล CSV จริงของระบบ
+     *
+     * @return ออบเจ็กต์ File ของไดเรกทอรีข้อมูล
+     */
+    public static synchronized File getDataDirectory() {
+        if (cachedDataDir != null && cachedDataDir.isDirectory()) {
+            return cachedDataDir;
+        }
+
+        // 1. ค้นหาโฟลเดอร์ที่มี rooms.csv หรือ users.csv ที่มีข้อมูลอยู่จริง
+        for (String d : DIRS) {
+            File dir = new File(d.isEmpty() ? "." : d);
+            if (dir.isDirectory()) {
+                File r = new File(dir, "rooms.csv");
+                File u = new File(dir, "users.csv");
+                if ((r.exists() && r.length() > 60) || (u.exists() && u.length() > 60)) {
+                    cachedDataDir = dir;
+                    return cachedDataDir;
+                }
+            }
+        }
+
+        // 2. หากยังไม่พบไฟล์ที่มีข้อมูล ให้เลือกโฟลเดอร์ data ที่มีอยู่จริง
+        for (String d : DIRS) {
+            File dir = new File(d.isEmpty() ? "." : d);
+            if (dir.isDirectory() && d.contains("data")) {
+                cachedDataDir = dir;
+                return cachedDataDir;
+            }
+        }
+
+        cachedDataDir = new File("data");
+        return cachedDataDir;
+    }
 
     /**
      * ค้นหาไฟล์ข้อมูลตามลำดับโฟลเดอร์ที่เป็นไปได้ในระบบ
@@ -72,12 +120,26 @@ public final class DataStore {
      * @return ออบเจ็กต์ File ของไฟล์ที่พบ หรือตำแหน่งเป้าหมาย
      */
     public static File file(String name) {
+        File dir = getDataDirectory();
+        File target = new File(dir, name);
+        if (target.exists() && target.length() > 60) {
+            return target;
+        }
+
+        File fallback = target.exists() ? target : null;
         for (String d : DIRS) {
             File f = new File(d + name);
-            if (f.exists())
-                return f;
+            if (f.exists() && f.isFile()) {
+                if (f.length() > 60) {
+                    return f;
+                }
+                if (fallback == null) {
+                    fallback = f;
+                }
+            }
         }
-        return new File("data/" + name);
+
+        return fallback != null ? fallback : target;
     }
 
     // ===================== อ่าน CSV =====================
@@ -780,13 +842,29 @@ public final class DataStore {
      * @param roomId รหัสห้องพัก
      * @param monthlyRent ค่าเช่ารายเดือน
      * @return true หากบันทึกสำเร็จ
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสห้องพัก
+     * @param monthlyRent ค่าเช่ารายเดือน
+     * @param deposit เงินประกันสัญญา
+     * @param status สถานะสัญญาเช่า เช่น "ACTIVE" หรือ "PENDING"
+     * @return true หากบันทึกสำเร็จ
      */
-    public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent) {
-        return saveContract(userId, roomId, monthlyRent, "ACTIVE");
+    public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent, int deposit, String status) {
+        try {
+            String contractId = nextId(CONTRACTS_FILE, "contractId", "CNT", 3);
+            String startDate = LocalDate.now().toString();
+            String endDate = LocalDate.now().plusYears(1).toString();
+            appendRow(CONTRACTS_FILE, CONTRACTS_HEADER, contractId, userId, roomId, startDate, endDate,
+                    String.valueOf(monthlyRent), String.valueOf(deposit), status);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
-     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะสัญญาได้ตามต้องการ
+     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะสัญญาได้ตามต้องการ (คำนวณเงินประกันอัตโนมัติหากไม่ได้ระบุ)
      * 
      * @param userId รหัสผู้เช่า
      * @param roomId รหัสห้องพัก
@@ -795,17 +873,35 @@ public final class DataStore {
      * @return true หากบันทึกสำเร็จ
      */
     public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent, String status) {
-        try {
-            String contractId = nextId(CONTRACTS_FILE, "contractId", "CNT", 3);
-            String startDate = LocalDate.now().toString();
-            String endDate = LocalDate.now().plusYears(1).toString();
-            appendRow(CONTRACTS_FILE, CONTRACTS_HEADER, contractId, userId, roomId, startDate, endDate,
-                    String.valueOf(monthlyRent), "0", status);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        Room r = room(roomId);
+        if (r == null) r = roomByNumber(roomId);
+        int dep = (r != null && (r.isAir() || (r.type != null && r.type.toLowerCase().contains("air")))) ? 7000 : (monthlyRent * 2);
+        return saveContract(userId, roomId, monthlyRent, dep, status);
+    }
+
+    /**
+     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะเริ่มต้นเป็น ACTIVE พร้อมระบุเงินประกัน
+     * 
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสห้องพัก
+     * @param monthlyRent ค่าเช่ารายเดือน
+     * @param deposit เงินประกันสัญญา
+     * @return true หากบันทึกสำเร็จ
+     */
+    public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent, int deposit) {
+        return saveContract(userId, roomId, monthlyRent, deposit, "ACTIVE");
+    }
+
+    /**
+     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะเริ่มต้นเป็น ACTIVE
+     * 
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสห้องพัก
+     * @param monthlyRent ค่าเช่ารายเดือน
+     * @return true หากบันทึกสำเร็จ
+     */
+    public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent) {
+        return saveContract(userId, roomId, monthlyRent, "ACTIVE");
     }
 
     /**

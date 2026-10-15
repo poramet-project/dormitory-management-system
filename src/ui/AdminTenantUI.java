@@ -322,7 +322,7 @@ public class AdminTenantUI extends JPanel {
     private void showFormDialog(AdminTenantLogic.TenantModel model) {
         boolean isEdit = (model != null);
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), isEdit ? "แก้ไขสัญญา" : "ทำสัญญาใหม่", true);
-        dialog.setSize(320, 320);
+        dialog.setSize(340, 340);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(null);
 
@@ -334,23 +334,65 @@ public class AdminTenantUI extends JPanel {
             }
         }
         if (isEdit) cbUser.setSelectedItem(model.userId + " - " + model.name);
-        cbUser.setBounds(100, 20, 180, 25); dialog.add(cbUser);
+        cbUser.setBounds(100, 20, 200, 25); dialog.add(cbUser);
 
         JLabel l2 = new JLabel("ห้องพัก:"); l2.setBounds(20, 60, 80, 25); dialog.add(l2);
         JComboBox<String> cbRoom = new JComboBox<>();
         for (DataStore.Room r : DataStore.rooms()) {
-            cbRoom.addItem(r.id + " (ห้อง " + r.number + ")");
+            boolean occupied = AdminTenantLogic.isRoomOccupied(r.id);
+            // สัญญาใหม่แสดงเฉพาะห้องว่าง / แก้ไขสัญญาแสดงห้องว่างและห้องเดิมของสัญญานี้
+            if (!occupied || (isEdit && (r.id.equalsIgnoreCase(model.roomId) || r.number.equalsIgnoreCase(model.room)))) {
+                cbRoom.addItem(r.id + " (ห้อง " + r.number + " - " + r.typeShort() + ")");
+            }
         }
-        if (isEdit) cbRoom.setSelectedItem(model.roomId + " (ห้อง " + model.room + ")");
-        cbRoom.setBounds(100, 60, 180, 25); dialog.add(cbRoom);
+
+        if (cbRoom.getItemCount() == 0) {
+            JOptionPane.showMessageDialog(this, "ขณะนี้ไม่มีห้องว่างสำหรับทำสัญญาใหม่", "ไม่มีห้องว่าง", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (isEdit) {
+            for (int i = 0; i < cbRoom.getItemCount(); i++) {
+                String item = cbRoom.getItemAt(i);
+                if (item.startsWith(model.roomId + " ")) {
+                    cbRoom.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        cbRoom.setBounds(100, 60, 200, 25); dialog.add(cbRoom);
 
         JLabel l3 = new JLabel("ค่าเช่า:"); l3.setBounds(20, 100, 80, 25); dialog.add(l3);
-        JTextField txtRent = new JTextField(isEdit ? model.rent.replace(" บาท", "").replace(",", "") : "2800");
-        txtRent.setBounds(100, 100, 180, 25); dialog.add(txtRent);
+        JTextField txtRent = new JTextField();
+        txtRent.setBounds(100, 100, 200, 25); dialog.add(txtRent);
 
         JLabel l4 = new JLabel("เงินประกัน:"); l4.setBounds(20, 140, 80, 25); dialog.add(l4);
-        JTextField txtDeposit = new JTextField(isEdit ? model.deposit.replace(" บาท", "").replace(",", "") : "5600");
-        txtDeposit.setBounds(100, 140, 180, 25); dialog.add(txtDeposit);
+        JTextField txtDeposit = new JTextField();
+        txtDeposit.setBounds(100, 140, 200, 25); dialog.add(txtDeposit);
+
+        // คำนวณค่าเช่าและเงินประกันอัตโนมัติตามประเภทห้อง (เช่น ห้องแอร์ เงินประกัน 7,000, ห้องพัดลม 5,600)
+        Runnable updateRentAndDeposit = () -> {
+            String rSel = (String) cbRoom.getSelectedItem();
+            if (rSel != null) {
+                String rId = rSel.split(" ")[0].trim();
+                DataStore.Room r = DataStore.room(rId);
+                if (r == null) r = DataStore.roomByNumber(rId);
+                if (r != null) {
+                    txtRent.setText(String.valueOf(r.rent));
+                    int dep = (r.isAir() || (r.type != null && r.type.toLowerCase().contains("air"))) ? 7000 : (r.rent * 2);
+                    txtDeposit.setText(String.valueOf(dep));
+                }
+            }
+        };
+
+        if (isEdit) {
+            txtRent.setText(model.rent.replace(" บาท", "").replace(",", ""));
+            txtDeposit.setText(model.deposit.replace(" บาท", "").replace(",", ""));
+        } else {
+            updateRentAndDeposit.run();
+        }
+
+        cbRoom.addActionListener(ev -> updateRentAndDeposit.run());
 
         JButton btnSave = new JButton("บันทึก");
         btnSave.setBounds(100, 200, 120, 35);
@@ -358,8 +400,23 @@ public class AdminTenantUI extends JPanel {
             try {
                 String uSel = (String) cbUser.getSelectedItem();
                 String rSel = (String) cbRoom.getSelectedItem();
+                if (uSel == null || rSel == null) {
+                    JOptionPane.showMessageDialog(dialog, "กรุณาเลือกผู้ใช้งานและห้องพัก", "ข้อมูลไม่ครบ", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 String uId = uSel.split(" - ")[0].trim();
                 String rId = rSel.split(" ")[0].trim();
+
+                // ตรวจสอบห้องซ้ำว่ามีผู้อาศัยอยู่แล้วหรือไม่
+                if (!isEdit && AdminTenantLogic.isRoomOccupied(rId)) {
+                    JOptionPane.showMessageDialog(dialog, "ไม่สามารถทำสัญญาได้ เนื่องจากห้องนี้มีผู้อาศัยอยู่แล้ว", "ห้องไม่ว่าง", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (isEdit && !rId.equalsIgnoreCase(model.roomId) && AdminTenantLogic.isRoomOccupied(rId)) {
+                    JOptionPane.showMessageDialog(dialog, "ไม่สามารถย้ายสัญญาไปยังห้องนี้ได้ เนื่องจากห้องนี้มีผู้อาศัยอยู่แล้ว", "ห้องไม่ว่าง", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
                 int rent = Integer.parseInt(txtRent.getText().trim());
                 int dep = Integer.parseInt(txtDeposit.getText().trim());
 
@@ -374,9 +431,13 @@ public class AdminTenantUI extends JPanel {
                     JOptionPane.showMessageDialog(dialog, "บันทึกข้อมูลเรียบร้อยแล้ว");
                     dialog.dispose();
                     refreshData();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "ไม่สามารถทำสัญญาได้ กรุณาตรวจสอบสถานะห้องพัก", "เกิดข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
                 }
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(dialog, "กรุณากรอกค่าเช่าและเงินประกันเป็นตัวเลข", "ข้อมูลไม่ถูกต้อง", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "ข้อมูลไม่ถูกต้อง");
+                JOptionPane.showMessageDialog(dialog, "ข้อมูลไม่ถูกต้อง: " + ex.getMessage());
             }
         });
         dialog.add(btnSave);

@@ -132,18 +132,7 @@ public class SignUpLogic {
      * @return ออบเจ็กต์ File ของ users.csv
      */
     private static File resolveCsvFile() {
-        String[] paths = {
-            "users.csv",
-            "src/users.csv",
-            "data/users.csv",
-            "src/data/users.csv",
-            "DMS/src/data/users.csv"
-        };
-        for (String p : paths) {
-            File f = new File(p);
-            if (f.exists()) return f;
-        }
-        return new File("users.csv");
+        return DataStore.file("users.csv");
     }
 
     /**
