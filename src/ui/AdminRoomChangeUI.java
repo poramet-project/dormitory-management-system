@@ -297,7 +297,7 @@ public class AdminRoomChangeUI extends JPanel {
                     JOptionPane.showMessageDialog(this, "อนุมัติย้ายห้องและออกสัญญาใหม่เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
                 } else {
-                    JOptionPane.showMessageDialog(this, "เกิดข้อผิดพลาดในการทำรายการ", "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "ไม่สามารถอนุมัติได้ เนื่องจากห้องพักปลายทางมีผู้อาศัยอยู่แล้ว หรือห้องไม่ว่าง", "ข้อผิดพลาด", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

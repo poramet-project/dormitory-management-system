@@ -152,6 +152,11 @@ public class AdminRoomChangeLogic {
                 String oldRoomId = m.getOrDefault("oldRoomId", "").trim();
                 String newRoomId = m.getOrDefault("newRoomId", "").trim();
 
+                // ป้องกันการอนุมัติหากห้องปลายทางมีผู้อาศัยอยู่แล้ว
+                if (AdminTenantLogic.isRoomOccupied(newRoomId)) {
+                    return false;
+                }
+
                 // 1. อัปเดตสถานะใน room_transfers.csv
                 DataStore.updateCell("room_transfers.csv", "transferId", transferId, "status", "APPROVED");
 
@@ -165,16 +170,9 @@ public class AdminRoomChangeLogic {
                 // 3. คำนวณราคาและสร้างสัญญาใหม่ (ACTIVE)
                 DataStore.Room newRoom = DataStore.room(newRoomId);
                 int newRent = newRoom != null ? newRoom.rent : 2800;
-                int newDeposit = newRent * 2; // เงินประกัน = ค่าห้องใหม่ x 2
+                int newDeposit = (newRoom != null && (newRoom.isAir() || (newRoom.type != null && newRoom.type.toLowerCase().contains("air")))) ? 7000 : (newRent * 2);
 
-                DataStore.saveContract(userId, newRoomId, newRent, "ACTIVE");
-
-                // บันทึกเงินประกันลงในสัญญาฉบับใหม่ล่าสุด
-                for (DataStore.Contract c : DataStore.contracts()) {
-                    if (c.userId.equalsIgnoreCase(userId) && c.roomId.equalsIgnoreCase(newRoomId) && c.isActive()) {
-                        DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", c.id, "deposit", String.valueOf(newDeposit));
-                    }
-                }
+                DataStore.saveContract(userId, newRoomId, newRent, newDeposit, "ACTIVE");
 
                 // 4. สลับสถานะห้องพัก
                 DataStore.setRoomStatus(oldRoomId, "AVAILABLE");

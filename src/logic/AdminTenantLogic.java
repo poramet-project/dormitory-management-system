@@ -172,6 +172,17 @@ public class AdminTenantLogic {
         if (isRoomOccupied(roomId)) {
             return false;
         }
+
+        // หากผู้ใช้นี้มีสัญญา ACTIVE เดิมอยู่ ให้ยกเลิกสัญญาเดิมก่อนและปล่อยห้องเดิมเป็น AVAILABLE
+        for (DataStore.Contract oldC : DataStore.contracts()) {
+            if (oldC.userId.equalsIgnoreCase(userId) && oldC.isActive()) {
+                DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", oldC.id, "status", "TERMINATED");
+                if (!oldC.roomId.equalsIgnoreCase(roomId)) {
+                    DataStore.setRoomStatus(oldC.roomId, "AVAILABLE");
+                }
+            }
+        }
+
         boolean ok = DataStore.saveContract(userId, roomId, rent, deposit, "ACTIVE");
         if (ok) {
             DataStore.setRoomStatus(roomId, "OCCUPIED");
@@ -264,8 +275,25 @@ public class AdminTenantLogic {
         boolean ok = DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "status", "TERMINATED");
         if (ok) {
             DataStore.setRoomStatus(roomId, "AVAILABLE");
-            DataStore.updateCell("users.csv", "userId", userId, "roomId", "-");
-            DataStore.updateCell("users.csv", "userId", userId, "role", "GUEST");
+
+            // ตรวจสอบว่าผู้เช่ายังมีสัญญา ACTIVE อื่นอยู่อีกหรือไม่
+            DataStore.Contract otherActive = null;
+            for (DataStore.Contract c : DataStore.contracts()) {
+                if (c.isActive() && c.userId.equalsIgnoreCase(userId) && !c.id.equalsIgnoreCase(contractId)) {
+                    otherActive = c;
+                    break;
+                }
+            }
+
+            if (otherActive != null) {
+                // หากยังมีสัญญาอื่นที่ active อยู่ ให้คงสถานะ TENANT และผูกกับห้องนั้น
+                DataStore.updateCell("users.csv", "userId", userId, "roomId", otherActive.roomId);
+                DataStore.updateCell("users.csv", "userId", userId, "role", "TENANT");
+                LoginLogic.assignRoom(userId, otherActive.roomId);
+            } else {
+                DataStore.updateCell("users.csv", "userId", userId, "roomId", "-");
+                DataStore.updateCell("users.csv", "userId", userId, "role", "GUEST");
+            }
         }
         return ok;
     }

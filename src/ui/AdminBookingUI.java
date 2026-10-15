@@ -262,9 +262,13 @@ public class AdminBookingUI extends JPanel {
                 String bookingId = String.valueOf(tableModel.getValueAt(row, 0));
                 if (logic.approveBooking(bookingId)) {
                     JOptionPane.showMessageDialog(this,
-                            "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่า (เงินประกัน x 2) เรียบร้อยแล้ว",
+                            "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่าเรียบร้อยแล้ว",
                             "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "ไม่สามารถอนุมัติได้ เนื่องจากห้องพักนี้มีผู้อาศัยอยู่แล้ว หรือห้องไม่ว่าง",
+                            "ห้องไม่ว่าง", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });

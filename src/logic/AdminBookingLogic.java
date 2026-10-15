@@ -148,6 +148,11 @@ public class AdminBookingLogic {
                 String name = m.getOrDefault("fullName", "").trim();
                 String phone = m.getOrDefault("phone", "").trim();
 
+                // ป้องกันการอนุมัติหากห้องพักมีผู้อาศัยอยู่แล้ว
+                if (AdminTenantLogic.isRoomOccupied(roomId)) {
+                    return false;
+                }
+
                 // 1. ค้นหา userId ที่ตรงกับชื่อ หรือ เบอร์โทร ใน users.csv
                 String targetUserId = null;
                 for (Map<String, String> u : DataStore.readTable("users.csv")) {
@@ -165,20 +170,23 @@ public class AdminBookingLogic {
 
                 DataStore.Room r = DataStore.room(roomId);
                 int rent = r != null ? r.rent : 2800;
-                int deposit = rent * 2; // เงินประกัน = 2 เท่าของค่าห้อง
+                int deposit = (r != null && (r.isAir() || (r.type != null && r.type.toLowerCase().contains("air")))) ? 7000 : (rent * 2);
+
+                // หากผู้ใช้นี้มีสัญญา ACTIVE เดิมอยู่ ให้ยกเลิกสัญญาเดิมก่อนและปล่อยห้องเดิมเป็น AVAILABLE
+                for (DataStore.Contract oldC : DataStore.contracts()) {
+                    if (oldC.userId.equalsIgnoreCase(targetUserId) && oldC.isActive()) {
+                        DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", oldC.id, "status", "TERMINATED");
+                        if (!oldC.roomId.equalsIgnoreCase(roomId)) {
+                            DataStore.setRoomStatus(oldC.roomId, "AVAILABLE");
+                        }
+                    }
+                }
 
                 // 2. อัปเดตใบจองเป็น APPROVED
                 DataStore.updateCell(DataStore.BOOKINGS_FILE, "bookingId", bookingId, "status", "APPROVED");
 
-                // 3. สร้างสัญญาใน contracts.csv
-                DataStore.saveContract(targetUserId, roomId, rent, "ACTIVE");
-
-                // 4. บันทึกเงินประกัน (ประกัน x 2) ลงในสัญญาฉบับล่าสุด
-                for (DataStore.Contract c : DataStore.contracts()) {
-                    if (c.userId.equalsIgnoreCase(targetUserId) && c.roomId.equalsIgnoreCase(roomId) && c.isActive()) {
-                        DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", c.id, "deposit", String.valueOf(deposit));
-                    }
-                }
+                // 3. สร้างสัญญาใน contracts.csv พร้อมระบุเงินประกัน
+                DataStore.saveContract(targetUserId, roomId, rent, deposit, "ACTIVE");
 
                 // 5. ปรับสถานะห้องเป็น OCCUPIED
                 DataStore.setRoomStatus(roomId, "OCCUPIED");
