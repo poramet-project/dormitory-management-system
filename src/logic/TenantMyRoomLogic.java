@@ -27,8 +27,16 @@ public class TenantMyRoomLogic {
      */
     public TenantMyRoomLogic(LoginLogic.User user) {
         this.user = user;
-        this.room = (user == null) ? null : DataStore.room(user.roomId);
-        this.contract = DataStore.contractFor(user);
+        LoginLogic.User latest = (user != null && !DataStore.blank(user.username)) ? LoginLogic.findUser(user.username) : user;
+        String rId = (latest != null && !DataStore.blank(latest.roomId) && !"-".equals(latest.roomId.trim())) ? latest.roomId.trim() : "";
+        DataStore.Contract c = DataStore.contractFor(latest != null ? latest : user);
+        if (DataStore.blank(rId) && c != null && c.isActive() && !DataStore.blank(c.roomId)) {
+            rId = c.roomId.trim();
+        }
+        DataStore.Room r = DataStore.room(rId);
+        if (r == null) r = DataStore.roomByNumber(rId);
+        this.room = r;
+        this.contract = c;
     }
 
     /**

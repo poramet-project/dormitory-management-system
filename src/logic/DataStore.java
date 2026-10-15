@@ -730,16 +730,45 @@ public final class DataStore {
     public static Contract contractFor(LoginLogic.User user) {
         if (user == null)
             return null;
-        boolean byUser = !blank(user.userId);
+        String uId = blank(user.userId) ? "" : user.userId.trim();
+        String uRoom = blank(user.roomId) ? "" : user.roomId.trim();
+
+        // 1. ลองหาสัญญาที่ ACTIVE ของห้องปัจจุบันก่อน
+        if (!blank(uRoom) && !"-".equals(uRoom)) {
+            Room r = room(uRoom);
+            if (r == null) r = roomByNumber(uRoom);
+            String rId = r != null ? r.id : uRoom;
+            String rNum = r != null ? r.number : uRoom;
+
+            for (Contract c : contracts()) {
+                boolean userOk = blank(uId) || c.userId.equalsIgnoreCase(uId);
+                boolean roomOk = c.roomId.equalsIgnoreCase(rId) || c.roomId.equalsIgnoreCase(rNum);
+                if (userOk && roomOk && c.isActive()) {
+                    return c;
+                }
+            }
+        }
+
+        // 2. หาสัญญาที่ ACTIVE ของ user
+        if (!blank(uId)) {
+            for (Contract c : contracts()) {
+                if (c.userId.equalsIgnoreCase(uId) && c.isActive()) {
+                    return c;
+                }
+            }
+        }
+
+        // 3. Fallback: สัญญาฉบับล่าสุดของผู้เช่า
         Contract best = null;
         for (Contract c : contracts()) {
-            boolean mine = byUser
-                    ? c.userId.equalsIgnoreCase(user.userId.trim())
-                    : (!blank(user.roomId) && c.roomId.equalsIgnoreCase(user.roomId.trim()));
-            if (!mine)
-                continue;
-            if (best == null || c.isActive() || !best.isActive())
-                best = c;
+            boolean mine = !blank(uId)
+                    ? c.userId.equalsIgnoreCase(uId)
+                    : (!blank(uRoom) && c.roomId.equalsIgnoreCase(uRoom));
+            if (mine) {
+                if (best == null || c.isActive() || !best.isActive()) {
+                    best = c;
+                }
+            }
         }
         return best;
     }
@@ -1127,18 +1156,46 @@ public final class DataStore {
     }
 
     /**
-     * ดึงรายการแจ้งซ่อมและข้อร้องเรียนทั้งหมดของผู้เช่ารายที่ระบุ
+     * ดึงรายการแจ้งซ่อมและข้อร้องเรียนของผู้เช่าเฉพาะห้องพักปัจจุบัน (ไม่รวมข้อมูลของห้องเดิมที่ย้ายออกแล้ว)
      * 
      * @param userId รหัสผู้เช่า
-     * @return รายการข้อร้องเรียนของผู้เช่า
+     * @return รายการข้อร้องเรียนของผู้เช่าในห้องปัจจุบัน
      */
     public static List<Complaint> complaintsForUser(String userId) {
-        List<Complaint> list = new ArrayList<>();
         if (blank(userId))
+            return new ArrayList<>();
+        LoginLogic.User u = LoginLogic.findUser(userId);
+        String rId = (u != null) ? u.roomId : null;
+        if (blank(rId) || "-".equals(rId.trim())) {
+            Contract c = contractFor(u);
+            if (c != null && c.isActive()) {
+                rId = c.roomId;
+            }
+        }
+        return complaintsForUserAndRoom(userId, rId);
+    }
+
+    /**
+     * ดึงรายการแจ้งซ่อมและข้อร้องเรียนของผู้เช่าเฉพาะห้องพักที่ระบุ
+     * 
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสหรือหมายเลขห้องพัก
+     * @return รายการข้อร้องเรียนของผู้เช่าในห้องพักที่ระบุ
+     */
+    public static List<Complaint> complaintsForUserAndRoom(String userId, String roomId) {
+        List<Complaint> list = new ArrayList<>();
+        if (blank(userId) || blank(roomId) || "-".equals(roomId.trim()))
             return list;
+        Room r = room(roomId);
+        if (r == null) r = roomByNumber(roomId);
+        String curId = r != null ? r.id : roomId.trim();
+        String curNum = r != null ? r.number : roomId.trim();
+
         for (Map<String, String> m : readTable(COMPLAINTS_FILE)) {
             Complaint c = new Complaint(m);
-            if (c.userId.equalsIgnoreCase(userId.trim())) {
+            boolean userMatch = c.userId.equalsIgnoreCase(userId.trim());
+            boolean roomMatch = c.roomId.equalsIgnoreCase(curId) || c.roomId.equalsIgnoreCase(curNum);
+            if (userMatch && roomMatch) {
                 list.add(c);
             }
         }

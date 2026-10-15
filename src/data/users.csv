@@ -1,5 +1,4 @@
 userId,username,password,fullName,phone,role,roomId
 U001,admin,123,Cristiano Ronaldo,0812345678,ADMIN,-
-U002,Messi,123,Lional Messi,0123456789,GUEST,-
-
-U003,Jude,1234,Jude Bellingham,0987654321,TENANT,R205
+U002,Messi,123,Lional Messi,0123456789,TENANT,R205
+U003,Jude,1234,Jude Bellingham,0987654321,GUEST,-

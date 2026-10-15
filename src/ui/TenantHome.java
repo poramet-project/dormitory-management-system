@@ -24,6 +24,9 @@ public class TenantHome extends JPanel {
     private final TenantHomeLogic logic;
     private final LoginLogic.User user;
     private JLabel totalLbl, inProgLbl, doneLbl;
+    private JLabel roomLbl, locLbl, conEndLbl;
+    private TenantUI.Pill typePill;
+    private TenantUI.RoomImage roomImg;
 
     /**
      * คอนสตรัคเตอร์สำหรับสร้างหน้าจอภาพรวมแดชบอร์ดของผู้เช่า (Home)
@@ -60,11 +63,21 @@ public class TenantHome extends JPanel {
      * โหลดข้อมูลสถิติการแจ้งซ่อมและอัปเดตการแสดงผลล่าสุดบนหน้าจอ
      */
     public void refresh() {
-        logic.reloadRepairStats();
+        logic.reload();
         if (totalLbl != null)  totalLbl.setText(logic.repairTotalText());
         if (inProgLbl != null) inProgLbl.setText(logic.repairInProgressText());
         if (doneLbl != null)   doneLbl.setText(logic.repairDoneText());
-        
+
+        if (roomLbl != null)   roomLbl.setText(logic.roomDisplay());
+        if (typePill != null)  typePill.setText(logic.pillText());
+        if (locLbl != null)    locLbl.setText(logic.locationText());
+        if (conEndLbl != null) conEndLbl.setText(logic.contractEndText());
+
+        DataStore.Room cur = logic.getRoom();
+        if (roomImg != null) {
+            roomImg.setRoomId(cur != null ? cur.id : null);
+        }
+
         revalidate();
         repaint();
     }
@@ -82,26 +95,27 @@ public class TenantHome extends JPanel {
         card.setMaximumSize(new Dimension(860, 190));
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String roomId = (user != null) ? user.roomId : null;
-        TenantUI.RoomImage img = new TenantUI.RoomImage(roomId);
-        img.setPreferredSize(new Dimension(260, 150));
-        card.add(img, BorderLayout.WEST);
+        DataStore.Room cur = logic.getRoom();
+        String roomId = (cur != null) ? cur.id : ((user != null) ? user.roomId : null);
+        roomImg = new TenantUI.RoomImage(roomId);
+        roomImg.setPreferredSize(new Dimension(260, 150));
+        card.add(roomImg, BorderLayout.WEST);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setOpaque(false);
 
-        JLabel roomLbl = TenantUI.label(logic.roomDisplay(), 26, Font.BOLD, TenantUI.TEXT);
+        roomLbl = TenantUI.label(logic.roomDisplay(), 26, Font.BOLD, TenantUI.TEXT);
 
-        TenantUI.Pill typePill = new TenantUI.Pill(logic.pillText(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
+        typePill = new TenantUI.Pill(logic.pillText(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
         typePill.setPreferredSize(new Dimension(150, 25));
         typePill.setMaximumSize(new Dimension(150, 25));
         typePill.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel loc = TenantUI.label(logic.locationText(), 13, Font.PLAIN, TenantUI.TEXT_MUTED);
-        loc.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.PIN, 14, TenantUI.TEXT_MUTED));
-        loc.setIconTextGap(6);
-        loc.setAlignmentX(Component.LEFT_ALIGNMENT);
+        locLbl = TenantUI.label(logic.locationText(), 13, Font.PLAIN, TenantUI.TEXT_MUTED);
+        locLbl.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.PIN, 14, TenantUI.TEXT_MUTED));
+        locLbl.setIconTextGap(6);
+        locLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         TenantUI.RoundButton btn = new TenantUI.RoundButton("ดูรายละเอียด");
         btn.setPreferredSize(new Dimension(200, 36));
@@ -115,7 +129,7 @@ public class TenantHome extends JPanel {
         info.add(Box.createVerticalStrut(6));
         info.add(typePill);
         info.add(Box.createVerticalStrut(8));
-        info.add(loc);
+        info.add(locLbl);
         info.add(Box.createVerticalStrut(14));
         info.add(btn);
 
@@ -198,11 +212,11 @@ public class TenantHome extends JPanel {
         card.add(header);
         card.add(Box.createVerticalStrut(8));
 
-        JLabel end = TenantUI.label(logic.contractEndText(), 14, Font.PLAIN, TenantUI.TEXT);
-        end.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.CALENDAR, 16, TenantUI.TEXT));
-        end.setIconTextGap(8);
-        end.setAlignmentX(Component.LEFT_ALIGNMENT);
-        card.add(end);
+        conEndLbl = TenantUI.label(logic.contractEndText(), 14, Font.PLAIN, TenantUI.TEXT);
+        conEndLbl.setIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.CALENDAR, 16, TenantUI.TEXT));
+        conEndLbl.setIconTextGap(8);
+        conEndLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(conEndLbl);
         card.add(Box.createVerticalStrut(10));
 
         TenantUI.RoundButton btn = new TenantUI.RoundButton("ดูสัญญาเช่า");

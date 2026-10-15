@@ -86,6 +86,7 @@ public class TenantUI extends JFrame {
     private final TenantLogic logic;
     private Component homePage;
     private Component reportPage;
+    private Component transferPage;
 
     /**
      * คอนสตรักเตอร์สร้างหน้าต่างหลักของระบบผู้เช่าหอพัก
@@ -120,7 +121,8 @@ public class TenantUI extends JFrame {
         centerCardsPanel.add(safePage("CONTRACT", () -> new TenantContractUI(u)), "CONTRACT");
         reportPage = safePage("REPORT", () -> new TenantReportUI(u));
         centerCardsPanel.add(reportPage, "REPORT");
-        centerCardsPanel.add(safePage("TRANSFER", () -> new TenantRoomChangeUI(u)), "TRANSFER");
+        transferPage = safePage("TRANSFER", () -> new TenantRoomChangeUI(u));
+        centerCardsPanel.add(transferPage, "TRANSFER");
 
         rightContainer.add(centerCardsPanel, BorderLayout.CENTER);
         root.add(rightContainer, BorderLayout.CENTER);
@@ -176,6 +178,9 @@ public class TenantUI extends JFrame {
         }
         if ("REPORT".equals(pageName) && reportPage instanceof TenantReportUI) {
             ((TenantReportUI) reportPage).refresh();
+        }
+        if ("TRANSFER".equals(pageName) && transferPage instanceof TenantRoomChangeUI) {
+            ((TenantRoomChangeUI) transferPage).refresh();
         }
         cardLayout.show(centerCardsPanel, pageName);
         for (int i = 0; i < menuItems.size(); i++) {
@@ -627,13 +632,21 @@ public class TenantUI extends JFrame {
         // RI
         // - img อาจเป็น null ได้หากไม่พบไฟล์ภาพ
 
-        private final Image img;
+        private Image img;
 
         /**
          * คอนสตรักเตอร์โหลดและแสดงรูปภาพห้องพักตามรหัสห้อง
          * @param roomId หมายเลขหรือรหัสห้องพัก
          */
         RoomImage(String roomId) {
+            setRoomId(roomId);
+        }
+
+        /**
+         * อัปเดตรูปภาพห้องพักตามรหัสห้องพักใหม่
+         * @param roomId หมายเลขหรือรหัสห้องพัก
+         */
+        public void setRoomId(String roomId) {
             if (roomId != null && !roomId.trim().isEmpty()) {
                 String cleanRoom = roomId.trim();
                 String roomNum = cleanRoom.replaceAll("[^0-9]", "");
@@ -656,6 +669,7 @@ public class TenantUI extends JFrame {
             } else {
                 this.img = loadImage("src/img/room.jpg", "room.jpg");
             }
+            repaint();
         }
 
         /**

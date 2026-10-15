@@ -73,7 +73,19 @@ public class TenantLogic {
      * @return ข้อความบทบาท เช่น "ผู้อยู่อาศัย (ห้อง 101)"
      */
     public String roleText() {
-        return "ผู้อยู่อาศัย (ห้อง " + orDefault(user.roomId, "ไม่ระบุ") + ")";
+        String rId = (user != null) ? user.roomId : null;
+        if (user != null && !DataStore.blank(user.username)) {
+            LoginLogic.User latest = LoginLogic.findUser(user.username);
+            if (latest != null && !DataStore.blank(latest.roomId)) {
+                rId = latest.roomId;
+            }
+        }
+        if (rId != null && !"-".equals(rId.trim())) {
+            DataStore.Room r = DataStore.room(rId);
+            if (r == null) r = DataStore.roomByNumber(rId);
+            if (r != null) return "ผู้อยู่อาศัย (ห้อง " + r.number + ")";
+        }
+        return "ผู้อยู่อาศัย (ห้อง " + orDefault(rId, "ไม่ระบุ") + ")";
     }
 
     /**

@@ -114,13 +114,29 @@ public class TenantReportLogic {
     // ===================== ผู้ใช้ / ห้อง =====================
 
     /**
+     * ดึงข้อมูลผู้ใช้งานล่าสุดจากฐานข้อมูลหรือ Session
+     * 
+     * @return ข้อมูล User ล่าสุด
+     */
+    public LoginLogic.User getUser() {
+        if (this.user != null && !DataStore.blank(this.user.username)) {
+            LoginLogic.User found = LoginLogic.findUser(this.user.username);
+            if (found != null) return found;
+        }
+        LoginLogic.User cur = LoginLogic.getCurrentUser();
+        if (cur != null) return cur;
+        return this.user;
+    }
+
+    /**
      * ดึงคีย์ระบุตัวตนของผู้ใช้ (userId หรือ username)
      * 
      * @return รหัสหรือชื่อผู้ใช้
      */
     private String userKey() {
-        if (user == null) return "";
-        return DataStore.blank(user.userId) ? user.username : user.userId;
+        LoginLogic.User u = getUser();
+        if (u == null) return "";
+        return DataStore.blank(u.userId) ? u.username : u.userId;
     }
 
     /**
@@ -129,10 +145,26 @@ public class TenantReportLogic {
      * @return รหัสห้องพัก หรือ "" หากไม่มีห้อง
      */
     public String roomId() {
-        if (user == null) return "";
-        if (!DataStore.blank(user.roomId)) return user.roomId.trim();
-        DataStore.Contract c = DataStore.contractFor(user);
-        return c != null ? c.roomId : "";
+        LoginLogic.User u = getUser();
+        if (u == null) return "";
+        if (!DataStore.blank(u.roomId) && !"-".equals(u.roomId.trim())) return u.roomId.trim();
+        DataStore.Contract c = DataStore.contractFor(u);
+        return (c != null && !DataStore.blank(c.roomId) && !"-".equals(c.roomId.trim())) ? c.roomId.trim() : "";
+    }
+
+    /**
+     * ดึงข้อมูลห้องพักปัจจุบันของผู้เช่า
+     * 
+     * @return ออบเจ็กต์ Room ห้องปัจจุบัน หรือ null หากไม่พบ
+     */
+    public DataStore.Room currentRoom() {
+        String rId = roomId();
+        if (DataStore.blank(rId)) return null;
+        DataStore.Room r = DataStore.room(rId);
+        if (r == null) {
+            r = DataStore.roomByNumber(rId);
+        }
+        return r;
     }
 
     /**
@@ -141,18 +173,22 @@ public class TenantReportLogic {
      * @return true หากผู้เช่ามีห้องพักผูกอยู่
      */
     public boolean hasRoom() {
-        return !DataStore.blank(roomId());
+        return currentRoom() != null;
     }
 
     // ===================== อ่านจากไฟล์ =====================
 
     /**
-     * โหลดรายการแจ้งซ่อมของผู้ใช้และห้องพักปัจจุบันจากไฟล์ complaints.csv ใหม่
+     * โหลดรายการแจ้งซ่อมของผู้ใช้และห้องพักปัจจุบันจากไฟล์ complaints.csv ใหม่ (ไม่รวมห้องเดิมที่ย้ายออกแล้ว)
      */
     public void reload() {
         reportList.clear();
         String currentUserId = userKey();
-        String currentRoomId = roomId();
+        DataStore.Room cur = currentRoom();
+        if (cur == null) return;
+
+        String curId = cur.id;
+        String curNum = cur.number;
 
         // อ่านข้อมูลทุกแถวจาก COMPLAINTS_FILE (complaints.csv)
         for (Map<String, String> row : DataStore.readTable(DataStore.COMPLAINTS_FILE)) {
@@ -165,9 +201,9 @@ public class TenantReportLogic {
             String reqDate = row.getOrDefault("requestDate", "").trim();
             String status = row.getOrDefault("status", "").trim();
 
-            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้ และเป็นของห้องพักปัจจุบันเท่านั้น
+            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้ และเป็นของห้องพักปัจจุบันเท่านั้น (ไม่รวมห้องเก่า)
             boolean isUserMatch = !DataStore.blank(currentUserId) && currentUserId.equalsIgnoreCase(uId);
-            boolean isRoomMatch = !DataStore.blank(currentRoomId) && currentRoomId.equalsIgnoreCase(rId);
+            boolean isRoomMatch = rId.equalsIgnoreCase(curId) || rId.equalsIgnoreCase(curNum);
 
             if (isUserMatch && isRoomMatch) {
                 String appointment = displayDate(reqDate);
@@ -284,8 +320,11 @@ public class TenantReportLogic {
         String description = detail.replace(",", " ").trim();
         String id = nextComplaintId();
 
+        DataStore.Room cur = currentRoom();
+        String saveRoomId = cur != null ? cur.id : roomId();
+
         DataStore.appendRow(DataStore.COMPLAINTS_FILE, DataStore.COMPLAINTS_HEADER,
-                id, userKey(), roomId(), category, title, description, requestDate, "PENDING");
+                id, userKey(), saveRoomId, category, title, description, requestDate, "PENDING");
 
         reload();
         for (ReportItem it : reportList) {
