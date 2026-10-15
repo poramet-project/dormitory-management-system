@@ -115,7 +115,16 @@ public class AdminRoomUI extends JPanel {
         }
 
         if (table.getRowCount() > 0) {
-            table.setRowSelectionInterval(0, 0);
+            int targetRow = 0;
+            if (!selectedRoomId.isEmpty()) {
+                for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    if (selectedRoomId.equalsIgnoreCase(String.valueOf(tableModel.getValueAt(i, 0)))) {
+                        targetRow = i;
+                        break;
+                    }
+                }
+            }
+            table.setRowSelectionInterval(targetRow, targetRow);
         } else {
             clearForm();
         }
@@ -264,7 +273,7 @@ public class AdminRoomUI extends JPanel {
                 String status = String.valueOf(tableModel.getValueAt(row, 5));
 
                 txtNumber.setText(roomNum);
-                formSub.setText("แก้ไขข้อมูลห้อง " + roomNum);
+                formSub.setText("แก้ไขข้อมูลห้อง " + roomNum + " (รหัส " + selectedRoomId + ")");
                 txtRent.setText(rent);
                 cbType.setSelectedItem(type);
 
@@ -282,6 +291,22 @@ public class AdminRoomUI extends JPanel {
             }
         });
 
+        // ตรวจจับการพิมพ์เลขห้องเพื่อแสดงตัวอย่างรหัสห้องพักแบบไดนามิก
+        txtNumber.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void updateLabel() {
+                String t = txtNumber.getText().trim().replace("ห้อง ", "").trim();
+                if (t.toUpperCase().startsWith("R") && t.length() > 1 && Character.isDigit(t.charAt(1))) {
+                    t = t.substring(1).trim();
+                }
+                if (!t.isEmpty() && !selectedRoomId.isEmpty()) {
+                    formSub.setText("แก้ไขข้อมูลห้อง " + t + " (รหัส R" + t + ")");
+                }
+            }
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { updateLabel(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { updateLabel(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { updateLabel(); }
+        });
+
         // บันทึกการแก้ไขข้อมูลห้องพัก (แผงขวามือ)
         btnSave.addActionListener(e -> {
             if (selectedRoomId.isEmpty()) {
@@ -294,11 +319,11 @@ public class AdminRoomUI extends JPanel {
                 String type = (String) cbType.getSelectedItem();
                 String status = rbAvailable.isSelected() ? "AVAILABLE" : (rbOccupied.isSelected() ? "OCCUPIED" : "MAINTENANCE");
 
-                AdminRoomLogic.saveOrUpdateRoom(selectedRoomId, num, type, rent, status);
-                
+                String newRoomId = AdminRoomLogic.saveOrUpdateRoom(selectedRoomId, num, type, rent, status);
+                selectedRoomId = newRoomId;
                 previousStatus = status;
                 loadTableData();
-                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องพักเรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "บันทึกข้อมูลห้องพักเรียบร้อยแล้ว (รหัส " + newRoomId + ")", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
             } catch (IllegalStateException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "ไม่อนุญาตให้ดำเนินการ", JOptionPane.ERROR_MESSAGE);
                 resetStatusToPrevious();
@@ -386,9 +411,10 @@ public class AdminRoomUI extends JPanel {
                 String status = rbAddAvailable.isSelected() ? "AVAILABLE" : (rbAddOccupied.isSelected() ? "OCCUPIED" : "MAINTENANCE");
 
                 // ส่งค่า roomId เป็น "" เพื่อสร้างห้องใหม่ลงไฟล์ rooms.csv
-                AdminRoomLogic.saveOrUpdateRoom("", num, type, rent, status);
+                String newRoomId = AdminRoomLogic.saveOrUpdateRoom("", num, type, rent, status);
+                selectedRoomId = newRoomId;
                 
-                JOptionPane.showMessageDialog(dialog, "เพิ่มห้องพักใหม่เรียบร้อยแล้ว", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "เพิ่มห้องพักใหม่เรียบร้อยแล้ว (รหัส " + newRoomId + ")", "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
                 loadTableData();
 

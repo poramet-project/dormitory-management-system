@@ -959,6 +959,108 @@ public final class DataStore {
         }
     }
 
+    /**
+     * อัปเดตรหัสห้องพัก (roomId) จากรหัสเดิมเป็นรหัสใหม่ในไฟล์ CSV ทั้งหมดที่เกี่ยวข้อง
+     * เพื่อให้รหัสห้องพักเชื่อมโยงอย่างถูกต้องทั่วทั้งระบบ
+     * 
+     * @param oldRoomId รหัสห้องพักเดิม (เช่น R206)
+     * @param newRoomId รหัสห้องพักใหม่ที่แปรผันตามเลขห้อง (เช่น R207)
+     */
+    public static synchronized void cascadeUpdateRoomId(String oldRoomId, String newRoomId) {
+        if (oldRoomId == null || newRoomId == null || oldRoomId.trim().equalsIgnoreCase(newRoomId.trim())) {
+            return;
+        }
+        String oldId = oldRoomId.trim();
+        String newId = newRoomId.trim();
+
+        // 1. contracts.csv (คอลัมน์ roomId)
+        updateCell(CONTRACTS_FILE, "roomId", oldId, "roomId", newId);
+        
+        // 2. users.csv (คอลัมน์ roomId)
+        updateCell("users.csv", "roomId", oldId, "roomId", newId);
+        
+        // 3. bookings.csv (คอลัมน์ roomId)
+        updateCell(BOOKINGS_FILE, "roomId", oldId, "roomId", newId);
+        
+        // 4. complaints.csv (คอลัมน์ roomId)
+        updateCell(COMPLAINTS_FILE, "roomId", oldId, "roomId", newId);
+        
+        // 5. room_transfers.csv (คอลัมน์ oldRoomId และ newRoomId)
+        updateCell("room_transfers.csv", "oldRoomId", oldId, "oldRoomId", newId);
+        updateCell("room_transfers.csv", "newRoomId", oldId, "newRoomId", newId);
+    }
+
+    /**
+     * อัปเดตข้อมูลห้องพักทั้งหมดใน rooms.csv พร้อมทั้งเปลี่ยนรหัสห้อง (roomId) และกระจายไปยังไฟล์ CSV อื่น
+     * 
+     * @param oldRoomId รหัสห้องเดิมก่อนแก้ไข
+     * @param newRoomId รหัสห้องใหม่ที่คำนวณตามหมายเลขห้อง
+     * @param roomNumber หมายเลขห้องใหม่
+     * @param roomType ประเภทห้อง (Air หรือ Fan)
+     * @param rent อัตราค่าเช่า
+     * @param status สถานะห้องพัก (AVAILABLE, OCCUPIED, MAINTENANCE)
+     * @return true หากพบแถวและอัปเดตข้อมูลสำเร็จ
+     */
+    public static synchronized boolean updateRoomFull(String oldRoomId, String newRoomId, String roomNumber, String roomType, int rent, String status) {
+        File f = file("rooms.csv");
+        if (!f.exists())
+            return false;
+        try {
+            List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+            boolean changed = false;
+            List<String> out = new ArrayList<>();
+            int idCol = -1, numCol = -1, typeCol = -1, rentCol = -1, stCol = -1;
+            for (String raw : lines) {
+                String line = raw.replace("\uFEFF", "").trim();
+                if (line.isEmpty() || line.startsWith("#")) {
+                    out.add(raw);
+                    continue;
+                }
+                String[] c = parseLine(line);
+                if (idCol < 0) { // บรรทัด header
+                    for (int i = 0; i < c.length; i++) {
+                        String h = c[i].trim();
+                        if (h.equals("roomId")) idCol = i;
+                        else if (h.equals("roomNumber")) numCol = i;
+                        else if (h.equals("roomType")) typeCol = i;
+                        else if (h.equals("baseRent")) rentCol = i;
+                        else if (h.equals("status")) stCol = i;
+                    }
+                    out.add(line);
+                    continue;
+                }
+                if (idCol >= 0 && idCol < c.length && c[idCol].trim().equalsIgnoreCase(oldRoomId.trim())) {
+                    c[idCol] = newRoomId;
+                    if (numCol >= 0 && numCol < c.length) c[numCol] = roomNumber;
+                    if (typeCol >= 0 && typeCol < c.length) c[typeCol] = roomType;
+                    if (rentCol >= 0 && rentCol < c.length) c[rentCol] = String.valueOf(rent);
+                    if (stCol >= 0 && stCol < c.length) c[stCol] = status;
+                    changed = true;
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < c.length; i++) {
+                    if (i > 0) sb.append(',');
+                    sb.append(csvEscape(c[i]));
+                }
+                out.add(sb.toString());
+            }
+            if (!changed)
+                return false;
+            Files.write(f.toPath(), (String.join(System.lineSeparator(), out) + System.lineSeparator())
+                    .getBytes(StandardCharsets.UTF_8));
+            
+            // กระจายรหัสห้องใหม่ไปยัง CSV อื่นๆ หากรหัสเปลี่ยน
+            if (!oldRoomId.trim().equalsIgnoreCase(newRoomId.trim())) {
+                cascadeUpdateRoomId(oldRoomId, newRoomId);
+            }
+            sortRoomsFile();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // ===================== คำขอย้ายห้อง =====================
 
     /**

@@ -11,7 +11,8 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * AdminBookingUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการพิจารณาคำขอจองห้องพัก
+ * AdminBookingUI
+ * คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการพิจารณาคำขอจองห้องพัก
  * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการข้อมูลคำขอจองห้องพัก
  * searchField คือ ช่องสำหรับค้นหาคำขอจองห้องพัก
  * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะคำขอ
@@ -34,7 +35,9 @@ public class AdminBookingUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, table, tableModel, currentBooking) คือ หน้าจอสำหรับแสดงรายการคำขอจองห้องพัก ตรวจสอบรายละเอียด และบันทึกผลการพิจารณาคำขอ
+    // AF(logic, table, tableModel, currentBooking) คือ
+    // หน้าจอสำหรับแสดงรายการคำขอจองห้องพัก ตรวจสอบรายละเอียด
+    // และบันทึกผลการพิจารณาคำขอ
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. table และ tableModel ต้องไม่เป็น null
@@ -78,7 +81,7 @@ public class AdminBookingUI extends JPanel {
      * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองสถานะและป้ายแสดงจำนวนรายการ
      */
     private void createToolbar() {
-        statusFilter = styledCombo(new String[] { "สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ" });
+        statusFilter = styledCombo(new String[] { "สถานะทั้งหมด", "อนุมัติ", "ปฏิเสธ" });
         statusFilter.setBounds(20, 20, 200, 34);
         add(statusFilter);
 
@@ -173,7 +176,8 @@ public class AdminBookingUI extends JPanel {
         tableModel.setRowCount(0);
         List<AdminBookingLogic.BookingModel> all = logic.getAllBookings();
         String filter = (statusFilter != null && statusFilter.getSelectedItem() != null)
-                ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
+                ? (String) statusFilter.getSelectedItem()
+                : "สถานะทั้งหมด";
 
         java.util.List<AdminBookingLogic.BookingModel> filtered = new java.util.ArrayList<>();
         for (AdminBookingLogic.BookingModel b : all) {
@@ -210,8 +214,10 @@ public class AdminBookingUI extends JPanel {
         lblDate.setText("-");
         lblStatus.setText("-");
         txtDescription.setText("");
-        if (btnApprove != null) btnApprove.setEnabled(false);
-        if (btnReject != null) btnReject.setEnabled(false);
+        if (btnApprove != null)
+            btnApprove.setEnabled(false);
+        if (btnReject != null)
+            btnReject.setEnabled(false);
     }
 
     /**
@@ -233,7 +239,8 @@ public class AdminBookingUI extends JPanel {
                         lblStatus.setText(currentBooking.status);
                         txtDescription.setText(currentBooking.roomDetail);
 
-                        boolean isPending = "รอพิจารณา".equalsIgnoreCase(currentBooking.status) || "PENDING".equalsIgnoreCase(currentBooking.status);
+                        boolean isPending = "รอพิจารณา".equalsIgnoreCase(currentBooking.status)
+                                || "PENDING".equalsIgnoreCase(currentBooking.status);
                         btnApprove.setEnabled(isPending);
                         btnReject.setEnabled(isPending);
                         break;
@@ -278,10 +285,10 @@ public class AdminBookingUI extends JPanel {
     /**
      * สร้างแถวแสดงข้อมูลรายละเอียดคู่หัวข้อและค่า
      * 
-     * @param p พาเนลที่จะวางองค์ประกอบ
+     * @param p     พาเนลที่จะวางองค์ประกอบ
      * @param title หัวข้อรายละเอียด
-     * @param text ค่ารายละเอียด
-     * @param y ตำแหน่งแกน Y
+     * @param text  ค่ารายละเอียด
+     * @param y     ตำแหน่งแกน Y
      * @return JLabel แสดงค่ารายละเอียด
      */
     private static JLabel detailRow(JPanel p, String title, String text, int y) {
@@ -299,7 +306,7 @@ public class AdminBookingUI extends JPanel {
      * สร้างป้ายข้อความกำกับฟิลด์ข้อมูล
      * 
      * @param title ข้อความหัวข้อ
-     * @param y ตำแหน่งแกน Y
+     * @param y     ตำแหน่งแกน Y
      * @return JLabel ป้ายกำกับ
      */
     private static JLabel fieldLabel(String title, int y) {
@@ -342,8 +349,8 @@ public class AdminBookingUI extends JPanel {
     /**
      * สร้าง JScrollPane ครอบกล่องข้อความพร้อมกำหนดพิกัดและความสูง
      * 
-     * @param area กล่องข้อความ
-     * @param y ตำแหน่งแกน Y
+     * @param area   กล่องข้อความ
+     * @param y      ตำแหน่งแกน Y
      * @param height ความสูง
      * @return JScrollPane
      */

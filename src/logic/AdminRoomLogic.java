@@ -82,18 +82,20 @@ public class AdminRoomLogic {
 
     /**
      * บันทึกข้อมูลห้องพักใหม่ หรืออัปเดตข้อมูลห้องพักเดิมลงในไฟล์ rooms.csv
+     * โดยรหัสห้องพัก (roomId) จะแปรผันตามเลขห้องพักเสมอ (เช่น เลขห้อง 101 -> รหัส R101)
      * พร้อมตรวจสอบเงื่อนไขความถูกต้อง (ห้ามเลขห้องซ้ำ, ห้ามเปลี่ยนสถานะเป็นว่างหากยังมีสัญญา ACTIVE)
+     * และกระจายการเปลี่ยนรหัสห้องพักไปยังไฟล์ CSV อื่นๆ ที่เกี่ยวข้อง
      *
-     * @param roomId รหัสห้องพัก (หากเป็นค่าว่างจะถือว่าเป็นการเพิ่มห้องใหม่)
+     * @param roomId รหัสห้องพักเดิม (หากเป็นค่าว่างจะถือว่าเป็นการเพิ่มห้องใหม่)
      * @param roomNumber หมายเลขห้องพัก
      * @param roomType ประเภทห้องพัก (แอร์ หรือ พัดลม)
      * @param rent อัตราค่าเช่าต่อเดือน
      * @param status สถานะห้องพัก (ห้องว่าง, มีผู้เช่า, ปิดปรับปรุง)
-     * @return true หากบันทึกข้อมูลสำเร็จ
+     * @return รหัสห้องพักใหม่ที่ถูกบันทึก (เช่น R101, R207)
      * @throws IOException หากเกิดข้อผิดพลาดในการอ่านหรือเขียนไฟล์
      * @throws IllegalStateException หากข้อมูลไม่ผ่านเงื่อนไขความถูกต้องของระบบ
      */
-    public static boolean saveOrUpdateRoom(String roomId, String roomNumber, String roomType, int rent, String status) throws IOException {
+    public static String saveOrUpdateRoom(String roomId, String roomNumber, String roomType, int rent, String status) throws IOException {
         String typeVal = roomType.contains("แอร์") ? "Air" : "Fan";
         
         String statusVal;
@@ -107,12 +109,18 @@ public class AdminRoomLogic {
             statusVal = "MAINTENANCE";
         }
 
-        String targetNumber = roomNumber.trim().replace("ห้อง ", "");
+        String targetNumber = roomNumber.trim().replace("ห้อง ", "").trim();
+        if (targetNumber.toUpperCase().startsWith("R") && targetNumber.length() > 1 && Character.isDigit(targetNumber.charAt(1))) {
+            targetNumber = targetNumber.substring(1).trim();
+        }
+        if (targetNumber.isEmpty()) {
+            throw new IllegalStateException("กรุณากรอกเลขห้องพัก");
+        }
+
+        String newRoomId = "R" + targetNumber;
 
         // 🔴 กรณีเพิ่มห้องใหม่ (roomId เป็นค่าว่าง)
         if (DataStore.blank(roomId)) {
-            String newRoomId = "R" + targetNumber;
-
             // ตรวจสอบเงื่อนไขห้ามเลขห้องพักซ้ำ หรือ รหัสห้องพักซ้ำ
             for (DataStore.Room existingRoom : DataStore.rooms()) {
                 if (existingRoom.number.equalsIgnoreCase(targetNumber)) {
@@ -127,33 +135,39 @@ public class AdminRoomLogic {
             String header = "roomId,roomNumber,roomType,baseRent,status";
             DataStore.appendRow("rooms.csv", header, newRoomId, targetNumber, typeVal, String.valueOf(rent), statusVal);
             DataStore.sortRoomsFile();
-            return true;
+            return newRoomId;
         }
 
         // 🔴 กรณีแก้ไขห้องเดิม
-        // ตรวจสอบห้ามเปลี่ยนเลขห้องไปซ้ำกับห้องอื่น
+        String oldRoomId = roomId.trim();
+
+        // ตรวจสอบห้ามเปลี่ยนเลขห้อง หรือ รหัสห้อง ไปซ้ำกับห้องอื่น
         for (DataStore.Room existingRoom : DataStore.rooms()) {
-            if (!existingRoom.id.equalsIgnoreCase(roomId.trim()) && existingRoom.number.equalsIgnoreCase(targetNumber)) {
-                throw new IllegalStateException("ไม่สามารถแก้ไขเป็นเลขห้อง " + targetNumber + " ได้ เนื่องจากมีห้องนี้อยู่ในระบบแล้ว");
+            if (!existingRoom.id.equalsIgnoreCase(oldRoomId)) {
+                if (existingRoom.number.equalsIgnoreCase(targetNumber)) {
+                    throw new IllegalStateException("ไม่สามารถแก้ไขเป็นเลขห้อง " + targetNumber + " ได้ เนื่องจากมีห้องนี้อยู่ในระบบแล้ว");
+                }
+                if (existingRoom.id.equalsIgnoreCase(newRoomId)) {
+                    throw new IllegalStateException("ไม่สามารถแก้ไขเป็นเลขห้อง " + targetNumber + " ได้ เนื่องจากมีรหัสห้อง " + newRoomId + " อยู่ในระบบแล้ว");
+                }
             }
         }
 
         // ป้องกันการเปลี่ยนสถานะ: ห้ามเปลี่ยนเป็น "ห้องว่าง" หรือ "ปิดปรับปรุง" หากยังมีสัญญาเช่า ACTIVE
         if ("AVAILABLE".equals(statusVal) || "MAINTENANCE".equals(statusVal)) {
             for (DataStore.Contract c : DataStore.contracts()) {
-                if (c.roomId.equalsIgnoreCase(roomId.trim()) && c.isActive()) {
+                if ((c.roomId.equalsIgnoreCase(oldRoomId) || c.roomId.equalsIgnoreCase(newRoomId)) && c.isActive()) {
                     String statusTarget = "AVAILABLE".equals(statusVal) ? "ห้องว่าง" : "ปิดปรับปรุง";
                     throw new IllegalStateException("ไม่สามารถเปลี่ยนสถานะเป็น '" + statusTarget + "' ได้ เนื่องจากห้องนี้ยังมีผู้เช่าและสัญญาเช่ายังดำเนินการอยู่ (ACTIVE)");
                 }
             }
         }
 
-        // อัปเดตข้อมูลในไฟล์ rooms.csv
-        DataStore.updateCell("rooms.csv", "roomId", roomId, "roomNumber", targetNumber);
-        DataStore.updateCell("rooms.csv", "roomId", roomId, "roomType", typeVal);
-        DataStore.updateCell("rooms.csv", "roomId", roomId, "baseRent", String.valueOf(rent));
-        boolean ok = DataStore.setRoomStatus(roomId, statusVal);
-        DataStore.sortRoomsFile();
-        return ok;
+        // อัปเดตข้อมูลในไฟล์ rooms.csv และกระจายการเปลี่ยนรหัสห้องไปยังไฟล์ CSV อื่นๆ ทั้งหมด
+        boolean ok = DataStore.updateRoomFull(oldRoomId, newRoomId, targetNumber, typeVal, rent, statusVal);
+        if (!ok) {
+            throw new IllegalStateException("ไม่พบห้องพักรหัส " + oldRoomId + " ในระบบ");
+        }
+        return newRoomId;
     }
 }
