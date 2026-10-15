@@ -17,7 +17,8 @@ public class TenantHome extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, user, totalLbl, inProgLbl, doneLbl) คือ หน้าจอสรุปภาพรวมห้องพัก สถานะการแจ้งซ่อม และสัญญาเช่าของผู้เช่า
+    // AF(logic, user, totalLbl, inProgLbl, doneLbl) คือ หน้าจอสรุปภาพรวมห้องพัก
+    // สถานะการแจ้งซ่อม และสัญญาเช่าของผู้เช่า
     // RI
     // 1. logic และ user ต้องไม่เป็น null
 
@@ -32,7 +33,7 @@ public class TenantHome extends JPanel {
      * คอนสตรัคเตอร์สำหรับสร้างหน้าจอภาพรวมแดชบอร์ดของผู้เช่า (Home)
      * 
      * @param mainUI หน้าต่างหลัก TenantUI
-     * @param user ข้อมูลผู้ใช้งานปัจจุบัน
+     * @param user   ข้อมูลผู้ใช้งานปัจจุบัน
      */
     public TenantHome(TenantUI mainUI, LoginLogic.User user) {
         this.user = user;
@@ -64,14 +65,21 @@ public class TenantHome extends JPanel {
      */
     public void refresh() {
         logic.reload();
-        if (totalLbl != null)  totalLbl.setText(logic.repairTotalText());
-        if (inProgLbl != null) inProgLbl.setText(logic.repairInProgressText());
-        if (doneLbl != null)   doneLbl.setText(logic.repairDoneText());
+        if (totalLbl != null)
+            totalLbl.setText(logic.repairTotalText());
+        if (inProgLbl != null)
+            inProgLbl.setText(logic.repairInProgressText());
+        if (doneLbl != null)
+            doneLbl.setText(logic.repairDoneText());
 
-        if (roomLbl != null)   roomLbl.setText(logic.roomDisplay());
-        if (typePill != null)  typePill.setText(logic.pillText());
-        if (locLbl != null)    locLbl.setText(logic.locationText());
-        if (conEndLbl != null) conEndLbl.setText(logic.contractEndText());
+        if (roomLbl != null)
+            roomLbl.setText(logic.roomDisplay());
+        if (typePill != null)
+            typePill.setText(logic.pillText());
+        if (locLbl != null)
+            locLbl.setText(logic.locationText());
+        if (conEndLbl != null)
+            conEndLbl.setText(logic.contractEndText());
 
         DataStore.Room cur = logic.getRoom();
         if (roomImg != null) {
@@ -153,7 +161,8 @@ public class TenantHome extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         header.setOpaque(false);
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
-        header.add(new TenantUI.CircleIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.WRENCH, 26, TenantUI.TEAL), 46));
+        header.add(
+                new TenantUI.CircleIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.WRENCH, 26, TenantUI.TEAL), 46));
         header.add(TenantUI.label("แจ้งซ่อม/ร้องเรียน", 16, Font.BOLD, TenantUI.TEXT));
         card.add(header);
         card.add(Box.createVerticalStrut(10));
@@ -207,7 +216,8 @@ public class TenantHome extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         header.setOpaque(false);
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
-        header.add(new TenantUI.CircleIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.CALENDAR, 24, TenantUI.TEAL), 42));
+        header.add(
+                new TenantUI.CircleIcon(new TenantUI.LineIcon(TenantUI.LineIcon.Type.CALENDAR, 24, TenantUI.TEAL), 42));
         header.add(TenantUI.label("สัญญาเช่า", 16, Font.BOLD, TenantUI.TEXT));
         card.add(header);
         card.add(Box.createVerticalStrut(8));

@@ -1,4 +1,5 @@
 package ui;
+
 import logic.*;
 
 import javax.swing.*;
@@ -14,7 +15,8 @@ public class TenantMyRoomUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, user) คือ หน้าจอแสดงข้อมูลหมายเลขห้อง ประเภทห้อง อัตราค่าเช่า และรายการสิ่งอำนวยความสะดวกประจำห้อง
+    // AF(logic, user) คือ หน้าจอแสดงข้อมูลหมายเลขห้อง ประเภทห้อง อัตราค่าเช่า
+    // และรายการสิ่งอำนวยความสะดวกประจำห้อง
     // RI
     // 1. logic ต้องไม่เป็น null
 
@@ -91,7 +93,8 @@ public class TenantMyRoomUI extends JPanel {
 
         JLabel title = TenantUI.label(logic.title(), 24, Font.BOLD, TenantUI.TEXT);
 
-        TenantUI.Pill pill = new TenantUI.Pill(logic.typeFull(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER, TenantUI.TEAL, 12);
+        TenantUI.Pill pill = new TenantUI.Pill(logic.typeFull(), TenantUI.TEAL_LIGHT, TenantUI.TEAL_BORDER,
+                TenantUI.TEAL, 12);
         pill.setPreferredSize(new Dimension(190, 25));
         pill.setMaximumSize(new Dimension(190, 25));
 

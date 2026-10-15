@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * GuestLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของหน้าค้นหาห้องพักสำหรับผู้เยี่ยมชม (Guest)
- * selectedTypeFilter คือ ตัวกรองประเภทห้องพักที่เลือก ("ทั้งหมด", "ห้องแอร์", "ห้องพัดลม")
+ * GuestLogic
+ * คือคลาสสำหรับจัดการตรรกะทางธุรกิจของหน้าค้นหาห้องพักสำหรับผู้เยี่ยมชม (Guest)
+ * selectedTypeFilter คือ ตัวกรองประเภทห้องพักที่เลือก ("ทั้งหมด", "ห้องแอร์",
+ * "ห้องพัดลม")
  * selectedPriceFilter คือ ตัวกรองช่วงราคาห้องพักที่เลือก
  * keyword คือ คำค้นหาหมายเลขห้องหรือรายละเอียด
  */
@@ -13,7 +15,8 @@ public class GuestLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(selectedTypeFilter, selectedPriceFilter, keyword) คือ สถานะของเงื่อนไขการค้นหาและกรองห้องพักสำหรับผู้เยี่ยมชม
+    // AF(selectedTypeFilter, selectedPriceFilter, keyword) คือ
+    // สถานะของเงื่อนไขการค้นหาและกรองห้องพักสำหรับผู้เยี่ยมชม
     // RI
     // 1. selectedTypeFilter, selectedPriceFilter, keyword ต้องไม่เป็น null
 
@@ -22,7 +25,8 @@ public class GuestLogic {
     private String keyword = "";
 
     /**
-     * RoomViewModel คือคลาสแบบจำลองข้อมูลห้องพักสำหรับแสดงผลเป็นการ์ดห้องพักในหน้า GuestUI
+     * RoomViewModel คือคลาสแบบจำลองข้อมูลห้องพักสำหรับแสดงผลเป็นการ์ดห้องพักในหน้า
+     * GuestUI
      * id คือ รหัสห้องพัก
      * numberText คือ ข้อความหมายเลขห้องพัก (เช่น ห้อง 101)
      * typeShort คือ ประเภทห้องพักย่อ (ห้องแอร์, ห้องพัดลม)
@@ -36,7 +40,8 @@ public class GuestLogic {
 
         // ===== representation =====
         // Abstraction Function:
-        // AF(id, numberText, typeShort, floorText, priceText, rawPrice, status, statusLabel) คือ
+        // AF(id, numberText, typeShort, floorText, priceText, rawPrice, status,
+        // statusLabel) คือ
         // ข้อมูลจำลองมุมมองของห้องพัก 1 ห้องสำหรับแสดงผลแก่ผู้เยี่ยมชม
         // RI
         // 1. id, numberText, typeShort, status, statusLabel ต้องไม่เป็น null
@@ -54,7 +59,7 @@ public class GuestLogic {
         /**
          * สร้างแบบจำลองข้อมูลห้องพักสำหรับการแสดงผลบนหน้าจอค้นหาห้องพัก
          * 
-         * @param room ข้อมูลห้องพักจากระบบ
+         * @param room        ข้อมูลห้องพักจากระบบ
          * @param currentUser ข้อมูลผู้ใช้งานที่กำลังเข้าสู่ระบบอยู่ในขณะนั้น
          */
         public RoomViewModel(DataStore.Room room, LoginLogic.User currentUser) {
@@ -68,7 +73,8 @@ public class GuestLogic {
 
             if ("OCCUPIED".equalsIgnoreCase(room.status)) {
                 this.statusLabel = "มีผู้เช่า";
-            } else if ("MAINTENANCE".equalsIgnoreCase(room.status) || "UNDER_RENOVATION".equalsIgnoreCase(room.status)) {
+            } else if ("MAINTENANCE".equalsIgnoreCase(room.status)
+                    || "UNDER_RENOVATION".equalsIgnoreCase(room.status)) {
                 this.statusLabel = "ปิดปรับปรุง";
             } else {
                 // เช็คว่า User ปัจจุบันเป็นเจ้าของคำขอจองห้องนี้ที่รออนุมัติอยู่หรือไม่
@@ -89,7 +95,8 @@ public class GuestLogic {
     /**
      * กำหนดเงื่อนไขตัวกรองประเภทห้องพัก
      * 
-     * @param typeFilter ตัวกรองประเภทห้องพัก เช่น "ทั้งหมด", "ห้องแอร์", "ห้องพัดลม"
+     * @param typeFilter ตัวกรองประเภทห้องพัก เช่น "ทั้งหมด", "ห้องแอร์",
+     *                   "ห้องพัดลม"
      */
     public void setTypeFilter(String typeFilter) {
         this.selectedTypeFilter = typeFilter != null ? typeFilter : "ทั้งหมด";
@@ -119,7 +126,7 @@ public class GuestLogic {
      * @return รายการตัวเลือกประเภทห้องพัก
      */
     public String[] getTypeOptions() {
-        return new String[]{"ทั้งหมด", "ห้องพัดลม", "ห้องแอร์"};
+        return new String[] { "ทั้งหมด", "ห้องพัดลม", "ห้องแอร์" };
     }
 
     /**
@@ -128,7 +135,7 @@ public class GuestLogic {
      * @return รายการตัวเลือกช่วงราคา
      */
     public String[] getPriceOptions() {
-        return new String[]{"ทั้งหมด", "ต่ำกว่า 3,000 บาท", "3,000 บาทขึ้นไป"};
+        return new String[] { "ทั้งหมด", "ต่ำกว่า 3,000 บาท", "3,000 บาทขึ้นไป" };
     }
 
     /**
@@ -147,7 +154,8 @@ public class GuestLogic {
      */
     public String getCurrentDisplayName() {
         LoginLogic.User u = LoginLogic.getCurrentUser();
-        if (u == null) return "";
+        if (u == null)
+            return "";
         return (DataStore.blank(u.fullName)) ? u.username : u.fullName;
     }
 
@@ -169,10 +177,11 @@ public class GuestLogic {
     }
 
     /**
-     * ดึงรายการแบบจำลองห้องพักที่ผ่านการกรองตามคำค้นหา ประเภทห้อง และช่วงราคาที่กำหนด
+     * ดึงรายการแบบจำลองห้องพักที่ผ่านการกรองตามคำค้นหา ประเภทห้อง
+     * และช่วงราคาที่กำหนด
      * 
-     * @param keyword คำค้นหาเลขห้องหรือชั้น
-     * @param typeFilter ตัวกรองประเภทห้อง
+     * @param keyword     คำค้นหาเลขห้องหรือชั้น
+     * @param typeFilter  ตัวกรองประเภทห้อง
      * @param priceFilter ตัวกรองช่วงราคา
      * @return รายการห้องพักที่ตรงตามเงื่อนไขทั้งหมด
      */
@@ -194,13 +203,17 @@ public class GuestLogic {
             }
 
             if (typeFilter != null && !typeFilter.equals("ทั้งหมด")) {
-                if (typeFilter.equals("ห้องพัดลม") && !r.typeShort().contains("พัดลม")) continue;
-                if (typeFilter.equals("ห้องแอร์") && !r.typeShort().contains("แอร์")) continue;
+                if (typeFilter.equals("ห้องพัดลม") && !r.typeShort().contains("พัดลม"))
+                    continue;
+                if (typeFilter.equals("ห้องแอร์") && !r.typeShort().contains("แอร์"))
+                    continue;
             }
 
             if (priceFilter != null && !priceFilter.equals("ทั้งหมด")) {
-                if (priceFilter.equals("ต่ำกว่า 3,000 บาท") && r.rent >= 3000) continue;
-                if (priceFilter.equals("3,000 บาทขึ้นไป") && r.rent < 3000) continue;
+                if (priceFilter.equals("ต่ำกว่า 3,000 บาท") && r.rent >= 3000)
+                    continue;
+                if (priceFilter.equals("3,000 บาทขึ้นไป") && r.rent < 3000)
+                    continue;
             }
 
             result.add(vm);

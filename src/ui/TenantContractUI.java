@@ -1,20 +1,22 @@
 package ui;
-import logic.*;
 
+import logic.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 /**
- * TenantContractUI คือคลาสหน้าจอแสดงข้อมูลสัญญาเช่าและข้อกำหนดเงื่อนไขของผู้เช่า
+ * TenantContractUI
+ * คือคลาสหน้าจอแสดงข้อมูลสัญญาเช่าและข้อกำหนดเงื่อนไขของผู้เช่า
  * logic คือ อ็อบเจกต์ตรรกะสำหรับดึงและจัดรูปแบบข้อมูลสัญญาเช่า
  */
 public class TenantContractUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic) คือ หน้าจอแสดงแถบสรุปเลขที่สัญญา วันเริ่ม-สิ้นสุดสัญญา และข้อความข้อกำหนดสัญญาเช่า
+    // AF(logic) คือ หน้าจอแสดงแถบสรุปเลขที่สัญญา วันเริ่ม-สิ้นสุดสัญญา
+    // และข้อความข้อกำหนดสัญญาเช่า
     // RI
     // 1. logic ต้องไม่เป็น null
 

@@ -10,7 +10,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -34,33 +33,37 @@ public class TenantReportUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, model, table, tracker) คือ หน้าจอสำหรับส่งคำร้องแจ้งซ่อมใหม่และติดตามสถานะความคืบหน้าของงานซ่อม
+    // AF(logic, model, table, tracker) คือ
+    // หน้าจอสำหรับส่งคำร้องแจ้งซ่อมใหม่และติดตามสถานะความคืบหน้าของงานซ่อม
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. table และ model ต้องไม่เป็น null
 
     // ---------- Theme ----------
-    static final Color PRIMARY       = new Color(0x13776B);
-    static final Color PRIMARY_DARK  = new Color(0x0E5E54);
+    static final Color PRIMARY = new Color(0x13776B);
+    static final Color PRIMARY_DARK = new Color(0x0E5E54);
     static final Color PRIMARY_LIGHT = new Color(0xD5F0EA);
-    static final Color BG            = new Color(0xF2F3F5);
-    static final Color CARD_BORDER   = new Color(0xDDE1E6);
-    static final Color FIELD_BORDER  = new Color(0xC9CED6);
-    static final Color TEXT          = new Color(0x222222);
-    static final Color MUTED         = new Color(0x7A808A);
-    static final Color STEP_GREY     = new Color(0xC9CED6);
-    static final Color ORANGE        = new Color(0xE08A00);
-    static final Color BLUE          = new Color(0x2F6FDB);
-    static final Color RED           = new Color(0xD93025);
-    static final String FONT_NAME    = "Leelawadee UI";
+    static final Color BG = new Color(0xF2F3F5);
+    static final Color CARD_BORDER = new Color(0xDDE1E6);
+    static final Color FIELD_BORDER = new Color(0xC9CED6);
+    static final Color TEXT = new Color(0x222222);
+    static final Color MUTED = new Color(0x7A808A);
+    static final Color STEP_GREY = new Color(0xC9CED6);
+    static final Color ORANGE = new Color(0xE08A00);
+    static final Color BLUE = new Color(0x2F6FDB);
+    static final Color RED = new Color(0xD93025);
+    static final String FONT_NAME = "Leelawadee UI";
 
     /**
      * คืนค่าแบบอักษรตามรูปแบบและขนาดที่กำหนด
+     * 
      * @param style รูปแบบอักษร (เช่น Font.PLAIN, Font.BOLD)
-     * @param size ขนาดตัวอักษร
+     * @param size  ขนาดตัวอักษร
      * @return อ็อบเจกต์ Font
      */
-    static Font font(int style, int size) { return new Font(FONT_NAME, style, size); }
+    static Font font(int style, int size) {
+        return new Font(FONT_NAME, style, size);
+    }
 
     // ---------- Logic & State ----------
     private final TenantReportLogic logic;
@@ -81,6 +84,7 @@ public class TenantReportUI extends JPanel {
 
     /**
      * คอนสตรักเตอร์สร้างหน้าจอแจ้งซ่อมและติดตามสถานะของผู้เช่า
+     * 
      * @param user ข้อมูลผู้เช่าที่กำลังเข้าใช้งาน
      */
     public TenantReportUI(LoginLogic.User user) {
@@ -98,7 +102,8 @@ public class TenantReportUI extends JPanel {
     }
 
     /**
-     * โหลดข้อมูลจากไฟล์ใหม่ (เรียกตอนสลับมาหน้านี้ เพื่อให้เห็นสถานะที่ Admin อัปเดต)
+     * โหลดข้อมูลจากไฟล์ใหม่ (เรียกตอนสลับมาหน้านี้ เพื่อให้เห็นสถานะที่ Admin
+     * อัปเดต)
      */
     public void refresh() {
         TenantReportLogic.ReportItem cur = logic.getReportAt(table.getSelectedRow());
@@ -108,16 +113,21 @@ public class TenantReportUI extends JPanel {
 
     /**
      * โหลดข้อมูลลงตารางใหม่และเลือกแถวตามรหัสที่ระบุ
+     * 
      * @param keepId รหัสคำขอที่ต้องการให้เลือกค้างไว้หลังจากรีโหลด
      */
     private void reloadTable(String keepId) {
         model.setRowCount(0);
-        for (Object[] row : logic.getTableData()) model.addRow(row);
+        for (Object[] row : logic.getTableData())
+            model.addRow(row);
 
         int sel = model.getRowCount() - 1;
         if (keepId != null) {
             for (int i = 0; i < logic.getReportList().size(); i++) {
-                if (logic.getReportList().get(i).id.equals(keepId)) { sel = i; break; }
+                if (logic.getReportList().get(i).id.equals(keepId)) {
+                    sel = i;
+                    break;
+                }
             }
         }
         if (sel >= 0) {
@@ -132,6 +142,7 @@ public class TenantReportUI extends JPanel {
     // =====================================================================
     /**
      * สร้างและจัดวางโครงสร้างเนื้อหาหลักของหน้าจอ แบ่งเป็นฝั่งซ้ายและขวา
+     * 
      * @return พาเนลเนื้อหาหลัก
      */
     private JPanel buildContent() {
@@ -148,44 +159,60 @@ public class TenantReportUI extends JPanel {
         left.setPreferredSize(new Dimension(1, 1));
         right.setPreferredSize(new Dimension(1, 1));
 
-        c.gridx = 0; c.weightx = 0.58; c.insets = new Insets(0, 0, 0, 10);
+        c.gridx = 0;
+        c.weightx = 0.58;
+        c.insets = new Insets(0, 0, 0, 10);
         content.add(left, c);
 
-        c.gridx = 1; c.weightx = 0.42; c.insets = new Insets(0, 10, 0, 0);
+        c.gridx = 1;
+        c.weightx = 0.42;
+        c.insets = new Insets(0, 10, 0, 0);
         content.add(right, c);
         return content;
     }
 
     /**
      * สร้างคอลัมน์ฝั่งซ้าย ประกอบด้วยการ์ดประวัติและการ์ดติดตามสถานะ
+     * 
      * @return พาเนลคอลัมน์ซ้าย
      */
     private JPanel buildLeftColumn() {
         JPanel col = new JPanel(new GridBagLayout());
         col.setOpaque(false);
         GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0; c.fill = GridBagConstraints.BOTH; c.weightx = 1;
+        c.gridx = 0;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
 
-        c.gridy = 0; c.weighty = 1; c.insets = new Insets(0, 0, 14, 0);
+        c.gridy = 0;
+        c.weighty = 1;
+        c.insets = new Insets(0, 0, 14, 0);
         col.add(buildHistoryCard(), c);
 
-        c.gridy = 1; c.weighty = 0; c.insets = new Insets(0, 0, 0, 0);
+        c.gridy = 1;
+        c.weighty = 0;
+        c.insets = new Insets(0, 0, 0, 0);
         col.add(buildTrackingCard(), c);
         return col;
     }
 
     /**
      * สร้างการ์ดแสดงตารางประวัติการแจ้งซ่อมและร้องเรียน
+     * 
      * @return พาเนลการ์ดประวัติ
      */
     private JPanel buildHistoryCard() {
         RoundPanel card = new RoundPanel(new BorderLayout(0, 10));
         card.setBorder(new EmptyBorder(16, 18, 16, 18));
-        card.add(sectionTitle("ประวัติการแจ้งซ่อม / ร้องเรียน", "คลิกที่รายการเพื่อดูสถานะด้านล่าง"), BorderLayout.NORTH);
+        card.add(sectionTitle("ประวัติการแจ้งซ่อม / ร้องเรียน", "คลิกที่รายการเพื่อดูสถานะด้านล่าง"),
+                BorderLayout.NORTH);
 
-        String[] cols = {"รหัส", "วันที่แจ้ง", "หมวด", "เรื่อง", "วันนัดซ่อม", "สถานะ"};
+        String[] cols = { "รหัส", "วันที่แจ้ง", "หมวด", "เรื่อง", "วันนัดซ่อม", "สถานะ" };
         model = new DefaultTableModel(logic.getTableData(), cols) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
 
         table = new JTable(model);
@@ -203,7 +230,8 @@ public class TenantReportUI extends JPanel {
         th.setReorderingAllowed(false);
         th.setPreferredSize(new Dimension(0, 34));
         th.setDefaultRenderer(new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
                 JLabel l = (JLabel) super.getTableCellRendererComponent(t, v, s, f, r, col);
                 l.setFont(font(Font.BOLD, 13));
                 l.setBackground(new Color(0xF6F7F9));
@@ -216,23 +244,26 @@ public class TenantReportUI extends JPanel {
         });
 
         DefaultTableCellRenderer pad = new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int col) {
                 JLabel l = (JLabel) super.getTableCellRendererComponent(t, v, s, false, r, col);
                 l.setBorder(new EmptyBorder(0, 6, 0, 4));
                 return l;
             }
         };
-        for (int i = 0; i < 5; i++) table.getColumnModel().getColumn(i).setCellRenderer(pad);
+        for (int i = 0; i < 5; i++)
+            table.getColumnModel().getColumn(i).setCellRenderer(pad);
         table.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
 
         table.removeColumn(table.getColumnModel().getColumn(1)); // ซ่อนวันที่แจ้ง
-        int[] visibleWidths = {50, 75, 95, 155, 85};
+        int[] visibleWidths = { 50, 75, 95, 155, 85 };
         for (int i = 0; i < visibleWidths.length && i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(visibleWidths[i]);
         }
 
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) refreshTracking();
+            if (!e.getValueIsAdjusting())
+                refreshTracking();
         });
 
         JScrollPane sp = new JScrollPane(table);
@@ -245,6 +276,7 @@ public class TenantReportUI extends JPanel {
 
     /**
      * สร้างการ์ดแสดงความคืบหน้าการติดตามสถานะของรายการแจ้งซ่อมที่เลือก
+     * 
      * @return พาเนลการ์ดติดตามสถานะ
      */
     private JPanel buildTrackingCard() {
@@ -287,6 +319,7 @@ public class TenantReportUI extends JPanel {
 
     /**
      * กำหนดรูปแบบตัวอักษรและสีให้กับป้ายข้อความข้อมูล
+     * 
      * @param l คอมโพเนนต์ JLabel
      */
     private void styleInfo(JLabel l) {
@@ -335,12 +368,14 @@ public class TenantReportUI extends JPanel {
     private void confirmNextStep() {
         int r = table.getSelectedRow();
         TenantReportLogic.ReportItem item = logic.getReportAt(r);
-        if (item == null || item.step != 1) return;
+        if (item == null || item.step != 1)
+            return;
 
         int ok = JOptionPane.showConfirmDialog(this,
                 "ยืนยันว่ารายการ " + item.id + " ดำเนินการแล้วใช่หรือไม่?",
                 "ยืนยันความคืบหน้า", JOptionPane.YES_NO_OPTION);
-        if (ok != JOptionPane.YES_OPTION) return;
+        if (ok != JOptionPane.YES_OPTION)
+            return;
 
         String id = item.id;
         if (logic.confirmResolved(r)) {
@@ -352,28 +387,41 @@ public class TenantReportUI extends JPanel {
 
     /**
      * สร้างการ์ดแบบฟอร์มสำหรับแจ้งซ่อมหรือร้องเรียนปัญหาใหม่
+     * 
      * @return พาเนลการ์ดแบบฟอร์ม
      */
     private JPanel buildFormCard() {
         RoundPanel card = new RoundPanel(new BorderLayout(0, 12));
         card.setBorder(new EmptyBorder(16, 20, 16, 20));
-        card.add(sectionTitle("แจ้งซ่อม / ร้องเรียนปัญหาใหม่", "กรอกข้อมูลและเลือกวันที่สะดวกให้เจ้าหน้าที่เข้าซ่อม"), BorderLayout.NORTH);
+        card.add(sectionTitle("แจ้งซ่อม / ร้องเรียนปัญหาใหม่", "กรอกข้อมูลและเลือกวันที่สะดวกให้เจ้าหน้าที่เข้าซ่อม"),
+                BorderLayout.NORTH);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0; c.gridwidth = 2; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 1;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
         int y = 0;
 
         cbCategory = new JComboBox<>(TenantReportLogic.CATEGORIES);
         styleField(cbCategory);
-        c.gridy = y++; c.insets = new Insets(0, 0, 4, 0); form.add(fieldLabel("หมวดหมู่ปัญหา"), c);
-        c.gridy = y++; c.insets = new Insets(0, 0, 10, 0); form.add(cbCategory, c);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 4, 0);
+        form.add(fieldLabel("หมวดหมู่ปัญหา"), c);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 10, 0);
+        form.add(cbCategory, c);
 
         tfTitle = new JTextField();
         styleField(tfTitle);
-        c.gridy = y++; c.insets = new Insets(0, 0, 4, 0); form.add(fieldLabel("เรื่อง"), c);
-        c.gridy = y++; c.insets = new Insets(0, 0, 10, 0); form.add(tfTitle, c);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 4, 0);
+        form.add(fieldLabel("เรื่อง"), c);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 10, 0);
+        form.add(tfTitle, c);
 
         taDetail = new JTextArea(4, 20);
         taDetail.setFont(font(Font.PLAIN, 13));
@@ -382,19 +430,27 @@ public class TenantReportUI extends JPanel {
         taDetail.setBorder(new EmptyBorder(6, 8, 6, 8));
         JScrollPane spDetail = new JScrollPane(taDetail);
         spDetail.setBorder(new LineBorder(FIELD_BORDER));
-        c.gridy = y++; c.insets = new Insets(0, 0, 4, 0); form.add(fieldLabel("รายละเอียดเพิ่มเติม"), c);
-        c.gridy = y++; c.insets = new Insets(0, 0, 12, 0); c.fill = GridBagConstraints.BOTH; c.weighty = 1;
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 4, 0);
+        form.add(fieldLabel("รายละเอียดเพิ่มเติม"), c);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 12, 0);
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
         form.add(spDetail, c);
-        c.fill = GridBagConstraints.HORIZONTAL; c.weighty = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weighty = 0;
 
-        c.gridy = y++; c.insets = new Insets(0, 0, 10, 0);
+        c.gridy = y++;
+        c.insets = new Insets(0, 0, 10, 0);
         form.add(buildAppointBox(), c);
 
         RoundButton submit = new RoundButton("ส่งเรื่อง", PRIMARY, Color.WHITE);
         submit.setPreferredSize(new Dimension(0, 42));
         submit.setMinimumSize(new Dimension(0, 42));
         submit.addActionListener(e -> submitForm());
-        c.gridy = y; c.insets = new Insets(0, 0, 0, 0);
+        c.gridy = y;
+        c.insets = new Insets(0, 0, 0, 0);
         form.add(submit, c);
 
         card.add(form, BorderLayout.CENTER);
@@ -403,11 +459,13 @@ public class TenantReportUI extends JPanel {
 
     /**
      * สร้างกล่องสำหรับเลือกวันและเวลาที่สะดวกให้เจ้าหน้าที่เข้าซ่อม
+     * 
      * @return พาเนลกล่องเลือกเวลานัดหมาย
      */
     private JPanel buildAppointBox() {
         JPanel box = new JPanel(new GridBagLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = aa(g);
                 g2.setColor(new Color(0xF2FAF8));
                 g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
@@ -425,7 +483,11 @@ public class TenantReportUI extends JPanel {
         JLabel head = new JLabel("วัน-เวลาที่สะดวกให้เข้าซ่อม");
         head.setFont(font(Font.BOLD, 13));
         head.setForeground(PRIMARY_DARK);
-        c.gridx = 0; c.gridy = 0; c.gridwidth = 2; c.weightx = 1; c.insets = new Insets(0, 0, 8, 0);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        c.weightx = 1;
+        c.insets = new Insets(0, 0, 8, 0);
         box.add(head, c);
 
         Date tomorrow = logic.getTomorrowDate();
@@ -438,12 +500,23 @@ public class TenantReportUI extends JPanel {
         cbTime.setMaximumRowCount(8);
         styleField(cbTime);
 
-        c.gridwidth = 1; c.gridy = 1; c.insets = new Insets(0, 0, 4, 8);
-        c.gridx = 0; c.weightx = 0.5; box.add(fieldLabel("วันที่"), c);
-        c.gridx = 1; c.weightx = 0.5; c.insets = new Insets(0, 0, 4, 0); box.add(fieldLabel("เวลา"), c);
-        c.gridy = 2; c.insets = new Insets(0, 0, 0, 8);
-        c.gridx = 0; box.add(spDate, c);
-        c.gridx = 1; c.insets = new Insets(0, 0, 0, 0); box.add(cbTime, c);
+        c.gridwidth = 1;
+        c.gridy = 1;
+        c.insets = new Insets(0, 0, 4, 8);
+        c.gridx = 0;
+        c.weightx = 0.5;
+        box.add(fieldLabel("วันที่"), c);
+        c.gridx = 1;
+        c.weightx = 0.5;
+        c.insets = new Insets(0, 0, 4, 0);
+        box.add(fieldLabel("เวลา"), c);
+        c.gridy = 2;
+        c.insets = new Insets(0, 0, 0, 8);
+        c.gridx = 0;
+        box.add(spDate, c);
+        c.gridx = 1;
+        c.insets = new Insets(0, 0, 0, 0);
+        box.add(cbTime, c);
 
         return box;
     }
@@ -460,7 +533,8 @@ public class TenantReportUI extends JPanel {
 
         String title = tfTitle.getText().trim();
         if (title.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "กรุณากรอกเรื่องที่ต้องการแจ้ง", "ข้อมูลไม่ครบ", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "กรุณากรอกเรื่องที่ต้องการแจ้ง", "ข้อมูลไม่ครบ",
+                    JOptionPane.WARNING_MESSAGE);
             tfTitle.requestFocus();
             return;
         }
@@ -471,8 +545,7 @@ public class TenantReportUI extends JPanel {
         String timeSlot = (String) cbTime.getSelectedItem();
 
         try {
-            TenantReportLogic.ReportItem newItem =
-                    logic.addNewReport(category, title, detail, date, timeSlot);
+            TenantReportLogic.ReportItem newItem = logic.addNewReport(category, title, detail, date, timeSlot);
             reloadTable(newItem != null ? newItem.id : null);
 
             tfTitle.setText("");
@@ -489,8 +562,9 @@ public class TenantReportUI extends JPanel {
 
     /**
      * สร้างพาเนลหัวข้อส่วนและคำอธิบายย่อย
+     * 
      * @param title ข้อความหัวข้อหลัก
-     * @param sub ข้อความคำอธิบายย่อย
+     * @param sub   ข้อความคำอธิบายย่อย
      * @return พาเนลหัวข้อ
      */
     private JPanel sectionTitle(String title, String sub) {
@@ -509,6 +583,7 @@ public class TenantReportUI extends JPanel {
 
     /**
      * สร้างป้ายข้อความกำกับช่องกรอกข้อมูล
+     * 
      * @param text ข้อความป้ายกำกับ
      * @return คอมโพเนนต์ JLabel
      */
@@ -521,6 +596,7 @@ public class TenantReportUI extends JPanel {
 
     /**
      * ปรับแต่งสไตล์และขนาดของช่องกรอกข้อมูลหรือคอมโพเนนต์อินพุต
+     * 
      * @param comp คอมโพเนนต์ที่ต้องการปรับแต่ง
      */
     private void styleField(JComponent comp) {
@@ -529,7 +605,8 @@ public class TenantReportUI extends JPanel {
         comp.setMinimumSize(new Dimension(0, 34));
         comp.setBackground(Color.WHITE);
         if (comp instanceof JTextField) {
-            comp.setBorder(BorderFactory.createCompoundBorder(new LineBorder(FIELD_BORDER), new EmptyBorder(0, 8, 0, 8)));
+            comp.setBorder(
+                    BorderFactory.createCompoundBorder(new LineBorder(FIELD_BORDER), new EmptyBorder(0, 8, 0, 8)));
         } else if (comp instanceof JSpinner) {
             comp.setBorder(new LineBorder(FIELD_BORDER));
             JComponent ed = ((JSpinner) comp).getEditor();
@@ -540,56 +617,22 @@ public class TenantReportUI extends JPanel {
         }
     }
 
-    /**
-     * ปรับแต่ง Graphics เป็น Graphics2D และเปิดการปรับภาพให้เรียบเนียน (Anti-aliasing)
-     * @param g กราฟิกส์ดั้งเดิม
-     * @return อ็อบเจกต์ Graphics2D ที่ปรับแต่งแล้ว
-     */
     static Graphics2D aa(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        return g2;
+        return UIComponents.smooth(g);
     }
 
-    /**
-     * คืนค่าสีประจำสถานะของขั้นตอนการแจ้งซ่อม
-     * @param status ชื่อสถานะ
-     * @return สีประจำสถานะ
-     */
     static Color stepColor(String status) {
-        if (status.equals(TenantReportLogic.STEPS[2])) return PRIMARY;
-        if (status.equals(TenantReportLogic.STEPS[1])) return ORANGE;
+        if (status.equals(TenantReportLogic.STEPS[2]))
+            return PRIMARY;
+        if (status.equals(TenantReportLogic.STEPS[1]))
+            return ORANGE;
         return BLUE;
     }
 
-    /**
-     * RoundPanel คือคอมโพเนนต์พาเนลพื้นหลังสีขาวขอบโค้งมน
-     */
-    static class RoundPanel extends JPanel {
-        // ===== representation =====
-        // Abstraction Function:
-        // AF() คือ การ์ดพาเนลสีขาวขอบโค้งมน
-        // RI
-        // - ไม่มีตัวแปรสถานะภายใน
-
-        /**
-         * คอนสตรักเตอร์สร้าง RoundPanel พร้อมกำหนด LayoutManager
-         * @param lm รูปแบบการจัดวางคอมโพเนนต์
-         */
-        RoundPanel(LayoutManager lm) { super(lm); setOpaque(false); }
-
-        /**
-         * วาดพื้นหลังพาเนลสีขาวขอบโค้งมนและเส้นขอบการ์ด
-         * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
-         */
-        @Override protected void paintComponent(Graphics g) {
-            Graphics2D g2 = aa(g);
-            g2.setColor(Color.WHITE);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
-            g2.setColor(CARD_BORDER);
-            g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
-            g2.dispose();
+    static class RoundPanel extends UIComponents.RoundedPanel {
+        RoundPanel(LayoutManager lm) {
+            super(Color.WHITE, CARD_BORDER, 7);
+            setLayout(lm);
         }
     }
 
@@ -608,9 +651,10 @@ public class TenantReportUI extends JPanel {
 
         /**
          * คอนสตรักเตอร์สร้าง RoundButton
+         * 
          * @param text ข้อความบนปุ่ม
-         * @param bg สีพื้นหลังปุ่ม
-         * @param fg สีข้อความบนปุ่ม
+         * @param bg   สีพื้นหลังปุ่ม
+         * @param fg   สีข้อความบนปุ่ม
          */
         RoundButton(String text, Color bg, Color fg) {
             super(text);
@@ -625,12 +669,15 @@ public class TenantReportUI extends JPanel {
 
         /**
          * วาดปุ่มกดขอบโค้งมนและข้อความตรงกลางปุ่มตามสถานะการกด/ชี้เมาส์
+         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
-        @Override protected void paintComponent(Graphics g) {
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
-            Color c = !isEnabled() ? STEP_GREY : getModel().isPressed() ? PRIMARY_DARK
-                    : getModel().isRollover() ? bg.darker() : bg;
+            Color c = !isEnabled() ? STEP_GREY
+                    : getModel().isPressed() ? PRIMARY_DARK
+                            : getModel().isRollover() ? bg.darker() : bg;
             g2.setColor(c);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
             g2.setColor(getForeground());
@@ -657,6 +704,7 @@ public class TenantReportUI extends JPanel {
 
         /**
          * กำหนดค่าและคืนค่าคอมโพเนนต์สำหรับแสดงผลข้อความสถานะในตาราง
+         * 
          * @param t ตาราง JTable
          * @param v ค่าในเซลล์
          * @param s สถานะการเลือกแถว
@@ -665,7 +713,8 @@ public class TenantReportUI extends JPanel {
          * @param c ดัชนีคอลัมน์
          * @return คอมโพเนนต์ที่ใช้แสดงผลเซลล์
          */
-        @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
             text = v == null ? "" : v.toString();
             setBackground(s ? t.getSelectionBackground() : Color.WHITE);
             return this;
@@ -673,9 +722,11 @@ public class TenantReportUI extends JPanel {
 
         /**
          * วาดป้ายสถานะรูปทรงแคปซูลพร้อมสีและข้อความ
+         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
-        @Override protected void paintComponent(Graphics g) {
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             g2.setColor(getBackground());
             g2.fillRect(0, 0, getWidth(), getHeight());
@@ -707,15 +758,22 @@ public class TenantReportUI extends JPanel {
 
         /**
          * กำหนดขั้นตอนปัจจุบันและสั่งวาดคอมโพเนนต์ใหม่
-         * @param s หมายเลขขั้นตอน (0=ส่งเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น, -1=ยังไม่เลือก)
+         * 
+         * @param s หมายเลขขั้นตอน (0=ส่งเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น,
+         *          -1=ยังไม่เลือก)
          */
-        void setStep(int s) { step = s; repaint(); }
+        void setStep(int s) {
+            step = s;
+            repaint();
+        }
 
         /**
          * วาดแถบขั้นตอนแสดงวงกลม เส้นเชื่อม และข้อความชื่อขั้นตอน
+         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
-        @Override protected void paintComponent(Graphics g) {
+        @Override
+        protected void paintComponent(Graphics g) {
             Graphics2D g2 = aa(g);
             int n = TenantReportLogic.STEPS.length;
             int d = 28;
@@ -740,7 +798,7 @@ public class TenantReportUI extends JPanel {
                     g2.fillOval(x, y, d, d);
                     g2.setColor(Color.WHITE);
                     g2.setStroke(new BasicStroke(2.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                    g2.drawPolyline(new int[]{cx - 6, cx - 1, cx + 7}, new int[]{cy, cy + 5, cy - 5}, 3);
+                    g2.drawPolyline(new int[] { cx - 6, cx - 1, cx + 7 }, new int[] { cy, cy + 5, cy - 5 }, 3);
                 } else if (current) {
                     g2.setColor(PRIMARY_LIGHT);
                     g2.fillOval(x - 4, y - 4, d + 8, d + 8);
@@ -765,12 +823,13 @@ public class TenantReportUI extends JPanel {
 
         /**
          * วาดข้อความให้อยู่กึ่งกลางจุดพิกัด (cx, cy)
+         * 
          * @param g2 อ็อบเจกต์ Graphics2D
-         * @param s ข้อความที่จะวาด
+         * @param s  ข้อความที่จะวาด
          * @param cx พิกัด X กึ่งกลาง
          * @param cy พิกัด Y กึ่งกลาง
-         * @param c สีข้อความ
-         * @param f แบบอักษร
+         * @param c  สีข้อความ
+         * @param f  แบบอักษร
          */
         private void drawCentered(Graphics2D g2, String s, int cx, int cy, Color c, Font f) {
             g2.setFont(f);

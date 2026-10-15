@@ -13,7 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * TenantReportLogic คือคลาสสำหรับจัดการตรรกะการแจ้งซ่อมและข้อร้องเรียนของผู้เช่า
+ * TenantReportLogic
+ * คือคลาสสำหรับจัดการตรรกะการแจ้งซ่อมและข้อร้องเรียนของผู้เช่า
  * STEPS คือ รายการข้อความแสดงขั้นตอนสถานะการแจ้งซ่อม
  * CATEGORIES คือ รายการหมวดหมู่การแจ้งซ่อม
  * STATUS_BY_STEP คือ รหัสสถานะในระบบตามขั้นตอน
@@ -25,18 +26,19 @@ public class TenantReportLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(user, reportList) คือ ตัวแทนตรรกะสำหรับการโหลด บันทึก และติดตามสถานะการแจ้งซ่อมของผู้เช่า
+    // AF(user, reportList) คือ ตัวแทนตรรกะสำหรับการโหลด บันทึก
+    // และติดตามสถานะการแจ้งซ่อมของผู้เช่า
     // RI
     // 1. user ต้องไม่เป็น null สำหรับผู้เช่าที่เข้าสู่ระบบ
     // 2. reportList ต้องไม่เป็น null
 
-    public static final String[] STEPS = {"ส่งเรื่อง", "ดำเนินการ", "เสร็จสิ้น"};
+    public static final String[] STEPS = { "ส่งเรื่อง", "ดำเนินการ", "เสร็จสิ้น" };
     public static final String[] CATEGORIES = {
             "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ", "เฟอร์นิเจอร์", "อินเทอร์เน็ต", "อื่น ๆ"
     };
 
     // 0=PENDING, 1=IN_PROGRESS, 2=RESOLVED
-    private static final String[] STATUS_BY_STEP = {"PENDING", "IN_PROGRESS", "RESOLVED"};
+    private static final String[] STATUS_BY_STEP = { "PENDING", "IN_PROGRESS", "RESOLVED" };
 
     private static final Pattern ID_P = Pattern.compile("^(\\D*)(\\d+)$");
 
@@ -48,12 +50,14 @@ public class TenantReportLogic {
      * title คือ หัวข้อเรื่อง
      * detail คือ รายละเอียดปัญหา
      * appointment คือ ข้อมูลเวลานัดหมายหรือหมายเหตุ
-     * step คือ ลำดับขั้นตอนสถานะการดำเนินการ (0=ส่งเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น)
+     * step คือ ลำดับขั้นตอนสถานะการดำเนินการ (0=ส่งเรื่อง, 1=ดำเนินการ,
+     * 2=เสร็จสิ้น)
      */
     public static class ReportItem {
         // ===== representation =====
         // Abstraction Function:
-        // AF(id, date, category, title, detail, appointment, step) คือ ตัวแทนของข้อมูลคำร้องแจ้งซ่อมหนึ่งรายการ
+        // AF(id, date, category, title, detail, appointment, step) คือ
+        // ตัวแทนของข้อมูลคำร้องแจ้งซ่อมหนึ่งรายการ
         // RI
         // 1. id, date, category, title ต้องไม่เป็น null
         // 2. step ต้องมีค่าระหว่าง 0 ถึง 2
@@ -69,16 +73,16 @@ public class TenantReportLogic {
         /**
          * คอนสตรักเตอร์สำหรับสร้างข้อมูลคำร้องแจ้งซ่อมหนึ่งรายการ
          * 
-         * @param id รหัสรายการแจ้งซ่อม
-         * @param date วันที่แจ้งซ่อม
-         * @param category หมวดหมู่ปัญหา
-         * @param title หัวข้อเรื่อง
-         * @param detail รายละเอียดปัญหา
+         * @param id          รหัสรายการแจ้งซ่อม
+         * @param date        วันที่แจ้งซ่อม
+         * @param category    หมวดหมู่ปัญหา
+         * @param title       หัวข้อเรื่อง
+         * @param detail      รายละเอียดปัญหา
          * @param appointment ข้อมูลนัดหมาย
-         * @param step ลำดับสถานะ (0=ส่งเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น)
+         * @param step        ลำดับสถานะ (0=ส่งเรื่อง, 1=ดำเนินการ, 2=เสร็จสิ้น)
          */
         public ReportItem(String id, String date, String category, String title,
-                          String detail, String appointment, int step) {
+                String detail, String appointment, int step) {
             this.id = id;
             this.date = date;
             this.category = category;
@@ -121,10 +125,12 @@ public class TenantReportLogic {
     public LoginLogic.User getUser() {
         if (this.user != null && !DataStore.blank(this.user.username)) {
             LoginLogic.User found = LoginLogic.findUser(this.user.username);
-            if (found != null) return found;
+            if (found != null)
+                return found;
         }
         LoginLogic.User cur = LoginLogic.getCurrentUser();
-        if (cur != null) return cur;
+        if (cur != null)
+            return cur;
         return this.user;
     }
 
@@ -135,7 +141,8 @@ public class TenantReportLogic {
      */
     private String userKey() {
         LoginLogic.User u = getUser();
-        if (u == null) return "";
+        if (u == null)
+            return "";
         return DataStore.blank(u.userId) ? u.username : u.userId;
     }
 
@@ -146,8 +153,10 @@ public class TenantReportLogic {
      */
     public String roomId() {
         LoginLogic.User u = getUser();
-        if (u == null) return "";
-        if (!DataStore.blank(u.roomId) && !"-".equals(u.roomId.trim())) return u.roomId.trim();
+        if (u == null)
+            return "";
+        if (!DataStore.blank(u.roomId) && !"-".equals(u.roomId.trim()))
+            return u.roomId.trim();
         DataStore.Contract c = DataStore.contractFor(u);
         return (c != null && !DataStore.blank(c.roomId) && !"-".equals(c.roomId.trim())) ? c.roomId.trim() : "";
     }
@@ -159,7 +168,8 @@ public class TenantReportLogic {
      */
     public DataStore.Room currentRoom() {
         String rId = roomId();
-        if (DataStore.blank(rId)) return null;
+        if (DataStore.blank(rId))
+            return null;
         DataStore.Room r = DataStore.room(rId);
         if (r == null) {
             r = DataStore.roomByNumber(rId);
@@ -179,13 +189,15 @@ public class TenantReportLogic {
     // ===================== อ่านจากไฟล์ =====================
 
     /**
-     * โหลดรายการแจ้งซ่อมของผู้ใช้และห้องพักปัจจุบันจากไฟล์ complaints.csv ใหม่ (ไม่รวมห้องเดิมที่ย้ายออกแล้ว)
+     * โหลดรายการแจ้งซ่อมของผู้ใช้และห้องพักปัจจุบันจากไฟล์ complaints.csv ใหม่
+     * (ไม่รวมห้องเดิมที่ย้ายออกแล้ว)
      */
     public void reload() {
         reportList.clear();
         String currentUserId = userKey();
         DataStore.Room cur = currentRoom();
-        if (cur == null) return;
+        if (cur == null)
+            return;
 
         String curId = cur.id;
         String curNum = cur.number;
@@ -201,7 +213,8 @@ public class TenantReportLogic {
             String reqDate = row.getOrDefault("requestDate", "").trim();
             String status = row.getOrDefault("status", "").trim();
 
-            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้ และเป็นของห้องพักปัจจุบันเท่านั้น (ไม่รวมห้องเก่า)
+            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้ และเป็นของห้องพักปัจจุบันเท่านั้น
+            // (ไม่รวมห้องเก่า)
             boolean isUserMatch = !DataStore.blank(currentUserId) && currentUserId.equalsIgnoreCase(uId);
             boolean isRoomMatch = rId.equalsIgnoreCase(curId) || rId.equalsIgnoreCase(curNum);
 
@@ -221,8 +234,10 @@ public class TenantReportLogic {
      * @return ลำดับตัวเลข 0, 1 หรือ 2
      */
     private static int stepOf(String status) {
-        if ("RESOLVED".equalsIgnoreCase(status)) return 2;
-        if ("IN_PROGRESS".equalsIgnoreCase(status)) return 1;
+        if ("RESOLVED".equalsIgnoreCase(status))
+            return 2;
+        if ("IN_PROGRESS".equalsIgnoreCase(status))
+            return 1;
         return 0;
     }
 
@@ -233,7 +248,8 @@ public class TenantReportLogic {
      * @return ข้อความวันที่ในรูปแบบ dd/MM/yyyy
      */
     private static String displayDate(String isoOrFormatted) {
-        if (DataStore.blank(isoOrFormatted)) return "-";
+        if (DataStore.blank(isoOrFormatted))
+            return "-";
         try {
             return LocalDate.parse(isoOrFormatted.trim()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         } catch (Exception e) {
@@ -269,7 +285,7 @@ public class TenantReportLogic {
         Object[][] data = new Object[reportList.size()][6];
         for (int i = 0; i < reportList.size(); i++) {
             ReportItem it = reportList.get(i);
-            data[i] = new Object[]{it.id, it.date, it.category, it.title, it.appointment, it.getStatusText()};
+            data[i] = new Object[] { it.id, it.date, it.category, it.title, it.appointment, it.getStatusText() };
         }
         return data;
     }
@@ -287,7 +303,8 @@ public class TenantReportLogic {
         boolean seen = false;
         for (Map<String, String> m : DataStore.readTable(DataStore.COMPLAINTS_FILE)) {
             Matcher mt = ID_P.matcher(m.getOrDefault("complaintId", "").trim());
-            if (!mt.matches()) continue;
+            if (!mt.matches())
+                continue;
             if (!seen) {
                 prefix = mt.group(1);
                 digits = mt.group(2).length();
@@ -304,15 +321,15 @@ public class TenantReportLogic {
      * บันทึกคำร้องแจ้งซ่อมใหม่ลงไฟล์ complaints.csv
      * 
      * @param category หมวดหมู่การแจ้งซ่อม
-     * @param title หัวข้อเรื่อง
-     * @param detail รายละเอียดปัญหา
-     * @param date วันที่นัดหมาย
+     * @param title    หัวข้อเรื่อง
+     * @param detail   รายละเอียดปัญหา
+     * @param date     วันที่นัดหมาย
      * @param timeSlot ช่วงเวลาที่สะดวก
      * @return ออบเจ็กต์ ReportItem ที่บันทึกสำเร็จ หรือ null
      * @throws IOException หากเกิดข้อผิดพลาดในการเขียนไฟล์
      */
     public synchronized ReportItem addNewReport(String category, String title, String detail,
-                                                Date date, String timeSlot) throws IOException {
+            Date date, String timeSlot) throws IOException {
         String appointDate = new SimpleDateFormat("dd/MM/yyyy").format(date);
         String slot = timeSlot.split(" ")[0];
         String requestDate = appointDate + " " + slot;
@@ -328,7 +345,8 @@ public class TenantReportLogic {
 
         reload();
         for (ReportItem it : reportList) {
-            if (it.id.equals(id)) return it;
+            if (it.id.equals(id))
+                return it;
         }
         return null;
     }
@@ -341,10 +359,12 @@ public class TenantReportLogic {
      */
     public boolean confirmResolved(int index) {
         ReportItem item = getReportAt(index);
-        if (item == null || item.step != 1) return false;
+        if (item == null || item.step != 1)
+            return false;
         boolean ok = DataStore.updateCell(DataStore.COMPLAINTS_FILE, "complaintId", item.id,
                 "status", STATUS_BY_STEP[2]);
-        if (ok) reload();
+        if (ok)
+            reload();
         return ok;
     }
 
@@ -354,7 +374,7 @@ public class TenantReportLogic {
      * สร้างรายการตัวเลือกช่วงเวลานัดหมาย เช่น "09:00 - 10:00 น."
      * 
      * @param startHour ชั่วโมงเริ่มต้น
-     * @param endHour ชั่วโมงสิ้นสุด
+     * @param endHour   ชั่วโมงสิ้นสุด
      * @return อาร์เรย์ของข้อความช่วงเวลา
      */
     public static String[] buildTimeSlots(int startHour, int endHour) {

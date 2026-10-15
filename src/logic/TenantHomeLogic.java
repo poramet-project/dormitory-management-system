@@ -3,7 +3,8 @@ package logic;
 import java.util.Map;
 
 /**
- * TenantHomeLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของหน้าหลักผู้เช่า (Dashboard ผู้เช่า)
+ * TenantHomeLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของหน้าหลักผู้เช่า
+ * (Dashboard ผู้เช่า)
  * user คือ ข้อมูลบัญชีผู้เช่าที่กำลังใช้งานระบบ
  * room คือ ข้อมูลห้องพักของผู้เช่า
  * contract คือ ข้อมูลสัญญาเช่าของผู้เช่า
@@ -16,7 +17,8 @@ public class TenantHomeLogic {
     // ===== representation =====
     // Abstraction Function:
     // AF(user, room, contract, repairTotal, repairInProgress, repairDone) คือ
-    // ตรรกะสรุปภาพรวมสถานะห้องพัก สัญญาเช่า และสถานะการแจ้งซ่อมในหน้าหลักของผู้เช่า (เฉพาะห้องปัจจุบัน ไม่รวมห้องเก่า)
+    // ตรรกะสรุปภาพรวมสถานะห้องพัก สัญญาเช่า และสถานะการแจ้งซ่อมในหน้าหลักของผู้เช่า
+    // (เฉพาะห้องปัจจุบัน ไม่รวมห้องเก่า)
     // RI
     // 1. repairTotal, repairInProgress, repairDone ต้อง >= 0
     // 2. repairInProgress + repairDone ต้องเท่ากับ repairTotal
@@ -45,14 +47,17 @@ public class TenantHomeLogic {
      * @return ข้อมูล User ล่าสุด
      */
     public LoginLogic.User getLatestUser() {
-        if (this.user == null) return null;
+        if (this.user == null)
+            return null;
         String curName = this.user.username;
         if (!DataStore.blank(curName)) {
             LoginLogic.User found = LoginLogic.findUser(curName);
-            if (found != null) return found;
+            if (found != null)
+                return found;
         }
         LoginLogic.User cur = LoginLogic.getCurrentUser();
-        if (cur != null) return cur;
+        if (cur != null)
+            return cur;
         return this.user;
     }
 
@@ -63,7 +68,8 @@ public class TenantHomeLogic {
      * @return ออบเจ็กต์ Room ห้องปัจจุบัน หรือ null หากไม่พบ
      */
     public static DataStore.Room resolveRoom(LoginLogic.User u) {
-        if (u == null) return null;
+        if (u == null)
+            return null;
         String rId = u.roomId;
         if (DataStore.blank(rId) || "-".equals(rId.trim())) {
             for (DataStore.Contract c : DataStore.contracts()) {
@@ -74,7 +80,8 @@ public class TenantHomeLogic {
                 }
             }
         }
-        if (DataStore.blank(rId) || "-".equals(rId.trim())) return null;
+        if (DataStore.blank(rId) || "-".equals(rId.trim()))
+            return null;
         DataStore.Room r = DataStore.room(rId);
         if (r == null) {
             r = DataStore.roomByNumber(rId);
@@ -85,12 +92,13 @@ public class TenantHomeLogic {
     /**
      * ค้นหาสัญญาเช่าที่ใช้งานอยู่ (ACTIVE) ของห้องปัจจุบันของผู้เช่า
      * 
-     * @param u ข้อมูลผู้เช่า
+     * @param u       ข้อมูลผู้เช่า
      * @param curRoom ห้องปัจจุบันของผู้เช่า
      * @return สัญญาเช่าที่ผูกกับห้องปัจจุบัน หรือสัญญาที่ยังใช้งานอยู่
      */
     public static DataStore.Contract resolveContract(LoginLogic.User u, DataStore.Room curRoom) {
-        if (u == null) return null;
+        if (u == null)
+            return null;
         String uId = DataStore.blank(u.userId) ? u.username : u.userId;
         if (curRoom != null) {
             for (DataStore.Contract c : DataStore.contracts()) {
@@ -119,7 +127,8 @@ public class TenantHomeLogic {
     }
 
     /**
-     * โหลดและนับจำนวนสถิติการแจ้งซ่อมของผู้เช่าเฉพาะห้องปัจจุบันเท่านั้นจาก complaints.csv
+     * โหลดและนับจำนวนสถิติการแจ้งซ่อมของผู้เช่าเฉพาะห้องปัจจุบันเท่านั้นจาก
+     * complaints.csv
      * หากผู้เช่าย้ายห้อง รายการแจ้งซ่อมของห้องเดิมจะไม่ถูกนำมานับหรือแสดงผล
      */
     public void reloadRepairStats() {
@@ -128,12 +137,15 @@ public class TenantHomeLogic {
         repairDone = 0;
 
         LoginLogic.User u = getLatestUser();
-        if (u == null) return;
+        if (u == null)
+            return;
         String uId = DataStore.blank(u.userId) ? u.username : u.userId;
-        if (DataStore.blank(uId)) return;
+        if (DataStore.blank(uId))
+            return;
 
         DataStore.Room curRoom = (this.room != null) ? this.room : resolveRoom(u);
-        if (curRoom == null) return; // หากยังไม่มีห้องพักปัจจุบัน จะไม่มีรายการแจ้งซ่อมของห้องเดิม
+        if (curRoom == null)
+            return; // หากยังไม่มีห้องพักปัจจุบัน จะไม่มีรายการแจ้งซ่อมของห้องเดิม
 
         String curRoomId = curRoom.id;
         String curRoomNum = curRoom.number;
@@ -143,7 +155,8 @@ public class TenantHomeLogic {
             String rowRoom = row.getOrDefault("roomId", "").trim();
             String status = row.getOrDefault("status", "").trim().toUpperCase();
 
-            // กรองเงื่อนไข: เป็นของผู้ใช้คนนี้ และต้องเป็นห้องพักปัจจุบันเท่านั้น (ไม่รวมห้องเก่า)
+            // กรองเงื่อนไข: เป็นของผู้ใช้คนนี้ และต้องเป็นห้องพักปัจจุบันเท่านั้น
+            // (ไม่รวมห้องเก่า)
             boolean userMatch = rowUser.equalsIgnoreCase(uId)
                     || (!DataStore.blank(u.username) && rowUser.equalsIgnoreCase(u.username));
             boolean roomMatch = rowRoom.equalsIgnoreCase(curRoomId) || rowRoom.equalsIgnoreCase(curRoomNum);
@@ -159,29 +172,40 @@ public class TenantHomeLogic {
         }
     }
 
-    public DataStore.Room getRoom() { return room; }
-    public DataStore.Contract getContract() { return contract; }
+    public DataStore.Room getRoom() {
+        return room;
+    }
+
+    public DataStore.Contract getContract() {
+        return contract;
+    }
 
     /**
      * ดึงข้อความสรุปจำนวนรายการแจ้งซ่อมทั้งหมดของห้องปัจจุบัน
      * 
      * @return ข้อความจำนวนรายการแจ้งซ่อมทั้งหมด เช่น "3 รายการ"
      */
-    public String repairTotalText()      { return repairTotal + " รายการ"; }
+    public String repairTotalText() {
+        return repairTotal + " รายการ";
+    }
 
     /**
      * ดึงข้อความแสดงจำนวนรายการแจ้งซ่อมที่กำลังดำเนินการของห้องปัจจุบัน
      * 
      * @return ข้อความจำนวนรายการที่กำลังดำเนินการ
      */
-    public String repairInProgressText() { return "กำลังดำเนินการ " + repairInProgress; }
+    public String repairInProgressText() {
+        return "กำลังดำเนินการ " + repairInProgress;
+    }
 
     /**
      * ดึงข้อความแสดงจำนวนรายการแจ้งซ่อมที่เสร็จสิ้นแล้วของห้องปัจจุบัน
      * 
      * @return ข้อความจำนวนรายการที่เสร็จสิ้น
      */
-    public String repairDoneText()       { return "เสร็จสิ้น " + repairDone; }
+    public String repairDoneText() {
+        return "เสร็จสิ้น " + repairDone;
+    }
 
     /**
      * ดึงข้อความหมายเลขห้องพักปัจจุบันสำหรับแสดงผลหัวการ์ด

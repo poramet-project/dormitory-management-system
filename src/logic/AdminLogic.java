@@ -10,20 +10,25 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * AdminLogic คือคลาสสำหรับคำนวณและประมวลผลข้อมูลสถิติของแผงควบคุมหลักผู้ดูแลระบบ (Admin Dashboard)
- * คำนวณจำนวนห้องว่าง ห้องเต็ม อัตราการเข้าพัก คำขอรอดำเนินการ และสถิติการเข้าพักรายเดือนจริง
+ * AdminLogic
+ * คือคลาสสำหรับคำนวณและประมวลผลข้อมูลสถิติของแผงควบคุมหลักผู้ดูแลระบบ (Admin
+ * Dashboard)
+ * คำนวณจำนวนห้องว่าง ห้องเต็ม อัตราการเข้าพัก คำขอรอดำเนินการ
+ * และสถิติการเข้าพักรายเดือนจริง
  */
 public class AdminLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF() คือ ระบบคำนวณและประมวลผลข้อมูลภาพรวมของหอพักจาก DataStore (rooms, contracts, users, complaints, bookings)
+    // AF() คือ ระบบคำนวณและประมวลผลข้อมูลภาพรวมของหอพักจาก DataStore (rooms,
+    // contracts, users, complaints, bookings)
     // RI
     // 1. DataStore ต้องพร้อมใช้งานและสามารถอ่านไฟล์ CSV ที่เกี่ยวข้องได้
     // 2. จำนวนห้องพักที่คำนวณได้ต้องมีค่าไม่น้อยกว่า 0
 
     /**
-     * RequestItemModel คือคลาสสำหรับเก็บข้อมูลคำร้องรอดำเนินการแต่ละรายการที่นำไปแสดงในการ์ดคำร้อง
+     * RequestItemModel
+     * คือคลาสสำหรับเก็บข้อมูลคำร้องรอดำเนินการแต่ละรายการที่นำไปแสดงในการ์ดคำร้อง
      * tag คือ ป้ายกำกับประเภทคำร้อง (เช่น แจ้งซ่อม, ย้ายห้อง, จองห้อง)
      * room คือ หมายเลขห้องพักที่เกี่ยวข้อง
      * desc คือ รายละเอียดโดยสังเขปของคำร้อง
@@ -48,7 +53,7 @@ public class AdminLogic {
         /**
          * คอนสตรักเตอร์สำหรับสร้างอ็อบเจกต์คำร้องรอดำเนินการ
          *
-         * @param tag ป้ายกำกับประเภทคำร้อง
+         * @param tag  ป้ายกำกับประเภทคำร้อง
          * @param room หมายเลขห้องพักที่เกี่ยวข้อง
          * @param desc คำอธิบายหรือรายละเอียดของคำร้อง
          * @param time วันที่หรือเวลาที่ยื่นคำร้อง
@@ -104,7 +109,8 @@ public class AdminLogic {
 
     /**
      * ดึงจำนวนห้องพักที่มีผู้เช่าหรือผู้เข้าพักอาศัยจริงในปัจจุบัน
-     * โดยตรวจนับจากห้องที่มีสถานะ OCCUPIED, สัญญาเช่าที่ยังใช้งานอยู่ (ACTIVE), และผู้ใช้ที่มีบทบาทเป็นผู้เช่า
+     * โดยตรวจนับจากห้องที่มีสถานะ OCCUPIED, สัญญาเช่าที่ยังใช้งานอยู่ (ACTIVE),
+     * และผู้ใช้ที่มีบทบาทเป็นผู้เช่า
      *
      * @return จำนวนห้องที่ไม่ซ้ำกันซึ่งมีผู้เข้าพักจริง
      */
@@ -145,7 +151,8 @@ public class AdminLogic {
 
     /**
      * ดึงจำนวนผู้เข้าพักหรือผู้เช่าทั้งหมดที่มีอยู่ในระบบ
-     * ตรวจนับจากบัญชีผู้ใช้งานที่มีบทบาท TENANT และผู้เช่าตามสัญญาเช่าที่ยังใช้งานอยู่
+     * ตรวจนับจากบัญชีผู้ใช้งานที่มีบทบาท TENANT
+     * และผู้เช่าตามสัญญาเช่าที่ยังใช้งานอยู่
      *
      * @return จำนวนผู้เช่าจริงทั้งหมดในระบบ
      */
@@ -174,18 +181,21 @@ public class AdminLogic {
      */
     public static int getOccupancyRate() {
         int total = getTotalRooms();
-        if (total == 0) return 0;
+        if (total == 0)
+            return 0;
         return (getOccupiedRoomsCount() * 100) / total;
     }
 
     /**
-     * แปลงสตริงข้อความวันที่เป็นอ็อบเจกต์ LocalDate โดยรองรับหลายรูปแบบวันที่และปี พ.ศ./ค.ศ.
+     * แปลงสตริงข้อความวันที่เป็นอ็อบเจกต์ LocalDate โดยรองรับหลายรูปแบบวันที่และปี
+     * พ.ศ./ค.ศ.
      *
      * @param raw ข้อความสตริงวันที่
      * @return อ็อบเจกต์ LocalDate หรือ null หากแปลงไม่สำเร็จ
      */
     private static LocalDate parseDateSafe(String raw) {
-        if (DataStore.blank(raw)) return null;
+        if (DataStore.blank(raw))
+            return null;
         String s = raw.trim().split("[ T]")[0];
         String[] patterns = { "yyyy-MM-dd", "yyyy-M-d", "d/M/yyyy", "dd/MM/yyyy", "yyyy/M/d" };
         for (String p : patterns) {
@@ -195,14 +205,16 @@ public class AdminLogic {
                     d = d.minusYears(543);
                 }
                 return d;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         return null;
     }
 
     /**
      * ดึงข้อมูลประวัติและสถิติอัตราการเข้าพักรายเดือนย้อนหลังตามจำนวนเดือนที่ระบุ
-     * โดยเดือนปัจจุบันจะใช้ข้อมูลผู้เข้าพักจริง และเดือนในอดีตจะคำนวณจากระยะเวลาสัญญาเช่า
+     * โดยเดือนปัจจุบันจะใช้ข้อมูลผู้เข้าพักจริง
+     * และเดือนในอดีตจะคำนวณจากระยะเวลาสัญญาเช่า
      *
      * @param numberOfMonths จำนวนเดือนย้อนหลังที่ต้องการดึงข้อมูล
      * @return อ็อบเจกต์ MonthlyOccupancy ที่บรรจุชื่อเดือนและจำนวนผู้เข้าพัก
@@ -232,8 +244,10 @@ public class AdminLogic {
                 Set<String> occupiedInMonth = new HashSet<>();
 
                 for (DataStore.Contract c : allContracts) {
-                    if (DataStore.blank(c.roomId)) continue;
-                    if ("REJECTED".equalsIgnoreCase(c.status) || "PENDING".equalsIgnoreCase(c.status)) continue;
+                    if (DataStore.blank(c.roomId))
+                        continue;
+                    if ("REJECTED".equalsIgnoreCase(c.status) || "PENDING".equalsIgnoreCase(c.status))
+                        continue;
 
                     LocalDate cStart = parseDateSafe(c.start);
                     LocalDate cEnd = parseDateSafe(c.end);
@@ -261,19 +275,23 @@ public class AdminLogic {
     public static int getPendingRequestsCount() {
         int count = 0;
         for (Map<String, String> m : DataStore.readTable("bookings.csv")) {
-            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", ""))) count++;
+            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", "")))
+                count++;
         }
         for (Map<String, String> m : DataStore.readTable("complaints.csv")) {
-            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", ""))) count++;
+            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", "")))
+                count++;
         }
         for (Map<String, String> m : DataStore.readTable("room_transfers.csv")) {
-            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", ""))) count++;
+            if ("PENDING".equalsIgnoreCase(m.getOrDefault("status", "")))
+                count++;
         }
         return count;
     }
 
     /**
-     * ดึงรายการคำร้องที่รอดำเนินการทั้งหมดจาก bookings.csv, complaints.csv และ room_transfers.csv
+     * ดึงรายการคำร้องที่รอดำเนินการทั้งหมดจาก bookings.csv, complaints.csv และ
+     * room_transfers.csv
      * เพื่อนำไปแสดงในรายการแจ้งเตือนของแผงควบคุมหลัก
      *
      * @return รายการ List ของ RequestItemModel
@@ -289,7 +307,8 @@ public class AdminLogic {
                 String roomNum = r != null ? r.number : roomId.replace("R", "");
                 String name = m.getOrDefault("fullName", "จองห้อง");
                 String date = m.getOrDefault("requestDate", "เร็วๆ นี้");
-                list.add(new RequestItemModel("จองห้อง", "ห้อง " + roomNum, "ผู้ยื่น: " + name, DataStore.thaiDate(date), "booking"));
+                list.add(new RequestItemModel("จองห้อง", "ห้อง " + roomNum, "ผู้ยื่น: " + name,
+                        DataStore.thaiDate(date), "booking"));
             }
         }
 

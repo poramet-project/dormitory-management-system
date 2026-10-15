@@ -338,25 +338,7 @@ public class AdminRoomChangeUI extends JPanel {
         return v;
     }
 
-    /**
-     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำขอย้ายห้อง
-     */
-    static class HeaderRenderer extends DefaultTableCellRenderer {
-        // ===== representation =====
-        // Abstraction Function:
-        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวตารางคำขอย้ายห้อง
-        // RI
-        // - ไม่มีตัวแปรสถานะภายใน
-
-        /**
-         * กำหนดการแสดงผลของส่วนหัวตารางคำขอย้ายห้องพัก
-         */
-        @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
-            super.getTableCellRendererComponent(t, v, sel, focus, row, col);
-            setFont(AdminUI.font(Font.PLAIN, 11)); setForeground(TEXT_GRAY); setBackground(WHITE);
-            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER), new EmptyBorder(0, 10, 0, 10)));
-            return this;
-        }
+    static class HeaderRenderer extends UIComponents.HeaderRenderer {
     }
 
     /**

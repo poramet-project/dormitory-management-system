@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TenantRoomChangeLogic คือคลาสสำหรับจัดการตรรกะการยื่นคำขอย้ายห้องพักของผู้เช่า
- * เชื่อมโยงข้อมูลบัญชีผู้เช่า (User) ห้องพักปัจจุบัน (Room) สัญญาเช่า (Contract) และรายการห้องว่าง
+ * TenantRoomChangeLogic
+ * คือคลาสสำหรับจัดการตรรกะการยื่นคำขอย้ายห้องพักของผู้เช่า
+ * เชื่อมโยงข้อมูลบัญชีผู้เช่า (User) ห้องพักปัจจุบัน (Room) สัญญาเช่า
+ * (Contract) และรายการห้องว่าง
  * TRANSFER_FILE คือ ชื่อไฟล์ CSV ที่เก็บข้อมูลคำขอย้ายห้อง
  * TRANSFER_HEADER คือ ส่วนหัวตารางของไฟล์ข้อมูลคำขอย้ายห้อง
  * user คือ ข้อมูลผู้ใช้งานปัจจุบัน
@@ -19,16 +21,18 @@ public class TenantRoomChangeLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(user, transferList) คือ ตัวแทนตรรกะสำหรับตรวจสอบห้องพักปัจจุบัน ห้องว่าง และบันทึกคำขอย้ายห้องของผู้เช่า
+    // AF(user, transferList) คือ ตัวแทนตรรกะสำหรับตรวจสอบห้องพักปัจจุบัน ห้องว่าง
+    // และบันทึกคำขอย้ายห้องของผู้เช่า
     // RI
     // 1. TRANSFER_FILE และ TRANSFER_HEADER ต้องไม่เป็น null หรือค่าว่าง
     // 2. transferList ต้องไม่เป็น null
 
     public static final String TRANSFER_FILE = "room_transfers.csv";
-    public static final String TRANSFER_HEADER =
-            "transferId,userId,contractId,oldRoomId,newRoomId,reason,requestDate,status";
+    public static final String TRANSFER_HEADER = "transferId,userId,contractId,oldRoomId,newRoomId,reason,requestDate,status";
 
-    public enum Status { INVALID_INPUT, PENDING_EXISTS, SUCCESS }
+    public enum Status {
+        INVALID_INPUT, PENDING_EXISTS, SUCCESS
+    }
 
     /**
      * Result คือคลาสผลลัพธ์การดำเนินการยื่นคำขอย้ายห้อง
@@ -71,15 +75,16 @@ public class TenantRoomChangeLogic {
         public final String status;
         public final String statusThai;
 
-        public TransferItem(String id, String date, String oldRoomNum, String newRoomNum, String reason, String status) {
+        public TransferItem(String id, String date, String oldRoomNum, String newRoomNum, String reason,
+                String status) {
             this.id = id;
             this.date = date;
             this.oldRoomNum = oldRoomNum;
             this.newRoomNum = newRoomNum;
             this.reason = reason;
             this.status = status;
-            this.statusThai = "APPROVED".equalsIgnoreCase(status) ? "อนุมัติแล้ว" :
-                             ("REJECTED".equalsIgnoreCase(status) ? "ปฏิเสธ" : "รอการอนุมัติ");
+            this.statusThai = "APPROVED".equalsIgnoreCase(status) ? "อนุมัติแล้ว"
+                    : ("REJECTED".equalsIgnoreCase(status) ? "ปฏิเสธ" : "รอการอนุมัติ");
         }
     }
 
@@ -108,7 +113,8 @@ public class TenantRoomChangeLogic {
             return this.user;
         }
         LoginLogic.User cur = LoginLogic.getCurrentUser();
-        if (cur != null) return cur;
+        if (cur != null)
+            return cur;
         String curName = DataStore.getCurrentLoginUser();
         if (!DataStore.blank(curName) && !"Guest".equalsIgnoreCase(curName)) {
             return LoginLogic.findUser(curName);
@@ -123,7 +129,8 @@ public class TenantRoomChangeLogic {
      */
     public String userKey() {
         LoginLogic.User u = getUser();
-        if (u == null) return "";
+        if (u == null)
+            return "";
         return DataStore.blank(u.userId) ? u.username : u.userId;
     }
 
@@ -135,7 +142,8 @@ public class TenantRoomChangeLogic {
      */
     public String roomId() {
         LoginLogic.User u = getUser();
-        if (u == null) return "";
+        if (u == null)
+            return "";
         if (!DataStore.blank(u.roomId) && !"-".equals(u.roomId.trim())) {
             return u.roomId.trim();
         }
@@ -159,7 +167,8 @@ public class TenantRoomChangeLogic {
      */
     public DataStore.Room currentRoom() {
         String rId = roomId();
-        if (DataStore.blank(rId)) return null;
+        if (DataStore.blank(rId))
+            return null;
         DataStore.Room r = DataStore.room(rId);
         if (r == null) {
             r = DataStore.roomByNumber(rId);
@@ -174,7 +183,8 @@ public class TenantRoomChangeLogic {
      */
     public DataStore.Contract contract() {
         LoginLogic.User u = getUser();
-        if (u == null) return null;
+        if (u == null)
+            return null;
         DataStore.Contract c = DataStore.contractFor(u);
         if (c == null) {
             String uKey = userKey();
@@ -200,7 +210,8 @@ public class TenantRoomChangeLogic {
     // ===================== อ่านจากไฟล์ =====================
 
     /**
-     * โหลดข้อมูลคำขอย้ายห้องของผู้ใช้และห้องพักปัจจุบันจากไฟล์ room_transfers.csv ใหม่
+     * โหลดข้อมูลคำขอย้ายห้องของผู้ใช้และห้องพักปัจจุบันจากไฟล์ room_transfers.csv
+     * ใหม่
      */
     public void reload() {
         transferList.clear();
@@ -215,14 +226,17 @@ public class TenantRoomChangeLogic {
             String reqDate = row.getOrDefault("requestDate", "").trim();
             String status = row.getOrDefault("status", "PENDING").trim();
 
-            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้เท่านั้น ไม่แสดงประวัติคำขอของผู้เช่าคนก่อนในห้องเดิม
+            // กรองเงื่อนไข: ตรวจสอบว่าเป็นของผู้ใช้คนนี้เท่านั้น
+            // ไม่แสดงประวัติคำขอของผู้เช่าคนก่อนในห้องเดิม
             boolean isUserMatch = !DataStore.blank(currentUserId) && currentUserId.equalsIgnoreCase(uId);
 
             if (isUserMatch) {
                 DataStore.Room rOld = DataStore.room(oldR);
-                if (rOld == null) rOld = DataStore.roomByNumber(oldR);
+                if (rOld == null)
+                    rOld = DataStore.roomByNumber(oldR);
                 DataStore.Room rNew = DataStore.room(newR);
-                if (rNew == null) rNew = DataStore.roomByNumber(newR);
+                if (rNew == null)
+                    rNew = DataStore.roomByNumber(newR);
 
                 String oldNum = rOld != null ? rOld.number : oldR;
                 String newNum = rNew != null ? rNew.number : newR;
@@ -240,7 +254,8 @@ public class TenantRoomChangeLogic {
      * @return ข้อความวันที่ในรูปแบบ dd/MM/yyyy
      */
     private static String displayDate(String isoOrFormatted) {
-        if (DataStore.blank(isoOrFormatted)) return "-";
+        if (DataStore.blank(isoOrFormatted))
+            return "-";
         try {
             return LocalDate.parse(isoOrFormatted.trim()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         } catch (Exception e) {

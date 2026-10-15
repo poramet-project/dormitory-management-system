@@ -1,6 +1,5 @@
 package logic;
 
-
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -11,7 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * TenantLogic คือคลาสสำหรับจัดการตรรกะภาพรวมและเมนูนำทางของหน้าต่างหลักผู้เช่า (TenantUI)
+ * TenantLogic คือคลาสสำหรับจัดการตรรกะภาพรวมและเมนูนำทางของหน้าต่างหลักผู้เช่า
+ * (TenantUI)
  * MENU_NAMES คือ รายชื่อเมนูทั้งหมดในฝั่งผู้เช่า
  * PAGE_KEYS คือ คีย์ระบุหน้าสำหรับการสลับหน้าด้วย CardLayout
  * user คือ ข้อมูลบัญชีผู้เช่าปัจจุบัน
@@ -20,7 +20,8 @@ public class TenantLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(MENU_NAMES, PAGE_KEYS, user) คือ ตรรกะโครงสร้างเมนูและการจัดการเซสชันของผู้เช่า
+    // AF(MENU_NAMES, PAGE_KEYS, user) คือ
+    // ตรรกะโครงสร้างเมนูและการจัดการเซสชันของผู้เช่า
     // RI
     // 1. MENU_NAMES และ PAGE_KEYS ต้องมีจำนวนสมาชิกเท่ากัน
     // 2. user ต้องไม่เป็น null
@@ -33,7 +34,8 @@ public class TenantLogic {
     private final LoginLogic.User user;
 
     /**
-     * คอนสตรักเตอร์สำหรับสร้างตรรกะหน้าต่างหลักผู้เช่า โดยดึงข้อมูลผู้ใช้ปัจจุบันหรือข้อมูลจำลอง
+     * คอนสตรักเตอร์สำหรับสร้างตรรกะหน้าต่างหลักผู้เช่า
+     * โดยดึงข้อมูลผู้ใช้ปัจจุบันหรือข้อมูลจำลอง
      */
     public TenantLogic() {
         // หา user ปัจจุบัน (ห้ามให้ล้มเหลวจนหน้าต่างไม่เปิด)
@@ -82,8 +84,10 @@ public class TenantLogic {
         }
         if (rId != null && !"-".equals(rId.trim())) {
             DataStore.Room r = DataStore.room(rId);
-            if (r == null) r = DataStore.roomByNumber(rId);
-            if (r != null) return "ผู้อยู่อาศัย (ห้อง " + r.number + ")";
+            if (r == null)
+                r = DataStore.roomByNumber(rId);
+            if (r != null)
+                return "ผู้อยู่อาศัย (ห้อง " + r.number + ")";
         }
         return "ผู้อยู่อาศัย (ห้อง " + orDefault(rId, "ไม่ระบุ") + ")";
     }
@@ -104,7 +108,7 @@ public class TenantLogic {
     /**
      * คืนค่าข้อความเดิม หรือคืนค่าข้อความสำรองหากข้อความเดิมเป็นค่าว่างหรือ "-"
      * 
-     * @param s ข้อความต้นทาง
+     * @param s        ข้อความต้นทาง
      * @param fallback ข้อความสำรองกรณีเป็นค่าว่าง
      * @return ข้อความที่พร้อมแสดงผล
      */

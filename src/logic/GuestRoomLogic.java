@@ -1,6 +1,8 @@
 package logic;
+
 /**
- * GuestRoomLogic คือคลาสสำหรับจัดการข้อมูลรายละเอียดห้องพักและตรรกะการจองห้องพักสำหรับผู้เยี่ยมชม
+ * GuestRoomLogic
+ * คือคลาสสำหรับจัดการข้อมูลรายละเอียดห้องพักและตรรกะการจองห้องพักสำหรับผู้เยี่ยมชม
  * roomName คือ ชื่อ/หมายเลขห้องพัก (เช่น ห้อง 101)
  * roomType คือ ประเภทห้องพัก (เช่น ห้องแอร์, ห้องพัดลม)
  * roomPrice คือ อัตราค่าเช่าต่อเดือน
@@ -10,7 +12,8 @@ public class GuestRoomLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(roomName, roomType, roomPrice, roomStatus) คือ ตรรกะแสดงรายละเอียดและการยื่นคำขอจองห้องพัก 1 ห้อง
+    // AF(roomName, roomType, roomPrice, roomStatus) คือ
+    // ตรรกะแสดงรายละเอียดและการยื่นคำขอจองห้องพัก 1 ห้อง
     // RI
     // 1. roomName, roomType, roomPrice, roomStatus ต้องไม่เป็น null
     // 2. roomName ต้องมีหมายเลขห้องระบุอยู่
@@ -20,14 +23,16 @@ public class GuestRoomLogic {
     private final String roomPrice;
     private final String roomStatus;
 
-    public enum BookResult { OK, PENDING_EXISTS, ALREADY_HAS_ROOM, ROOM_NOT_AVAILABLE, ROOM_NOT_FOUND }
+    public enum BookResult {
+        OK, PENDING_EXISTS, ALREADY_HAS_ROOM, ROOM_NOT_AVAILABLE, ROOM_NOT_FOUND
+    }
 
     /**
      * คอนสตรักเตอร์สำหรับสร้างตรรกะข้อมูลรายละเอียดห้องพัก
      * 
-     * @param roomName ชื่อหรือข้อความหมายเลขห้องพัก เช่น "ห้อง 101"
-     * @param roomType ประเภทห้องพัก เช่น "ห้องแอร์", "ห้องพัดลม"
-     * @param roomPrice ข้อความอัตราค่าเช่า
+     * @param roomName   ชื่อหรือข้อความหมายเลขห้องพัก เช่น "ห้อง 101"
+     * @param roomType   ประเภทห้องพัก เช่น "ห้องแอร์", "ห้องพัดลม"
+     * @param roomPrice  ข้อความอัตราค่าเช่า
      * @param roomStatus ข้อความสถานะห้องพัก
      */
     public GuestRoomLogic(String roomName, String roomType, String roomPrice, String roomStatus) {
@@ -42,28 +47,36 @@ public class GuestRoomLogic {
      * 
      * @return ชื่อห้องพัก เช่น "ห้อง 101"
      */
-    public String getRoomName() { return roomName; }
+    public String getRoomName() {
+        return roomName;
+    }
 
     /**
      * ดึงประเภทห้องพัก
      * 
      * @return ประเภทห้องพัก เช่น "ห้องแอร์"
      */
-    public String getRoomType() { return roomType; }
+    public String getRoomType() {
+        return roomType;
+    }
 
     /**
      * ดึงข้อความอัตราค่าเช่าห้องพัก
      * 
      * @return อัตราค่าเช่า
      */
-    public String getRoomPrice() { return roomPrice; }
+    public String getRoomPrice() {
+        return roomPrice;
+    }
 
     /**
      * ดึงสถานะห้องพัก
      * 
      * @return สถานะห้องพัก
      */
-    public String getRoomStatus() { return roomStatus; }
+    public String getRoomStatus() {
+        return roomStatus;
+    }
 
     /**
      * ดึงเฉพาะตัวเลขห้องพักโดยตัดคำว่า "ห้อง " ออก
@@ -91,23 +104,23 @@ public class GuestRoomLogic {
      */
     public String[] getFurnitureList() {
         if (roomType != null && (roomType.contains("แอร์") || roomType.equalsIgnoreCase("Air"))) {
-            return new String[]{
-                "- เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
-                "- ตู้เสื้อผ้าบิวท์อิน 2 บาน",
-                "- โต๊ะทำงานและเก้าอี้ (2 ชุด)",
-                "- เครื่องปรับอากาศ (Air Conditioner)",
-                "- ตู้เย็นขนาด 6.0 คิว",
-                "- เครื่องทำน้ำอุ่นในห้องน้ำส่วนตัว",
-                "- Wi-Fi ความเร็วสูงฟรี"
+            return new String[] {
+                    "- เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
+                    "- ตู้เสื้อผ้าบิวท์อิน 2 บาน",
+                    "- โต๊ะทำงานและเก้าอี้ (2 ชุด)",
+                    "- เครื่องปรับอากาศ (Air Conditioner)",
+                    "- ตู้เย็นขนาด 6.0 คิว",
+                    "- เครื่องทำน้ำอุ่นในห้องน้ำส่วนตัว",
+                    "- Wi-Fi ความเร็วสูงฟรี"
             };
         } else {
-            return new String[]{
-                "- เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
-                "- ตู้เสื้อผ้าบิวท์อิน 2 บาน",
-                "- โต๊ะทำงานและเก้าอี้ (2 ชุด)",
-                "- พัดลมติดเพดาน",
-                "- เครื่องทำน้ำอุ่นในห้องน้ำส่วนตัว",
-                "- Wi-Fi ความเร็วสูงฟรี"
+            return new String[] {
+                    "- เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
+                    "- ตู้เสื้อผ้าบิวท์อิน 2 บาน",
+                    "- โต๊ะทำงานและเก้าอี้ (2 ชุด)",
+                    "- พัดลมติดเพดาน",
+                    "- เครื่องทำน้ำอุ่นในห้องน้ำส่วนตัว",
+                    "- Wi-Fi ความเร็วสูงฟรี"
             };
         }
     }
@@ -137,7 +150,8 @@ public class GuestRoomLogic {
      */
     public boolean isPendingByCurrentUser() {
         LoginLogic.User u = getCurrentUser();
-        if (u == null) return false;
+        if (u == null)
+            return false;
         String fullName = DataStore.blank(u.fullName) ? u.username : u.fullName;
         DataStore.Room r = DataStore.roomByNumber(getRoomNumberOnly());
         return r != null && DataStore.isRoomPendingByUser(r.id, fullName);
@@ -150,7 +164,8 @@ public class GuestRoomLogic {
      * @return ผลลัพธ์ของการจองห้องพักในรูปแบบ BookResult
      */
     public BookResult bookRoom(LoginLogic.User user) {
-        if (user == null) return BookResult.ROOM_NOT_FOUND;
+        if (user == null)
+            return BookResult.ROOM_NOT_FOUND;
 
         if (!DataStore.blank(user.roomId)) {
             return BookResult.ALREADY_HAS_ROOM;
@@ -169,7 +184,8 @@ public class GuestRoomLogic {
 
         String phone = DataStore.blank(user.phone) ? "-" : user.phone;
         boolean saved = DataStore.saveBooking(r.id, fullName, phone);
-        if (!saved) return BookResult.ROOM_NOT_FOUND;
+        if (!saved)
+            return BookResult.ROOM_NOT_FOUND;
 
         return BookResult.OK;
     }

@@ -387,30 +387,7 @@ public class AdminBookingUI extends JPanel {
         return cb;
     }
 
-    /**
-     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำขอจองห้อง
-     */
-    static class HeaderRenderer extends DefaultTableCellRenderer {
-        // ===== representation =====
-        // Abstraction Function:
-        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางให้มีสีและฟอนต์ตามธีมระบบ
-        // RI
-        // - ไม่มีตัวแปรสถานะภายใน
-
-        /**
-         * กำหนดการแสดงผลของส่วนหัวตารางคำขอจองห้องพัก
-         */
-        @Override
-        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
-                int col) {
-            super.getTableCellRendererComponent(t, value, selected, focus, row, col);
-            setFont(AdminUI.font(Font.PLAIN, 11));
-            setForeground(TEXT_GRAY);
-            setBackground(WHITE);
-            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER),
-                    new EmptyBorder(0, 8, 0, 8)));
-            return this;
-        }
+    static class HeaderRenderer extends UIComponents.HeaderRenderer {
     }
 
     /**

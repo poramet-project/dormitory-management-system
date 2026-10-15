@@ -1,9 +1,8 @@
 package logic;
 
-
-
 /**
- * TenantContractLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของข้อมูลสัญญาเช่าฝั่งผู้เช่า
+ * TenantContractLogic
+ * คือคลาสสำหรับจัดการตรรกะทางธุรกิจของข้อมูลสัญญาเช่าฝั่งผู้เช่า
  * user คือ ข้อมูลผู้เช่าปัจจุบันที่กำลังเข้าสู่ระบบ
  * contract คือ สัญญาเช่าที่ผูกกับผู้เช่าปัจจุบัน
  * room คือ ข้อมูลห้องพักที่ระบุตามสัญญาเช่า
@@ -12,7 +11,8 @@ public class TenantContractLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(user, contract, room) คือ ตัวแทนตรรกะสำหรับแสดงข้อมูลสรุปสัญญาเช่าและเงื่อนไขข้อตกลงแก่ผู้เช่า
+    // AF(user, contract, room) คือ
+    // ตัวแทนตรรกะสำหรับแสดงข้อมูลสรุปสัญญาเช่าและเงื่อนไขข้อตกลงแก่ผู้เช่า
     // RI
     // 1. user ต้องไม่เป็น null เพื่อระบุตัวตนของผู้เช่าในการดึงสัญญา
     // 2. หากมี contract ข้อมูล roomId ในสัญญาต้องสอดคล้องกับห้องพักในระบบ
@@ -28,33 +28,36 @@ public class TenantContractLogic {
      */
     public TenantContractLogic(LoginLogic.User user) {
         this.user = user;
-        LoginLogic.User latest = (user != null && !DataStore.blank(user.username)) ? LoginLogic.findUser(user.username) : user;
+        LoginLogic.User latest = (user != null && !DataStore.blank(user.username)) ? LoginLogic.findUser(user.username)
+                : user;
         this.contract = DataStore.contractFor(latest != null ? latest : user);
         String roomId = (contract != null) ? contract.roomId : (latest == null ? "" : latest.roomId);
         DataStore.Room r = DataStore.room(roomId);
-        if (r == null) r = DataStore.roomByNumber(roomId);
+        if (r == null)
+            r = DataStore.roomByNumber(roomId);
         this.room = r;
     }
 
     /**
      * คืนค่าข้อมูลสรุปสาระสำคัญของสัญญาเช่า ในรูปแบบตารางคู่ {หัวข้อ, ค่า}
      * 
-     * @return อาร์เรย์ 2 มิติของคู่หัวข้อและค่าสรุปสัญญา เช่น เลขที่สัญญา สถานะ วันเริ่มต้น วันสิ้นสุด
+     * @return อาร์เรย์ 2 มิติของคู่หัวข้อและค่าสรุปสัญญา เช่น เลขที่สัญญา สถานะ
+     *         วันเริ่มต้น วันสิ้นสุด
      */
     public String[][] summaryCells() {
         if (contract != null) {
-            return new String[][]{
-                    {"เลขที่สัญญา", contract.id},
-                    {"สถานะสัญญา", contract.statusThai()},
-                    {"วันเริ่มสัญญา", DataStore.thaiDate(contract.start)},
-                    {"วันสิ้นสุดสัญญา", DataStore.thaiDate(contract.end)}
+            return new String[][] {
+                    { "เลขที่สัญญา", contract.id },
+                    { "สถานะสัญญา", contract.statusThai() },
+                    { "วันเริ่มสัญญา", DataStore.thaiDate(contract.start) },
+                    { "วันสิ้นสุดสัญญา", DataStore.thaiDate(contract.end) }
             };
         }
-        return new String[][]{
-                {"เลขที่สัญญา", "-"},
-                {"สถานะสัญญา", "ยังไม่มีสัญญา"},
-                {"วันเริ่มสัญญา", "-"},
-                {"วันสิ้นสุดสัญญา", "-"}
+        return new String[][] {
+                { "เลขที่สัญญา", "-" },
+                { "สถานะสัญญา", "ยังไม่มีสัญญา" },
+                { "วันเริ่มสัญญา", "-" },
+                { "วันสิ้นสุดสัญญา", "-" }
         };
     }
 
@@ -77,10 +80,13 @@ public class TenantContractLogic {
 
         return "ผู้เช่า: " + name + " (เบอร์โทรศัพท์: " + phone + ")\n"
                 + "ห้องพัก: " + roomText + " อาคารหอพักนักศึกษา มหาวิทยาลัยเกษตรศาสตร์\n"
-                + "ระยะเวลาสัญญา: " + DataStore.thaiDate(contract.start) + " ถึง " + DataStore.thaiDate(contract.end) + "\n\n"
+                + "ระยะเวลาสัญญา: " + DataStore.thaiDate(contract.start) + " ถึง " + DataStore.thaiDate(contract.end)
+                + "\n\n"
                 + "1. อัตราค่าเช่าและเงินประกัน:\n"
-                + "   • ค่าเช่าห้องพักเดือนละ " + DataStore.money(contract.rent) + " บาท กำหนดชำระทุกวันที่ 1 - 5 ของเดือน\n"
-                + "   • เงินประกันความเสียหาย " + DataStore.money(contract.deposit) + " บาท ได้รับคืนเต็มจำนวนหลังสิ้นสุดสัญญา\n\n"
+                + "   • ค่าเช่าห้องพักเดือนละ " + DataStore.money(contract.rent)
+                + " บาท กำหนดชำระทุกวันที่ 1 - 5 ของเดือน\n"
+                + "   • เงินประกันความเสียหาย " + DataStore.money(contract.deposit)
+                + " บาท ได้รับคืนเต็มจำนวนหลังสิ้นสุดสัญญา\n\n"
                 + "2. ระเบียบหอพัก:\n"
                 + "   • หอพักเปิดเวลา 05:30 น. และปิดเวลา 23:00 น.\n"
                 + "   • ห้ามนำสัตว์เลี้ยงเข้ามาในอาคารหอพักโดยเด็ดขาด\n"

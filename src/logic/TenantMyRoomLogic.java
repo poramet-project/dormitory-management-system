@@ -1,8 +1,8 @@
 package logic;
 
-
 /**
- * TenantMyRoomLogic คือคลาสที่ใช้สำหรับจัดการตรรกะข้อมูลห้องพักของผู้เช่าปัจจุบัน
+ * TenantMyRoomLogic
+ * คือคลาสที่ใช้สำหรับจัดการตรรกะข้อมูลห้องพักของผู้เช่าปัจจุบัน
  * user คือ ข้อมูลผู้ใช้งานปัจจุบันที่กำลังล็อกอิน
  * room คือ ข้อมูลห้องพักของผู้ใช้งาน
  * contract คือ ข้อมูลสัญญาเช่าของผู้ใช้งาน
@@ -11,7 +11,8 @@ public class TenantMyRoomLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(user, room, contract) คือ ตัวแทนตรรกะสำหรับการแสดงรายละเอียดห้องพัก อัตราค่าเช่า และสิ่งอำนวยความสะดวกของผู้เช่า
+    // AF(user, room, contract) คือ ตัวแทนตรรกะสำหรับการแสดงรายละเอียดห้องพัก
+    // อัตราค่าเช่า และสิ่งอำนวยความสะดวกของผู้เช่า
     // RI
     // 1. user ต้องไม่เป็น null สำหรับผู้เช่าที่เข้าสู่ระบบ
     // 2. ถ้า room ไม่เป็น null ต้องมีหมายเลขห้อง (number) ที่ถูกต้อง
@@ -27,14 +28,18 @@ public class TenantMyRoomLogic {
      */
     public TenantMyRoomLogic(LoginLogic.User user) {
         this.user = user;
-        LoginLogic.User latest = (user != null && !DataStore.blank(user.username)) ? LoginLogic.findUser(user.username) : user;
-        String rId = (latest != null && !DataStore.blank(latest.roomId) && !"-".equals(latest.roomId.trim())) ? latest.roomId.trim() : "";
+        LoginLogic.User latest = (user != null && !DataStore.blank(user.username)) ? LoginLogic.findUser(user.username)
+                : user;
+        String rId = (latest != null && !DataStore.blank(latest.roomId) && !"-".equals(latest.roomId.trim()))
+                ? latest.roomId.trim()
+                : "";
         DataStore.Contract c = DataStore.contractFor(latest != null ? latest : user);
         if (DataStore.blank(rId) && c != null && c.isActive() && !DataStore.blank(c.roomId)) {
             rId = c.roomId.trim();
         }
         DataStore.Room r = DataStore.room(rId);
-        if (r == null) r = DataStore.roomByNumber(rId);
+        if (r == null)
+            r = DataStore.roomByNumber(rId);
         this.room = r;
         this.contract = c;
     }
@@ -106,7 +111,7 @@ public class TenantMyRoomLogic {
         String cooling = room.isAir()
                 ? " เครื่องปรับอากาศ Inverter ประหยัดไฟ"
                 : " พัดลมติดเพดาน";
-        return new String[]{
+        return new String[] {
                 " เตียงนอนเดี่ยว 3.5 ฟุต พร้อมฟูก (2 ชุด)",
                 cooling,
                 " ตู้เสื้อผ้าบิวท์อิน 2 บาน",
