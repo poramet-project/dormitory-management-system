@@ -10,7 +10,17 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * TenantRoomChangeUI คือคลาสหน้าจอสำหรับให้ผู้เช่ายื่นคำขอย้ายห้องพัก
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับตรวจสอบห้องว่างและบันทึกคำขอย้ายห้อง
+ */
 public class TenantRoomChangeUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic) คือ หน้าจอแบบฟอร์มแสดงห้องพักปัจจุบัน รายการห้องว่างที่สามารถย้ายได้ และช่องกรอกเหตุผลในการย้ายห้อง
+    // RI
+    // 1. logic ต้องไม่เป็น null
 
     private static final Font THAI_FONT = new Font("Tahoma", Font.PLAIN, 13);
     private static final Font THAI_FONT_BOLD = new Font("Tahoma", Font.BOLD, 14);
@@ -20,6 +30,10 @@ public class TenantRoomChangeUI extends JPanel {
 
     private final TenantRoomChangeLogic logic;
 
+    /**
+     * คอนสตรักเตอร์สร้างหน้าจอยื่นคำขอย้ายห้องพักของผู้เช่า
+     * @param user ข้อมูลผู้เช่าที่กำลังเข้าใช้งานระบบ
+     */
     public TenantRoomChangeUI(LoginLogic.User user) {
         this.logic = new TenantRoomChangeLogic(user);
         setLayout(new BorderLayout());
@@ -52,6 +66,11 @@ public class TenantRoomChangeUI extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อความแจ้งเตือนตรงกลางหน้าจอ (เช่น เมื่อผู้ใช้ยังไม่มีห้องพัก)
+     * @param msg ข้อความแจ้งเตือน
+     * @return พาเนลการ์ดข้อความ
+     */
     private JPanel messageCard(String msg) {
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(12, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new GridBagLayout());
@@ -60,6 +79,10 @@ public class TenantRoomChangeUI extends JPanel {
         return card;
     }
 
+    /**
+     * สร้างการ์ดแบบฟอร์มแสดงความประสงค์ขอย้ายห้องพักและปุ่มยื่นคำขอ
+     * @return พาเนลแบบฟอร์ม
+     */
     private JPanel buildForm() {
         TenantUI.RoundedPanel formCard = new TenantUI.RoundedPanel(12, Color.WHITE, TenantUI.CARD_BORDER);
         formCard.setLayout(new GridBagLayout());
@@ -173,7 +196,10 @@ public class TenantRoomChangeUI extends JPanel {
         return formCard;
     }
 
-    // Custom helper สำหรับจัดสไตล์ Input Control ให้สวยสะอาดตา
+    /**
+     * กำหนดรูปแบบสไตล์ ขนาดตัวอักษร ความสูง และเส้นขอบของคอนโทรลรับข้อมูล
+     * @param comp คอมโพเนนต์ที่ต้องการจัดสไตล์
+     */
     private void styleControl(JComponent comp) {
         comp.setFont(THAI_FONT);
         comp.setPreferredSize(new Dimension(0, 36));

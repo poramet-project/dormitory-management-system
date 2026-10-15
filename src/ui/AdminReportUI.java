@@ -10,7 +10,36 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * AdminReportUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการจัดการคำร้องเรียนและงานแจ้งซ่อม
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการคำร้องเรียนและงานแจ้งซ่อม
+ * searchField คือ ช่องสำหรับค้นหาข้อมูลคำร้องเรียน
+ * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะ
+ * typeFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามหมวดหมู่งานซ่อม
+ * table คือ ตารางแสดงรายการคำร้องเรียนและแจ้งซ่อม
+ * tableModel คือ โมเดลข้อมูลของตารางคำร้องเรียน
+ * detailTitle คือ ป้ายแสดงหัวเรื่องรายละเอียดคำร้อง
+ * detailSub คือ ป้ายแสดงคำอธิบายย่อยของรายละเอียด
+ * lblName คือ ป้ายแสดงชื่อผู้แจ้ง
+ * lblPhone คือ ป้ายแสดงเบอร์โทรศัพท์ผู้แจ้ง
+ * lblRoom คือ ป้ายแสดงหมายเลขห้องพักที่แจ้ง
+ * lblDate คือ ป้ายแสดงวันที่แจ้ง
+ * lblTime คือ ป้ายแสดงเวลานัดหมาย
+ * lblStatus คือ ป้ายแสดงสถานะปัจจุบัน
+ * lblCount คือ ป้ายแสดงจำนวนรายการคำร้องที่แสดงผล
+ * lblCategory คือ ป้ายแสดงหมวดหมู่งานซ่อม
+ * lblTopic คือ ป้ายแสดงหัวข้อเรื่อง
+ * txtDescription คือ กล่องข้อความแสดงรายละเอียดปัญหา
+ * btnAccept คือ ปุ่มกดสำหรับดำเนินการรับเรื่องหรือปรับปรุงสถานะงานซ่อม
+ */
 public class AdminReportUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, table, tableModel) คือ หน้าจอสำหรับแสดงรายการคำร้องเรียน ติดตามสถานะงานซ่อม และปรับปรุงความคืบหน้าการซ่อมบำรุง
+    // RI
+    // 1. logic ต้องไม่เป็น null
+    // 2. table และ tableModel ต้องไม่เป็น null
 
     static final Color PRIMARY = AdminUI.PRIMARY;
     static final Color BG = AdminUI.BG;
@@ -26,10 +55,14 @@ public class AdminReportUI extends JPanel {
     JComboBox<String> statusFilter, typeFilter;
     JTable table;
     DefaultTableModel tableModel;
-    JLabel detailTitle, detailSub, lblName, lblPhone, lblRoom, lblDate, lblStatus, lblCount, lblCategory, lblTopic;
+    JLabel detailTitle, detailSub, lblName, lblPhone, lblRoom, lblDate, lblTime, lblStatus, lblCount, lblCategory,
+            lblTopic;
     JTextArea txtDescription;
     JButton btnAccept;
 
+    /**
+     * คอนสตรักเตอร์สร้างหน้าจอจัดการคำร้องเรียนและงานแจ้งซ่อมสำหรับผู้ดูแลระบบ
+     */
     public AdminReportUI() {
         setLayout(null);
         setBackground(BG);
@@ -42,6 +75,9 @@ public class AdminReportUI extends JPanel {
         refreshData();
     }
 
+    /**
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองหมวดหมู่ ตัวกรองสถานะ และป้ายแสดงจำนวนรายการ
+     */
     private void createToolbar() {
         typeFilter = styledCombo(new String[] { "หมวดหมู่ทั้งหมด", "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ",
                 "เฟอร์นิเจอร์", "อื่นๆ" });
@@ -58,8 +94,13 @@ public class AdminReportUI extends JPanel {
         add(lblCount);
     }
 
+    /**
+     * สร้างและจัดรูปแบบตารางแสดงรายการคำร้องเรียนและแจ้งซ่อม
+     * 
+     * @return JScrollPane ที่ครอบตารางคำร้องเรียน
+     */
     private JScrollPane createTable() {
-        String[] columns = { "เลขที่", "ผู้แจ้ง", "ห้อง", "เรื่อง", "วันที่แจ้ง", "สถานะ" };
+        String[] columns = { "เลขที่", "ผู้แจ้ง", "ห้อง", "หมวดหมู่", "วันนัดซ้อม", "สถานะ" };
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -89,6 +130,11 @@ public class AdminReportUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างพาเนลแสดงรายละเอียดคำร้องเรียนและปุ่มสำหรับรับเรื่องเพื่อส่งช่าง
+     * 
+     * @return JPanel แสดงรายละเอียดคำร้อง
+     */
     private JPanel createDetailPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
@@ -104,21 +150,23 @@ public class AdminReportUI extends JPanel {
         p.add(detailSub);
         p.add(divider(78));
 
-        lblName = detailRow(p, "ผู้ยื่นคำขอ", "-", 94);
-        lblPhone = detailRow(p, "เบอร์โทรศัพท์", "-", 122);
-        lblRoom = detailRow(p, "ห้องพัก", "-", 150);
-        lblCategory = detailRow(p, "หมวดหมู่", "-", 178);
-        lblTopic = detailRow(p, "เรื่อง", "-", 206);
-        lblDate = detailRow(p, "วันที่แจ้ง", "-", 234);
-        lblStatus = detailRow(p, "สถานะ", "-", 262);
+        lblName = detailRow(p, "ผู้ยื่นคำขอ", "-", 90);
+        lblPhone = detailRow(p, "เบอร์โทรศัพท์", "-", 114);
+        lblRoom = detailRow(p, "ห้องพัก", "-", 138);
+        lblCategory = detailRow(p, "หมวดหมู่", "-", 162);
+        lblTopic = detailRow(p, "เรื่อง", "-", 186);
+        lblDate = detailRow(p, "วันนัดซ้อม", "-", 210);
+        lblTime = detailRow(p, "เวลานัดซ้อม", "-", 234);
+        lblStatus = detailRow(p, "สถานะ", "-", 258);
 
-        p.add(fieldLabel("รายละเอียดปัญหา", 294));
+        p.add(fieldLabel("รายละเอียดปัญหา", 288));
         txtDescription = textArea(false);
-        p.add(areaScroll(txtDescription, 316, 160));
+        p.add(areaScroll(txtDescription, 310, 160));
 
         p.add(divider(494));
 
-        JLabel lblNotice = AdminUI.label("* หมายเหตุ: ผู้เช่าจะเป็นผู้กดยืนยันเมื่อซ่อมเสร็จสิ้น", Font.PLAIN, 11, TEXT_GRAY);
+        JLabel lblNotice = AdminUI.label("* หมายเหตุ: ผู้เช่าจะเป็นผู้กดยืนยันเมื่อซ่อมเสร็จสิ้น", Font.PLAIN, 11,
+                TEXT_GRAY);
         lblNotice.setBounds(20, 502, 276, 18);
         p.add(lblNotice);
 
@@ -128,14 +176,19 @@ public class AdminReportUI extends JPanel {
         return p;
     }
 
+    /**
+     * โหลดข้อมูลคำร้องเรียนใหม่และอัปเดตการแสดงผลในตารางตามตัวกรองหมวดหมู่และสถานะ
+     */
     public void refreshData() {
         tableModel.setRowCount(0);
         List<AdminReportLogic.ProblemModel> all = logic.getAllProblems();
 
         String selCat = (typeFilter != null && typeFilter.getSelectedItem() != null)
-                ? (String) typeFilter.getSelectedItem() : "หมวดหมู่ทั้งหมด";
+                ? (String) typeFilter.getSelectedItem()
+                : "หมวดหมู่ทั้งหมด";
         String selStatus = (statusFilter != null && statusFilter.getSelectedItem() != null)
-                ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
+                ? (String) statusFilter.getSelectedItem()
+                : "สถานะทั้งหมด";
 
         java.util.List<AdminReportLogic.ProblemModel> filtered = new java.util.ArrayList<>();
         for (AdminReportLogic.ProblemModel p : all) {
@@ -144,8 +197,8 @@ public class AdminReportUI extends JPanel {
                 if ("อื่นๆ".equals(selCat)) {
                     matchCat = p.category == null || p.category.contains("อื่น")
                             || (!p.category.contains("ประปา") && !p.category.contains("ไฟฟ้า")
-                            && !p.category.contains("ปรับอากาศ") && !p.category.contains("แอร์")
-                            && !p.category.contains("เฟอร์นิเจอร์"));
+                                     && !p.category.contains("ปรับอากาศ") && !p.category.contains("แอร์")
+                                    && !p.category.contains("เฟอร์นิเจอร์"));
                 } else if (p.category != null) {
                     String cleanKey = selCat.replace("ระบบ", "").replace("เครื่อง", "").trim();
                     matchCat = p.category.contains(cleanKey) || selCat.contains(p.category);
@@ -156,11 +209,11 @@ public class AdminReportUI extends JPanel {
 
             if (matchCat && matchStatus) {
                 filtered.add(p);
-                tableModel.addRow(new Object[] { p.id, p.name, p.room, p.topic, p.date, p.status });
+                tableModel.addRow(new Object[] { p.id, p.name, p.room, p.category, p.date, p.status });
             }
         }
 
-        int[] widths = { 46, 110, 40, 118, 86, 140 };
+        int[] widths = { 46, 105, 45, 110, 105, 129 };
         for (int i = 0; i < widths.length; i++)
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
@@ -175,6 +228,9 @@ public class AdminReportUI extends JPanel {
         }
     }
 
+    /**
+     * ล้างข้อมูลในพาเนลแสดงรายละเอียดคำร้องให้เป็นค่าเริ่มต้น
+     */
     private void clearDetailPanel() {
         detailSub.setText("- • แจ้งซ่อม");
         lblName.setText("-");
@@ -183,11 +239,16 @@ public class AdminReportUI extends JPanel {
         lblCategory.setText("-");
         lblTopic.setText("-");
         lblDate.setText("-");
+        lblTime.setText("-");
         lblStatus.setText("-");
         txtDescription.setText("");
-        if (btnAccept != null) btnAccept.setEnabled(false);
+        if (btnAccept != null)
+            btnAccept.setEnabled(false);
     }
 
+    /**
+     * ผูก Listener การเลือกแถวในตารางเพื่อแสดงรายละเอียดคำร้องที่เลือกในพาเนลด้านขวา
+     */
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
@@ -202,11 +263,14 @@ public class AdminReportUI extends JPanel {
                         lblCategory.setText(p.category);
                         lblTopic.setText(p.topic);
                         lblDate.setText(p.date);
+                        lblTime.setText(p.time);
                         lblStatus.setText(p.status);
                         txtDescription.setText(p.desc);
 
-                        boolean isPending = "รอดำเนินการ".equalsIgnoreCase(p.status) || "PENDING".equalsIgnoreCase(p.status);
-                        if (btnAccept != null) btnAccept.setEnabled(isPending);
+                        boolean isPending = "รอดำเนินการ".equalsIgnoreCase(p.status)
+                                || "PENDING".equalsIgnoreCase(p.status);
+                        if (btnAccept != null)
+                            btnAccept.setEnabled(isPending);
                         break;
                     }
                 }
@@ -214,6 +278,9 @@ public class AdminReportUI extends JPanel {
         });
     }
 
+    /**
+     * กำหนด Event Handlers สำหรับตัวกรองหมวดหมู่ ตัวกรองสถานะ และปุ่มรับเรื่องส่งช่าง
+     */
     private void initActions() {
         typeFilter.addActionListener(e -> refreshData());
         statusFilter.addActionListener(e -> refreshData());
@@ -223,11 +290,10 @@ public class AdminReportUI extends JPanel {
             if (row != -1) {
                 String complaintId = String.valueOf(tableModel.getValueAt(row, 0));
                 int confirm = JOptionPane.showConfirmDialog(
-                    this,
-                    "ยืนยันการรับเรื่องแจ้งซ่อม " + complaintId + " เพื่อส่งช่างเข้าตรวจสอบ?",
-                    "ยืนยันการรับเรื่อง",
-                    JOptionPane.YES_NO_OPTION
-                );
+                        this,
+                        "ยืนยันการรับเรื่องแจ้งซ่อม " + complaintId + " เพื่อส่งช่างเข้าตรวจสอบ?",
+                        "ยืนยันการรับเรื่อง",
+                        JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION && logic.acceptProblem(complaintId)) {
                     JOptionPane.showMessageDialog(this,
                             "รับเรื่องและปรับสถานะเป็น 'ช่างกำลังเข้าตรวจสอบ' เรียบร้อยแล้ว\n(สถานะจะเปลี่ยนเป็น 'เสร็จสิ้น' เมื่อผู้เช่ายืนยัน)",
@@ -239,6 +305,15 @@ public class AdminReportUI extends JPanel {
         });
     }
 
+    /**
+     * สร้างแถวแสดงข้อมูลรายละเอียดคู่หัวข้อและค่า
+     * 
+     * @param p พาเนลที่จะวางองค์ประกอบ
+     * @param title หัวข้อรายละเอียด
+     * @param text ค่ารายละเอียด
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel แสดงค่ารายละเอียด
+     */
     private static JLabel detailRow(JPanel p, String title, String text, int y) {
         JLabel label = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         label.setBounds(20, y, 130, 20);
@@ -250,12 +325,25 @@ public class AdminReportUI extends JPanel {
         return value;
     }
 
+    /**
+     * สร้างป้ายข้อความกำกับฟิลด์ข้อมูล
+     * 
+     * @param title ข้อความหัวข้อ
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel ป้ายกำกับ
+     */
     private static JLabel fieldLabel(String title, int y) {
         JLabel label = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         label.setBounds(20, y, 276, 18);
         return label;
     }
 
+    /**
+     * สร้างเส้นแบ่งแนวนอน
+     * 
+     * @param y ตำแหน่งแกน Y
+     * @return JPanel เส้นแบ่ง
+     */
     private static JPanel divider(int y) {
         JPanel line = new JPanel();
         line.setBackground(BORDER);
@@ -263,6 +351,12 @@ public class AdminReportUI extends JPanel {
         return line;
     }
 
+    /**
+     * สร้างกล่องข้อความหลายบรรทัด
+     * 
+     * @param editable กำหนดว่าสามารถแก้ไขข้อความได้หรือไม่
+     * @return JTextArea ที่จัดรูปแบบแล้ว
+     */
     private static JTextArea textArea(boolean editable) {
         JTextArea area = new JTextArea();
         area.setFont(AdminUI.font(Font.PLAIN, 12));
@@ -275,6 +369,14 @@ public class AdminReportUI extends JPanel {
         return area;
     }
 
+    /**
+     * สร้าง JScrollPane ครอบกล่องข้อความพร้อมกำหนดพิกัดและความสูง
+     * 
+     * @param area กล่องข้อความ
+     * @param y ตำแหน่งแกน Y
+     * @param height ความสูง
+     * @return JScrollPane
+     */
     private static JScrollPane areaScroll(JTextArea area, int y, int height) {
         JScrollPane scroll = new JScrollPane(area);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -282,6 +384,12 @@ public class AdminReportUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์พร้อมตกแต่งรูปแบบตามธีมระบบ
+     * 
+     * @param items รายการตัวเลือก
+     * @return JComboBox ที่จัดรูปแบบแล้ว
+     */
     private static JComboBox<String> styledCombo(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(AdminUI.font(Font.PLAIN, 12));
@@ -298,7 +406,19 @@ public class AdminReportUI extends JPanel {
         return cb;
     }
 
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำร้องเรียน
+     */
     static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางคำร้องเรียน
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของส่วนหัวตารางคำร้องเรียน
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
                 int col) {
@@ -312,7 +432,19 @@ public class AdminReportUI extends JPanel {
         }
     }
 
+    /**
+     * CellRenderer คือคลาสกำหนดการแสดงผลข้อมูลแต่ละเซลล์ในตารางคำร้องเรียน
+     */
     static class CellRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์เซลล์ตารางพร้อมป้ายสถานะ Badge
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของแต่ละเซลล์ในตารางคำร้องเรียนพร้อม Badge แสดงสถานะ
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
                 int col) {

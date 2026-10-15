@@ -5,15 +5,28 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * ศูนย์กลางอ่าน/เขียนไฟล์ CSV ของระบบ (rooms, contracts, room_transfers, complaints, bookings)
+ * DataStore คือคลาสศูนย์กลางสำหรับจัดการการอ่านและเขียนไฟล์ CSV ของระบบหอพัก
+ * COMPLAINTS_FILE คือ ชื่อไฟล์บันทึกการแจ้งซ่อม (complaints.csv)
+ * CONTRACTS_FILE คือ ชื่อไฟล์บันทึกสัญญาเช่า (contracts.csv)
+ * BOOKINGS_FILE คือ ชื่อไฟล์บันทึกคำขอจองห้องพัก (bookings.csv)
+ * currentLoginUser คือ ตัวแปรเก็บชื่อผู้ใช้ที่กำลังล็อกอินอยู่ในระบบ
  */
 public final class DataStore {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(currentLoginUser) คือ คลังข้อมูลหลักและกลไกเข้าถึงฐานข้อมูลไฟล์ CSV สำหรับระบบจัดการหอพัก
+    // RI
+    // 1. currentLoginUser ต้องไม่เป็น null
+    // 2. ไฟล์ CSV ที่ระบุในระบบต้องเป็นรูปแบบ UTF-8 ที่มีหัวตาราง (Header) ถูกต้อง
+
     private DataStore() {
     }
 
@@ -30,10 +43,20 @@ public final class DataStore {
     // ===================== ตัวแปรเก็บ Session ผู้ใช้ปัจจุบัน =====================
     private static String currentLoginUser = "Guest";
 
+    /**
+     * ดึงชื่อผู้ใช้งานที่กำลังเข้าสู่ระบบอยู่ในปัจจุบัน
+     * 
+     * @return ชื่อบัญชีผู้ใช้งานปัจจุบัน
+     */
     public static String getCurrentLoginUser() {
         return currentLoginUser;
     }
 
+    /**
+     * กำหนดชื่อผู้ใช้งานที่เข้าสู่ระบบ
+     * 
+     * @param username ชื่อบัญชีผู้ใช้งาน
+     */
     public static void setCurrentLoginUser(String username) {
         currentLoginUser = username != null ? username : "Guest";
     }
@@ -42,6 +65,12 @@ public final class DataStore {
 
     private static final String[] DIRS = { "src/data/", "data/", "DMS/src/data/", "src/", "" };
 
+    /**
+     * ค้นหาไฟล์ข้อมูลตามลำดับโฟลเดอร์ที่เป็นไปได้ในระบบ
+     * 
+     * @param name ชื่อไฟล์ที่ต้องการค้นหา
+     * @return ออบเจ็กต์ File ของไฟล์ที่พบ หรือตำแหน่งเป้าหมาย
+     */
     public static File file(String name) {
         for (String d : DIRS) {
             File f = new File(d + name);
@@ -53,6 +82,12 @@ public final class DataStore {
 
     // ===================== อ่าน CSV =====================
 
+    /**
+     * แยกข้อความ 1 บรรทัดของ CSV ให้เป็นอาร์เรย์ของแต่ละคอลัมน์ โดยรองรับเครื่องหมายคำพูด (Quotes)
+     * 
+     * @param line ข้อความบรรทัดใน CSV
+     * @return อาร์เรย์ของข้อความในแต่ละคอลัมน์
+     */
     static String[] parseLine(String line) {
         List<String> out = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -81,6 +116,12 @@ public final class DataStore {
         return out.toArray(new String[0]);
     }
 
+    /**
+     * อ่านข้อมูลทั้งหมดจากไฟล์ CSV ในรูปแบบตาราง (List ของแถวข้อมูลแบบ Map)
+     * 
+     * @param name ชื่อไฟล์ CSV
+     * @return รายการแถวข้อมูลทั้งหมดในรูปแบบ Map คีย์เป็นชื่อคอลัมน์
+     */
     public static synchronized List<Map<String, String>> readTable(String name) {
         List<Map<String, String>> rows = new ArrayList<>();
         File f = file(name);
@@ -113,6 +154,12 @@ public final class DataStore {
 
     // ===================== เขียน CSV =====================
 
+    /**
+     * แปลงข้อความให้ปลอดภัยสำหรับนำไปเขียนลงในไฟล์ CSV (ครอบเครื่องหมายคำพูดหากจำเป็น)
+     * 
+     * @param v ข้อความที่ต้องการแปลง
+     * @return ข้อความที่ปลอดภัยตามมาตรฐาน CSV
+     */
     static String csvEscape(String v) {
         if (v == null)
             return "";
@@ -123,6 +170,14 @@ public final class DataStore {
         return v;
     }
 
+    /**
+     * เพิ่มแถวข้อมูลใหม่ต่อท้ายไฟล์ CSV
+     * 
+     * @param name ชื่อไฟล์ CSV
+     * @param header ส่วนหัวตาราง (ใช้เมื่อไฟล์ยังไม่เคยมีอยู่)
+     * @param values ค่าของแต่ละคอลัมน์ในแถวที่จะเพิ่ม
+     * @throws IOException หากเกิดข้อผิดพลาดในการเขียนไฟล์
+     */
     public static synchronized void appendRow(String name, String header, String... values) throws IOException {
         File f = file(name);
         if (f.getParentFile() != null)
@@ -144,6 +199,15 @@ public final class DataStore {
         Files.write(f.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * สร้างรหัสถัดไปแบบอัตโนมัติ (Auto-increment ID) จากข้อมูลที่มีอยู่ในตาราง
+     * 
+     * @param name ชื่อไฟล์ CSV
+     * @param idColumn ชื่อคอลัมน์ที่เป็นรหัส
+     * @param prefix คำนำหน้ารหัส เช่น "BK", "CNT", "T"
+     * @param digits จำนวนหลักของตัวเลข เช่น 3 หลัก ("001")
+     * @return รหัสใหม่ถัดไป
+     */
     public static synchronized String nextId(String name, String idColumn, String prefix, int digits) {
         int max = 0;
         for (Map<String, String> m : readTable(name)) {
@@ -160,6 +224,12 @@ public final class DataStore {
 
     // ===================== ตัวช่วยทั่วไป =====================
 
+    /**
+     * ตรวจสอบว่าข้อความเป็นค่าว่าง null หรือมีเพียงเครื่องหมายขีด "-" หรือไม่
+     * 
+     * @param s ข้อความที่ต้องการตรวจสอบ
+     * @return true หากเป็นค่าว่างหรือไม่มีข้อมูลจริง
+     */
     public static boolean blank(String s) {
         if (s == null)
             return true;
@@ -167,6 +237,12 @@ public final class DataStore {
         return t.isEmpty() || t.equals("-");
     }
 
+    /**
+     * แปลงสตริงตัวเลขเป็นค่าจำนวนเต็ม int โดยตัดเครื่องหมายจุลภาคออก
+     * 
+     * @param s ข้อความตัวเลข
+     * @return ค่าตัวเลขจำนวนเต็ม หรือ 0 หากไม่สามารถแปลงได้
+     */
     static int toInt(String s) {
         try {
             return Integer.parseInt(s.trim().replaceAll("[,]", ""));
@@ -175,6 +251,12 @@ public final class DataStore {
         }
     }
 
+    /**
+     * จัดรูปแบบจำนวนเงินเป็นสตริงที่มีเครื่องหมายจุลภาคคั่นหลักพัน
+     * 
+     * @param v จำนวนเงิน
+     * @return ข้อความจำนวนเงิน เช่น "4,500"
+     */
     public static String money(int v) {
         return String.format("%,d", v);
     }
@@ -182,16 +264,135 @@ public final class DataStore {
     private static final String[] TH_MONTHS = { "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
             "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค." };
 
-    public static String thaiDate(String iso) {
-        try {
-            LocalDate d = LocalDate.parse(iso.trim());
-            return d.getDayOfMonth() + " " + TH_MONTHS[d.getMonthValue() - 1] + " " + (d.getYear() + 543);
-        } catch (Exception e) {
+    /**
+     * แปลงสตริงวันที่สากลหรือรูปแบบต่างๆ ให้เป็นวันที่ภาษาไทยพร้อมปี พ.ศ.
+     * 
+     * @param raw ข้อความวันที่ต้นทาง เช่น "2026-10-16"
+     * @return วันที่ภาษาไทย เช่น "16 ต.ค. 2569" หรือ "-" หากไม่มีข้อมูล
+     */
+    public static String thaiDate(String raw) {
+        if (raw == null) {
             return "-";
         }
+        String s = raw.trim();
+        if (s.isEmpty() || "-".equals(s)) {
+            return "-";
+        }
+
+        // หากเป็นวันที่ไทยอยู่แล้ว เช่น "16 ต.ค. 2569"
+        for (String m : TH_MONTHS) {
+            if (s.contains(m)) {
+                return s;
+            }
+        }
+
+        // หากเป็นข้อความทั่วไปที่ไม่มีตัวเลข (เช่น "เร็วๆ นี้") ให้ส่งคืนข้อความเดิม
+        boolean hasDigit = false;
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.isDigit(s.charAt(i))) {
+                hasDigit = true;
+                break;
+            }
+        }
+        if (!hasDigit) {
+            return s;
+        }
+
+        // แยกเฉพาะส่วนวันที่ในกรณีมีเวลาพ่วงท้าย (เช่น "16/10/2026 08:00" หรือ "2026-10-16T08:00:00")
+        String datePart = s.split("[ T]")[0].trim();
+
+        DateTimeFormatter[] formatters = new DateTimeFormatter[] {
+            DateTimeFormatter.ofPattern("yyyy-M-d"),
+            DateTimeFormatter.ofPattern("d/M/yyyy"),
+            DateTimeFormatter.ofPattern("d-M-yyyy"),
+            DateTimeFormatter.ofPattern("yyyy/M/d")
+        };
+
+        LocalDate d = null;
+        for (DateTimeFormatter fmt : formatters) {
+            try {
+                d = LocalDate.parse(datePart, fmt);
+                break;
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (d == null) {
+            try {
+                String[] parts = datePart.split("[-/.]");
+                if (parts.length == 3) {
+                    int p0 = Integer.parseInt(parts[0].trim());
+                    int p1 = Integer.parseInt(parts[1].trim());
+                    int p2 = Integer.parseInt(parts[2].trim());
+                    int day, month, year;
+                    if (p0 > 1000) {
+                        year = p0;
+                        month = p1;
+                        day = p2;
+                    } else {
+                        day = p0;
+                        month = p1;
+                        year = p2;
+                    }
+                    if (year > 2400) {
+                        year -= 543;
+                    }
+                    d = LocalDate.of(year, month, day);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (d != null) {
+            int year = d.getYear();
+            int beYear = year < 2400 ? year + 543 : year;
+            return d.getDayOfMonth() + " " + TH_MONTHS[d.getMonthValue() - 1] + " " + beYear;
+        }
+
+        return "-";
+    }
+
+    /**
+     * ดึงและจัดรูปแบบเวลาภาษาไทย (เติมหน่วย น.)
+     * 
+     * @param raw ข้อความวันและเวลาต้นทาง
+     * @return ข้อความเวลา เช่น "14:30 น." หรือ "-" หากไม่มีข้อมูล
+     */
+    public static String thaiTime(String raw) {
+        if (raw == null) {
+            return "-";
+        }
+        String s = raw.trim();
+        if (s.isEmpty() || "-".equals(s)) {
+            return "-";
+        }
+        String[] parts = s.split("[ T]");
+        if (parts.length > 1) {
+            String t = parts[1].trim();
+            if (t.endsWith("น.")) {
+                return t;
+            }
+            if (t.matches("\\d{1,2}:\\d{2}(:\\d{2})?")) {
+                if (t.length() > 5) {
+                    t = t.substring(0, 5);
+                }
+                return t + " น.";
+            }
+            return t;
+        }
+        return "-";
     }
 
     // ===================== การจัดการข้อมูล Bookings =====================
+
+    /**
+     * บันทึกคำขอจองห้องพักใหม่ลงในไฟล์ bookings.csv
+     * 
+     * @param roomId รหัสห้องพัก
+     * @param fullName ชื่อ-นามสกุลของผู้ขอจอง
+     * @param phone เบอร์โทรศัพท์ติดต่อ
+     * @return true หากบันทึกสำเร็จ, false หากเกิดข้อผิดพลาด
+     */
     public static synchronized boolean saveBooking(String roomId, String fullName, String phone) {
         try {
             String bookingId = nextId(BOOKINGS_FILE, "bookingId", "BK", 3);
@@ -204,6 +405,12 @@ public final class DataStore {
         }
     }
 
+    /**
+     * ตรวจสอบว่าผู้ใช้งานชื่อนี้มีคำขอจองห้องที่ยังรอพิจารณา (PENDING) อยู่หรือไม่
+     * 
+     * @param fullName ชื่อ-นามสกุล
+     * @return true หากมีคำขอจองสถานะ PENDING ค้างอยู่
+     */
     public static boolean hasPendingBookingByName(String fullName) {
         if (blank(fullName)) return false;
         for (Map<String, String> m : readTable(BOOKINGS_FILE)) {
@@ -215,7 +422,13 @@ public final class DataStore {
         return false;
     }
 
-    /** เช็คว่า User รายนี้เป็นเจ้าของคำขอจองที่กำลัง PENDING ของห้องนี้หรือไม่ */
+    /**
+     * ตรวจสอบว่าผู้ใช้งานรายนี้เป็นเจ้าของคำขอจองที่กำลังรอพิจารณา (PENDING) ของห้องนี้หรือไม่
+     * 
+     * @param roomId รหัสห้องพัก
+     * @param fullName ชื่อ-นามสกุล
+     * @return true หากเป็นเจ้าของคำขอจองที่รอพิจารณาอยู่สำหรับห้องนี้
+     */
     public static boolean isRoomPendingByUser(String roomId, String fullName) {
         if (blank(roomId) || blank(fullName)) return false;
         for (Map<String, String> m : readTable(BOOKINGS_FILE)) {
@@ -230,7 +443,23 @@ public final class DataStore {
 
     // ===================== ห้องพัก =====================
 
+    /**
+     * Room คือคลาสแทนข้อมูลห้องพัก 1 ห้องในหอพัก
+     * id คือ รหัสห้องพัก (เช่น R101)
+     * number คือ หมายเลขห้องพัก (เช่น 101)
+     * type คือ ประเภทห้องพัก (เช่น Air, Fan)
+     * status คือ สถานะห้องพัก (AVAILABLE, OCCUPIED, MAINTENANCE)
+     * rent คือ อัตราค่าเช่ารายเดือน
+     */
     public static final class Room {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, number, type, status, rent) คือ ข้อมูลห้องพัก 1 ห้องในหอพัก
+        // RI
+        // 1. id, number, type, status ต้องไม่เป็น null
+        // 2. rent ต้องมีค่า >= 0
+
         public final String id, number, type, status;
         public final int rent;
 
@@ -242,10 +471,20 @@ public final class DataStore {
             rent = toInt(m.getOrDefault("baseRent", "0"));
         }
 
+        /**
+         * ตรวจสอบว่าห้องพักเป็นห้องปรับอากาศ (แอร์) หรือไม่
+         * 
+         * @return true หากเป็นห้องแอร์
+         */
         public boolean isAir() {
             return type.toLowerCase().contains("air");
         }
 
+        /**
+         * คืนค่าประเภทห้องพักแบบย่อภาษาไทย
+         * 
+         * @return ชื่อประเภทห้อง เช่น "ห้องแอร์" หรือ "ห้องพัดลม"
+         */
         public String typeShort() {
             if (isAir())
                 return "ห้องแอร์";
@@ -254,10 +493,20 @@ public final class DataStore {
             return type.isEmpty() ? "-" : type;
         }
 
+        /**
+         * คืนค่าประเภทห้องพักแบบเต็มพร้อมระบุคำภาษาอังกฤษในวงเล็บ
+         * 
+         * @return ชื่อประเภทห้องแบบเต็ม
+         */
         public String typeFull() {
             return typeShort() + " (" + type + ")";
         }
 
+        /**
+         * แปลงสถานะของห้องพักภาษาอังกฤษเป็นข้อความภาษาไทย
+         * 
+         * @return สถานะห้องภาษาไทย เช่น "ห้องว่าง", "มีผู้เช่า", "ปิดปรับปรุง"
+         */
         public String statusThai() {
             switch (status) {
                 case "AVAILABLE":
@@ -268,24 +517,41 @@ public final class DataStore {
                     return "มีผู้เช่า";
                 case "MAINTENANCE":
                 case "UNDER_RENOVATION":
-                    return "อยู่ระหว่างปรับปรุง";
+                    return "ปิดปรับปรุง";
                 default:
                     return status.isEmpty() ? "-" : status;
             }
         }
 
+        /**
+         * ดึงหมายเลขชั้นของห้องพักจากตัวเลขห้อง
+         * 
+         * @return หมายเลขชั้น เช่น "1", "2" หรือ "-"
+         */
         public String floor() {
             if (number.isEmpty() || !number.matches("\\d+"))
                 return "-";
             return number.length() >= 3 ? number.substring(0, number.length() - 2) : number.substring(0, 1);
         }
 
+        /**
+         * แปลงข้อมูลห้องพักเป็นข้อความสรุปสำหรับแสดงผลในรายการ
+         * 
+         * @return ข้อความรายละเอียดห้องพัก
+         */
         @Override
         public String toString() {
             return "ห้อง " + number + "  •  " + typeShort() + "  •  " + money(rent) + " บาท/เดือน";
         }
     }
 
+    /**
+     * เปรียบเทียบหมายเลขห้องพักสองห้องเพื่อใช้ในการเรียงลำดับห้อง
+     * 
+     * @param n1 หมายเลขห้องแรก
+     * @param n2 หมายเลขห้องที่สอง
+     * @return ค่าลบหาก n1 น้อยกว่า, 0 หากเท่ากัน, ค่าบวกหาก n1 มากกว่า
+     */
     public static int compareRoomNumbers(String n1, String n2) {
         if (n1 == null) n1 = "";
         if (n2 == null) n2 = "";
@@ -297,7 +563,9 @@ public final class DataStore {
         return n1.compareToIgnoreCase(n2);
     }
 
-    /** เรียงลำดับข้อมูลห้องพักใน rooms.csv ตามลำดับชั้นและเลขห้องพักอย่างสวยงาม */
+    /**
+     * จัดเรียงข้อมูลห้องพักในไฟล์ rooms.csv ตามหมายเลขห้องและบันทึกกลับลงไฟล์
+     */
     public static synchronized void sortRoomsFile() {
         File f = file("rooms.csv");
         if (!f.exists()) return;
@@ -321,6 +589,11 @@ public final class DataStore {
         }
     }
 
+    /**
+     * ดึงรายการห้องพักทั้งหมดจาก rooms.csv พร้อมจัดเรียงตามหมายเลขห้อง
+     * 
+     * @return รายการออบเจ็กต์ Room ทั้งหมด
+     */
     public static List<Room> rooms() {
         List<Room> list = new ArrayList<>();
         for (Map<String, String> m : readTable("rooms.csv")) {
@@ -332,6 +605,12 @@ public final class DataStore {
         return list;
     }
 
+    /**
+     * ค้นหาข้อมูลห้องพักตามรหัสห้อง (roomId)
+     * 
+     * @param roomId รหัสห้องพักที่ต้องการค้นหา
+     * @return ออบเจ็กต์ Room หรือ null หากไม่พบ
+     */
     public static Room room(String roomId) {
         if (blank(roomId))
             return null;
@@ -342,10 +621,16 @@ public final class DataStore {
         return null;
     }
 
+    /**
+     * ดึงรายชื่อห้องพักที่ว่างทั้งหมด โดยสามารถเลือกตัดห้องที่ไม่ต้องการออกได้
+     * 
+     * @param excludeRoomId รหัสห้องพักที่ต้องการยกเว้นไม่ให้นับ
+     * @return รายการห้องพักที่มีสถานะว่าง
+     */
     public static List<Room> availableRooms(String excludeRoomId) {
         List<Room> list = new ArrayList<>();
         for (Room r : rooms()) {
-            if (!r.status.equals("OCCUPIED")
+            if ("AVAILABLE".equalsIgnoreCase(r.status)
                     && !r.id.equalsIgnoreCase(excludeRoomId == null ? "" : excludeRoomId.trim())) {
                 list.add(r);
             }
@@ -355,7 +640,26 @@ public final class DataStore {
 
     // ===================== สัญญาเช่า =====================
 
+    /**
+     * Contract คือคลาสแทนสัญญาเช่าห้องพัก 1 ฉบับ
+     * id คือ รหัสสัญญาเช่า (เช่น CNT001)
+     * userId คือ รหัสผู้เช่าที่ทำสัญญา
+     * roomId คือ รหัสห้องพักที่ทำสัญญา
+     * start คือ วันที่เริ่มต้นสัญญา
+     * end คือ วันที่สิ้นสุดสัญญา
+     * status คือ สถานะสัญญา (ACTIVE, PENDING, EXPIRED, TERMINATED, REJECTED)
+     * rent คือ อัตราค่าเช่ารายเดือนตามสัญญา
+     * deposit คือ เงินประกันสัญญา
+     */
     public static final class Contract {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, userId, roomId, start, end, status, rent, deposit) คือ สัญญาเช่าห้องพัก 1 ฉบับ
+        // RI
+        // 1. id, userId, roomId, status ต้องไม่เป็น null
+        // 2. rent และ deposit ต้องมีค่า >= 0
+
         public final String id, userId, roomId, start, end, status;
         public final int rent, deposit;
 
@@ -370,10 +674,20 @@ public final class DataStore {
             deposit = toInt(m.getOrDefault("deposit", "0"));
         }
 
+        /**
+         * ตรวจสอบว่าสัญญาเช่าฉบับนี้มีสถานะเปิดใช้งานอยู่ (ACTIVE) หรือไม่
+         * 
+         * @return true หากสัญญาเปิดใช้งานอยู่
+         */
         public boolean isActive() {
             return status.equals("ACTIVE");
         }
 
+        /**
+         * แปลงสถานะของสัญญาเช่าเป็นข้อความภาษาไทยพร้อมคำอธิบาย
+         * 
+         * @return สถานะสัญญาภาษาไทย
+         */
         public String statusThai() {
             switch (status) {
                 case "ACTIVE":
@@ -392,6 +706,11 @@ public final class DataStore {
         }
     }
 
+    /**
+     * ดึงรายการสัญญาเช่าทั้งหมดจากไฟล์ contracts.csv
+     * 
+     * @return รายการสัญญาเช่าทั้งหมด
+     */
     public static List<Contract> contracts() {
         List<Contract> list = new ArrayList<>();
         for (Map<String, String> m : readTable(CONTRACTS_FILE)) {
@@ -402,6 +721,12 @@ public final class DataStore {
         return list;
     }
 
+    /**
+     * ค้นหาสัญญาเช่าของผู้เช่ารายที่ระบุ โดยให้ความสำคัญกับสัญญาที่สถานะ ACTIVE ก่อน
+     * 
+     * @param user ข้อมูลผู้เช่า
+     * @return สัญญาเช่าที่ตรงกัน หรือ null หากไม่มี
+     */
     public static Contract contractFor(LoginLogic.User user) {
         if (user == null)
             return null;
@@ -419,10 +744,27 @@ public final class DataStore {
         return best;
     }
 
+    /**
+     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะเริ่มต้นเป็น ACTIVE
+     * 
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสห้องพัก
+     * @param monthlyRent ค่าเช่ารายเดือน
+     * @return true หากบันทึกสำเร็จ
+     */
     public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent) {
         return saveContract(userId, roomId, monthlyRent, "ACTIVE");
     }
 
+    /**
+     * บันทึกข้อมูลสัญญาเช่าใหม่โดยกำหนดสถานะสัญญาได้ตามต้องการ
+     * 
+     * @param userId รหัสผู้เช่า
+     * @param roomId รหัสห้องพัก
+     * @param monthlyRent ค่าเช่ารายเดือน
+     * @param status สถานะสัญญาเช่า เช่น "ACTIVE" หรือ "PENDING"
+     * @return true หากบันทึกสำเร็จ
+     */
     public static synchronized boolean saveContract(String userId, String roomId, int monthlyRent, String status) {
         try {
             String contractId = nextId(CONTRACTS_FILE, "contractId", "CNT", 3);
@@ -437,6 +779,12 @@ public final class DataStore {
         }
     }
 
+    /**
+     * ตรวจสอบว่าผู้เช่ามีสัญญาเช่าที่รอการอนุมัติ (PENDING) หรือไม่
+     * 
+     * @param userId รหัสผู้เช่า
+     * @return true หากมีสัญญาเช่าที่รออนุมัติค้างอยู่
+     */
     public static boolean hasPendingBooking(String userId) {
         if (blank(userId))
             return false;
@@ -447,6 +795,11 @@ public final class DataStore {
         return false;
     }
 
+    /**
+     * ดึงรายการสัญญาเช่าทั้งหมดที่อยู่ในสถานะรอการอนุมัติ (PENDING)
+     * 
+     * @return รายการสัญญาเช่าที่รออนุมัติ
+     */
     public static List<Contract> pendingContracts() {
         List<Contract> list = new ArrayList<>();
         for (Contract c : contracts()) {
@@ -456,6 +809,12 @@ public final class DataStore {
         return list;
     }
 
+    /**
+     * อนุมัติสัญญาเช่า กำหนดวันที่เริ่ม-สิ้นสุดสัญญา ปรับสถานะห้องเป็น OCCUPIED และบันทึกห้องให้ผู้ใช้
+     * 
+     * @param contractId รหัสสัญญาเช่าที่ต้องการอนุมัติ
+     * @return true หากอนุมัติสำเร็จ
+     */
     public static synchronized boolean approveBooking(String contractId) {
         Contract c = null;
         for (Contract x : pendingContracts()) {
@@ -476,6 +835,12 @@ public final class DataStore {
         return true;
     }
 
+    /**
+     * ปฏิเสธคำขอทำสัญญาเช่า และคืนสถานะห้องพักกลับเป็น AVAILABLE
+     * 
+     * @param contractId รหัสสัญญาเช่าที่ต้องการปฏิเสธ
+     * @return true หากปฏิเสธสำเร็จ
+     */
     public static synchronized boolean rejectBooking(String contractId) {
         Contract c = null;
         for (Contract x : pendingContracts()) {
@@ -492,6 +857,12 @@ public final class DataStore {
         return true;
     }
 
+    /**
+     * ตรวจสอบว่าผู้เช่ามีสัญญาเช่าที่กำลังเปิดใช้งานอยู่ (ACTIVE) หรือไม่
+     * 
+     * @param userId รหัสผู้เช่า
+     * @return true หากมีสัญญาเช่าที่ใช้งานอยู่
+     */
     public static boolean hasActiveContract(String userId) {
         if (blank(userId))
             return false;
@@ -502,6 +873,12 @@ public final class DataStore {
         return false;
     }
 
+    /**
+     * ค้นหาข้อมูลห้องพักจากหมายเลขห้องพัก (roomNumber)
+     * 
+     * @param number หมายเลขห้องพัก เช่น "101"
+     * @return ออบเจ็กต์ Room หรือ null หากไม่พบ
+     */
     public static Room roomByNumber(String number) {
         if (blank(number))
             return null;
@@ -512,10 +889,27 @@ public final class DataStore {
         return null;
     }
 
+    /**
+     * ปรับปรุงสถานะของห้องพักในไฟล์ rooms.csv
+     * 
+     * @param roomId รหัสห้องพัก
+     * @param newStatus สถานะใหม่ของห้องพัก เช่น "AVAILABLE", "OCCUPIED"
+     * @return true หากปรับปรุงสถานะสำเร็จ
+     */
     public static synchronized boolean setRoomStatus(String roomId, String newStatus) {
         return updateCell("rooms.csv", "roomId", roomId, "status", newStatus);
     }
 
+    /**
+     * ปรับปรุงค่าในคอลัมน์ของแถวข้อมูลที่ตรงกับค่าคีย์ที่กำหนดในไฟล์ CSV
+     * 
+     * @param name ชื่อไฟล์ CSV
+     * @param keyCol ชื่อคอลัมน์คีย์สำหรับค้นหาแถว
+     * @param keyVal ค่าคีย์ที่ต้องการจับคู่
+     * @param col ชื่อคอลัมน์ที่ต้องการแก้ไขค่า
+     * @param newVal ค่าใหม่ที่ต้องการเขียนลงไป
+     * @return true หากพบแถวและปรับปรุงข้อมูลสำเร็จ
+     */
     public static synchronized boolean updateCell(String name, String keyCol, String keyVal, String col, String newVal) {
         File f = file(name);
         if (!f.exists())
@@ -567,6 +961,12 @@ public final class DataStore {
 
     // ===================== คำขอย้ายห้อง =====================
 
+    /**
+     * ตรวจสอบว่าผู้เช่ามีคำขอย้ายห้องที่ยังรอการพิจารณา (PENDING) อยู่หรือไม่
+     * 
+     * @param userId รหัสผู้เช่า
+     * @return true หากมีคำขอย้ายห้องที่รอพิจารณาค้างอยู่
+     */
     public static boolean hasPendingTransfer(String userId) {
         if (blank(userId))
             return false;
@@ -581,7 +981,17 @@ public final class DataStore {
 
     // ===================== แจ้งซ่อม / ร้องเรียน =====================
 
+    /**
+     * Complaint คือคลาสแทนข้อมูลรายการแจ้งซ่อมหรือร้องเรียน 1 รายการ
+     */
     public static final class Complaint {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, userId, roomId, category, topic, description, date, status) คือ ข้อมูลรายการแจ้งซ่อมหรือร้องเรียน 1 รายการ
+        // RI
+        // 1. id, userId, roomId, category, topic, status ต้องไม่เป็น null
+
         public final String id, userId, roomId, category, topic, description, date, status;
 
         Complaint(Map<String, String> m) {
@@ -595,6 +1005,11 @@ public final class DataStore {
             status = m.getOrDefault("status", "").trim().toUpperCase();
         }
 
+        /**
+         * แปลงสถานะรายการแจ้งซ่อม/ร้องเรียนเป็นข้อความภาษาไทย
+         * 
+         * @return สถานะภาษาไทย เช่น "กำลังดำเนินการ", "ช่างกำลังเข้าตรวจสอบ", "เสร็จสิ้น"
+         */
         public String statusThai() {
             switch (status) {
                 case "PENDING":
@@ -609,6 +1024,12 @@ public final class DataStore {
         }
     }
 
+    /**
+     * ดึงรายการแจ้งซ่อมและข้อร้องเรียนทั้งหมดของผู้เช่ารายที่ระบุ
+     * 
+     * @param userId รหัสผู้เช่า
+     * @return รายการข้อร้องเรียนของผู้เช่า
+     */
     public static List<Complaint> complaintsForUser(String userId) {
         List<Complaint> list = new ArrayList<>();
         if (blank(userId))

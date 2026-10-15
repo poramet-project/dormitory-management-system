@@ -5,10 +5,27 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/**
+ * TenantMyRoomUI คือคลาสหน้าจอแสดงข้อมูลห้องพักของผู้เช่าปัจจุบัน
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับดึงข้อมูลรายละเอียดห้องพัก
+ * user คือ ข้อมูลผู้ใช้งานปัจจุบันที่เข้าสู่ระบบ
+ */
 public class TenantMyRoomUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, user) คือ หน้าจอแสดงข้อมูลหมายเลขห้อง ประเภทห้อง อัตราค่าเช่า และรายการสิ่งอำนวยความสะดวกประจำห้อง
+    // RI
+    // 1. logic ต้องไม่เป็น null
+
     private final TenantMyRoomLogic logic;
     private final LoginLogic.User user;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าจอแสดงข้อมูลห้องพักของผู้เช่าปัจจุบัน
+     * 
+     * @param user ข้อมูลผู้ใช้งานที่เข้าสู่ระบบ
+     */
     public TenantMyRoomUI(LoginLogic.User user) {
         this.user = user;
         this.logic = new TenantMyRoomLogic(user);
@@ -36,6 +53,12 @@ public class TenantMyRoomUI extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อความแจ้งเตือน (กรณีที่ผู้ใช้ยังไม่มีห้องพัก)
+     * 
+     * @param msg ข้อความแจ้งเตือน
+     * @return JPanel แผงข้อความแจ้งเตือน
+     */
     private JPanel messageCard(String msg) {
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new GridBagLayout());
@@ -45,6 +68,11 @@ public class TenantMyRoomUI extends JPanel {
         return card;
     }
 
+    /**
+     * สร้างการ์ดหลักแสดงรูปภาพห้องพัก หมายเลขห้อง ประเภท ชั้น และอัตราค่าเช่า
+     * 
+     * @return JPanel การ์ดข้อมูลห้องพัก
+     */
     private JPanel buildMainCard() {
         TenantUI.RoundedPanel mainCard = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         mainCard.setLayout(new BorderLayout(25, 0));
@@ -82,6 +110,11 @@ public class TenantMyRoomUI extends JPanel {
         return mainCard;
     }
 
+    /**
+     * สร้างการ์ดแสดงรายการสิ่งอำนวยความสะดวกและเฟอร์นิเจอร์ประจำห้อง
+     * 
+     * @return JPanel การ์ดสิ่งอำนวยความสะดวก
+     */
     private JPanel buildFacilityCard() {
         TenantUI.RoundedPanel facCard = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         facCard.setLayout(new BorderLayout());

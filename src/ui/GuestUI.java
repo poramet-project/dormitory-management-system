@@ -11,7 +11,26 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.util.List;
 
+/**
+ * GuestUI คือคลาสหน้าต่างหลักสำหรับผู้เข้าชมทั่วไปในการค้นหาและดูรายละเอียดห้องพัก
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับการค้นหาและกรองห้องพักของผู้เข้าชม
+ * cbType คือ คอมโบ้บ็อกซ์สำหรับเลือกประเภทห้องพักที่ต้องการค้นหา
+ * cbPrice คือ คอมโบ้บ็อกซ์สำหรับเลือกระดับราคาค่าเช่า
+ * btnSearch คือ ปุ่มกดเพื่อดำเนินการค้นหาห้องพักตามเงื่อนไข
+ * grid คือ พาเนลแบบกริดสำหรับแสดงการ์ดห้องพักที่ค้นพบ
+ * scroll คือ ตัวเลื่อนดูรายการการ์ดห้องพัก
+ * cardLayout คือ ตัวจัดการสลับมุมมองระหว่างหน้ารายการห้องพักและหน้ารายละเอียด
+ * cardsContainer คือ พาเนลหลักที่บรรจุมุมมองต่าง ๆ
+ * detailCardWrapper คือ พาเนลสำหรับแสดงคอมโพเนนต์รายละเอียดห้องพัก
+ */
 public class GuestUI extends JFrame {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, cardsContainer, cardLayout, grid) คือ หน้าต่างค้นหาห้องพักสำหรับบุคคลทั่วไปและผู้เข้าชม
+    // RI
+    // 1. logic ต้องไม่เป็น null
+    // 2. cardsContainer และ cardLayout ต้องไม่เป็น null
 
     public static final Color PRIMARY = new Color(13, 148, 136); // Teal 600
     public static final Color PRIMARY_HOVER = new Color(15, 118, 110); // Teal 700
@@ -32,6 +51,9 @@ public class GuestUI extends JFrame {
     private final JPanel cardsContainer;
     private final JPanel detailCardWrapper;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าต่างค้นหาและดูรายละเอียดห้องพักสำหรับผู้เข้าชมทั่วไป
+     */
     public GuestUI() {
         this.logic = new GuestLogic();
 
@@ -53,6 +75,11 @@ public class GuestUI extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * สร้างหน้าจอแสดงรายการห้องพัก ประกอบด้วยแถบนำทาง แผงตัวกรอง และตารางการ์ดห้องพัก
+     * 
+     * @return JPanel แผงหน้าจอรายการห้องพัก
+     */
     private JPanel createListPanel() {
         JPanel root = new JPanel(null);
         root.setBackground(BG);
@@ -94,6 +121,11 @@ public class GuestUI extends JFrame {
         return root;
     }
 
+    /**
+     * เปลี่ยนมุมมองไปยังหน้ารายละเอียดของห้องพักที่เลือก
+     * 
+     * @param room ข้อมูลห้องพักที่ต้องการดูรายละเอียด
+     */
     public void showDetailView(GuestLogic.RoomViewModel room) {
         detailCardWrapper.removeAll();
         GuestRoomUI detailUI = new GuestRoomUI(this, room.numberText, room.typeShort, room.priceText, room.statusLabel);
@@ -105,12 +137,18 @@ public class GuestUI extends JFrame {
         cardLayout.show(cardsContainer, "DETAIL");
     }
 
+    /**
+     * สลับมุมมองกลับมายังหน้ารายการค้นหาห้องพักและรีเฟรชข้อมูลการ์ดห้องพัก
+     */
     public void showListView() {
         loadRoomCards();
         setTitle("KU Dormitory - ค้นหาห้องพัก");
         cardLayout.show(cardsContainer, "LIST");
     }
 
+    /**
+     * โหลดและสร้างการ์ดห้องพักทั้งหมดตามเงื่อนไขการกรองปัจจุบัน แล้วนำไปวางบนกริด
+     */
     private void loadRoomCards() {
         grid.removeAll();
         List<GuestLogic.RoomViewModel> rooms = logic.getFilteredRooms();
@@ -130,6 +168,11 @@ public class GuestUI extends JFrame {
         grid.repaint();
     }
 
+    /**
+     * สร้างแถบนำทางส่วนหัว (Navbar) พร้อมโลโก้ และปุ่มเข้าสู่ระบบหรือออกจากระบบ
+     * 
+     * @return JPanel แถบนำทางด้านบน
+     */
     private JPanel createNavbar() {
         JPanel nav = new JPanel(null);
         nav.setBackground(WHITE);
@@ -178,6 +221,11 @@ public class GuestUI extends JFrame {
         return nav;
     }
 
+    /**
+     * สร้างการ์ดแผงตัวกรองค้นหาตามประเภทห้องพักและช่วงราคา
+     * 
+     * @return JPanel แผงตัวกรอง
+     */
     private JPanel createFilterCard() {
         ShadowCardPanel card = new ShadowCardPanel(WHITE, BORDER, 12);
         card.setLayout(null);
@@ -205,6 +253,14 @@ public class GuestUI extends JFrame {
         return card;
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อมูลห้องพักเดี่ยว พร้อมรูปภาพ ประเภท ราคา และเอฟเฟกต์การเด้งเมื่อเมาส์ชี้
+     * 
+     * @param room ข้อมูลวิวโมเดลห้องพัก
+     * @param x ตำแหน่ง X
+     * @param y ตำแหน่ง Y
+     * @return JPanel การ์ดห้องพัก
+     */
     private JPanel createRoomCard(GuestLogic.RoomViewModel room, int x, int y) {
         int w = 235, h = 328;
         ShadowCardPanel card = new ShadowCardPanel(WHITE, BORDER, 12);
@@ -317,16 +373,26 @@ public class GuestUI extends JFrame {
         return card;
     }
 
+    /**
+     * สร้างป้ายสถานะห้องพักพร้อมจุดสีระบุความพร้อม (เขียว=ว่าง, แดง=มีผู้เช่า, ส้ม=ปรับปรุง)
+     * 
+     * @param status ข้อความสถานะห้องพัก
+     * @return JPanel ป้ายสถานะ
+     */
     private static JPanel dotStatusBadge(String status) {
         boolean isAvailable = status.contains("ว่าง");
         boolean isOccupied = status.contains("มีผู้เช่า");
+        boolean isMaintenance = status.contains("ปรับปรุง");
 
         Color bg = isAvailable ? new Color(240, 253, 244)
-                : (isOccupied ? new Color(254, 242, 242) : new Color(254, 252, 232));
+                : (isOccupied ? new Color(254, 242, 242)
+                : (isMaintenance ? new Color(254, 243, 199) : new Color(254, 252, 232)));
         Color fg = isAvailable ? new Color(22, 101, 52)
-                : (isOccupied ? new Color(153, 27, 27) : new Color(133, 77, 14));
+                : (isOccupied ? new Color(153, 27, 27)
+                : (isMaintenance ? new Color(180, 83, 9) : new Color(133, 77, 14)));
         Color dotColor = isAvailable ? new Color(34, 197, 94)
-                : (isOccupied ? new Color(239, 68, 68) : new Color(234, 179, 8));
+                : (isOccupied ? new Color(239, 68, 68)
+                : (isMaintenance ? new Color(217, 119, 6) : new Color(234, 179, 8)));
 
         JPanel badge = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2)) {
             @Override
@@ -349,12 +415,29 @@ public class GuestUI extends JFrame {
         return badge;
     }
 
+    /**
+     * สร้างป้ายข้อความกำกับช่องกรอกข้อมูล
+     * 
+     * @param text ข้อความกำกับ
+     * @param x ตำแหน่ง X
+     * @param y ตำแหน่ง Y
+     * @return JLabel ป้ายข้อความ
+     */
     private static JLabel fieldLabel(String text, int x, int y) {
         JLabel l = label(text, Font.BOLD, 12, TEXT_GRAY);
         l.setBounds(x, y, 200, 18);
         return l;
     }
 
+    /**
+     * สร้างป้ายข้อความพร้อมกำหนดรูปแบบและสี
+     * 
+     * @param text ข้อความ
+     * @param style รูปแบบฟอนต์ (Font.PLAIN, Font.BOLD)
+     * @param size ขนาดตัวอักษร
+     * @param color สีข้อความ
+     * @return JLabel ป้ายข้อความ
+     */
     public static JLabel label(String text, int style, int size, Color color) {
         JLabel l = new JLabel(text);
         Font baseFont = UIManager.getFont("Label.font");
@@ -367,6 +450,12 @@ public class GuestUI extends JFrame {
         return l;
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์สำหรับเลือกรายการ
+     * 
+     * @param items รายการตัวเลือก
+     * @return JComboBox คอมโบ้บ็อกซ์ที่จัดรูปแบบแล้ว
+     */
     private static JComboBox<String> combo(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
         Font baseFont = UIManager.getFont("ComboBox.font");
@@ -388,6 +477,13 @@ public class GuestUI extends JFrame {
         private final int radius;
         private boolean isHovered = false;
 
+        /**
+         * สร้างแผงการ์ดพร้อมเงาและมุมโค้งมน
+         * 
+         * @param bgColor สีพื้นหลัง
+         * @param borderColor สีเส้นขอบ
+         * @param radius รัศมีความโค้งมนของมุม
+         */
         public ShadowCardPanel(Color bgColor, Color borderColor, int radius) {
             this.bgColor = bgColor;
             this.borderColor = borderColor;
@@ -395,10 +491,20 @@ public class GuestUI extends JFrame {
             setOpaque(false);
         }
 
+        /**
+         * กำหนดสถานะการชี้เมาส์เหนือการ์ดเพื่อสลับระดับเงาและสีขอบ
+         * 
+         * @param hovered ค่าความจริงว่าเมาส์ชี้อยู่หรือไม่
+         */
         public void setHovered(boolean hovered) {
             this.isHovered = hovered;
         }
 
+        /**
+         * วาดเงาการ์ด พื้นหลัง และเส้นขอบขอบมน
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
@@ -433,6 +539,13 @@ public class GuestUI extends JFrame {
         }
     }
 
+    /**
+     * สร้างปุ่มกดสไตล์โมเดิร์นแบนราบ (Flat Button)
+     * 
+     * @param text ข้อความบนปุ่ม
+     * @param isPrimary กำหนดว่าเป็นปุ่มหลักหรือปุ่มรอง
+     * @return JButton ปุ่มที่จัดรูปแบบแล้ว
+     */
     public static JButton flatButton(String text, boolean isPrimary) {
         JButton btn = new JButton(text);
         Font baseFont = UIManager.getFont("Button.font");
@@ -466,23 +579,52 @@ public class GuestUI extends JFrame {
         return btn;
     }
 
+    /**
+     * ThinScrollBarUI คือคลาสกำหนดการแสดงผลแถบเลื่อน Scrollbar ให้มีความบางและโมเดิร์น
+     */
     static class ThinScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์กำหนดรูปแบบการแสดงผลของแถบเลื่อน
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดชุดสีของตัวเลื่อนและรางเลื่อน
+         */
         @Override
         protected void configureScrollBarColors() {
             thumbColor = new Color(203, 213, 225);
             trackColor = BG;
         }
 
+        /**
+         * สร้างปุ่มลูกศรเลื่อนขึ้นแบบซ่อน
+         * 
+         * @param o ทิศทาง
+         * @return JButton ปุ่มขนาด 0x0
+         */
         @Override
         protected JButton createDecreaseButton(int o) {
             return zeroButton();
         }
 
+        /**
+         * สร้างปุ่มลูกศรเลื่อนลงแบบซ่อน
+         * 
+         * @param o ทิศทาง
+         * @return JButton ปุ่มขนาด 0x0
+         */
         @Override
         protected JButton createIncreaseButton(int o) {
             return zeroButton();
         }
 
+        /**
+         * คืนค่าปุ่มขนาด 0 เพื่อซ่อนปุ่มหัวท้ายของแถบเลื่อน
+         * 
+         * @return JButton ปุ่มว่างเปล่า
+         */
         private JButton zeroButton() {
             JButton b = new JButton();
             b.setPreferredSize(new Dimension(0, 0));
@@ -490,10 +632,26 @@ public class GuestUI extends JFrame {
         }
     }
 
-    // 🟢 Component รูปภาพพร้อมการแสดงกรอบว่างแบบครอบคลุม
+    /**
+     * RoomImage คือคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักพร้อมการจัดกรอบขอบมน
+     * photo คือ อ็อบเจกต์รูปภาพห้องพักที่โหลดมาแสดงผล
+     */
     static class RoomImage extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(photo) คือ พาเนลแสดงภาพห้องพัก หรือแสดงกรอบว่างพร้อมข้อความหากไม่มีรูปภาพ
+        // RI
+        // - photo อาจเป็น null ได้หากไม่มีไฟล์รูปภาพ
+
         private final Image photo;
 
+        /**
+         * สร้างคอมโพเนนต์แสดงรูปภาพห้องพัก
+         * 
+         * @param paths รายชื่อพาธไฟล์รูปภาพที่ต้องการค้นหาและโหลด
+         * @param width ความกว้าง
+         * @param height ความสูง
+         */
         RoomImage(String[] paths, int width, int height) {
             this.photo = ImageLoader.load(paths);
             setOpaque(false);
@@ -501,6 +659,11 @@ public class GuestUI extends JFrame {
             setSize(width, height);
         }
 
+        /**
+         * วาดภาพห้องพักขอบมน หรือแสดงกรอบประพร้อมไอคอนเมื่อไม่มีรูป
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);

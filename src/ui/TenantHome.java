@@ -5,11 +5,32 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/**
+ * TenantHome คือคลาสหน้าจอหลัก (Home Dashboard) สำหรับผู้เช่า
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับดึงและประมวลผลข้อมูลในหน้าหลักของผู้เช่า
+ * user คือ ข้อมูลผู้ใช้งานปัจจุบันที่เข้าสู่ระบบ
+ * totalLbl คือ ป้ายแสดงสถิติการแจ้งซ่อมทั้งหมด
+ * inProgLbl คือ ป้ายแสดงสถิติการแจ้งซ่อมที่กำลังดำเนินการ
+ * doneLbl คือ ป้ายแสดงสถิติการแจ้งซ่อมที่เสร็จสิ้นแล้ว
+ */
 public class TenantHome extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, user, totalLbl, inProgLbl, doneLbl) คือ หน้าจอสรุปภาพรวมห้องพัก สถานะการแจ้งซ่อม และสัญญาเช่าของผู้เช่า
+    // RI
+    // 1. logic และ user ต้องไม่เป็น null
+
     private final TenantHomeLogic logic;
     private final LoginLogic.User user;
     private JLabel totalLbl, inProgLbl, doneLbl;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าจอภาพรวมแดชบอร์ดของผู้เช่า (Home)
+     * 
+     * @param mainUI หน้าต่างหลัก TenantUI
+     * @param user ข้อมูลผู้ใช้งานปัจจุบัน
+     */
     public TenantHome(TenantUI mainUI, LoginLogic.User user) {
         this.user = user;
         this.logic = new TenantHomeLogic(user);
@@ -35,6 +56,9 @@ public class TenantHome extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * โหลดข้อมูลสถิติการแจ้งซ่อมและอัปเดตการแสดงผลล่าสุดบนหน้าจอ
+     */
     public void refresh() {
         logic.reloadRepairStats();
         if (totalLbl != null)  totalLbl.setText(logic.repairTotalText());
@@ -45,6 +69,12 @@ public class TenantHome extends JPanel {
         repaint();
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อมูลห้องพักของผู้เช่า พร้อมรูปภาพ ประเภท และตำแหน่งชั้น
+     * 
+     * @param mainUI หน้าต่างหลัก TenantUI
+     * @return JPanel การ์ดข้อมูลห้องพัก
+     */
     private JPanel createRoomCard(TenantUI mainUI) {
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new BorderLayout(20, 0));
@@ -93,6 +123,12 @@ public class TenantHome extends JPanel {
         return card;
     }
 
+    /**
+     * สร้างการ์ดแสดงสถานะและสถิติการแจ้งซ่อม/ร้องเรียน พร้อมปุ่มเปิดหน้าแจ้งซ่อม
+     * 
+     * @param mainUI หน้าต่างหลัก TenantUI
+     * @return JPanel การ์ดแจ้งซ่อม
+     */
     private JPanel createRepairCard(TenantUI mainUI) {
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -141,6 +177,12 @@ public class TenantHome extends JPanel {
         return card;
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อมูลวันสิ้นสุดสัญญาเช่า พร้อมปุ่มเปิดดูสัญญาเช่า
+     * 
+     * @param mainUI หน้าต่างหลัก TenantUI
+     * @return JPanel การ์ดสัญญาเช่า
+     */
     private JPanel createContractCard(TenantUI mainUI) {
         TenantUI.RoundedPanel card = new TenantUI.RoundedPanel(10, Color.WHITE, TenantUI.CARD_BORDER);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));

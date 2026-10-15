@@ -12,7 +12,27 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 
+/**
+ * SignUpUI คือคลาสหน้าต่างลงทะเบียนผู้ใช้งานใหม่ (Sign Up Screen) ของระบบ
+ * bgImg คือ รูปภาพพื้นหลังของหน้าลงทะเบียน
+ * userField คือ ช่องกรอกชื่อผู้ใช้ (Username)
+ * passField คือ ช่องกรอกรหัสผ่าน (Password)
+ * nameField คือ ช่องกรอกชื่อ-นามสกุล (Full Name)
+ * phoneField คือ ช่องกรอกเบอร์โทรศัพท์ (Phone Number)
+ * signUpBtn คือ ปุ่มกดยืนยันเพื่อสมัครสมาชิก
+ * PH_USER คือ ข้อความแนะนำในช่องกรอกชื่อผู้ใช้
+ * PH_PASS คือ ข้อความแนะนำในช่องกรอกรหัสผ่าน
+ * PH_NAME คือ ข้อความแนะนำในช่องกรอกชื่อ-นามสกุล
+ * PH_PHONE คือ ข้อความแนะนำในช่องกรอกเบอร์โทรศัพท์
+ */
 public class SignUpUI extends JFrame {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(bgImg, userField, passField, nameField, phoneField, signUpBtn) คือ หน้าต่างกราฟิกสำหรับรับข้อมูลสมัครสมาชิกใหม่ของผู้ใช้งาน
+    // RI
+    // 1. userField, passField, nameField, phoneField, signUpBtn ต้องไม่เป็น null หลังสร้างคอมโพเนนต์
+
     private Image bgImg;
     private JTextField userField;
     private JPasswordField passField;
@@ -25,6 +45,9 @@ public class SignUpUI extends JFrame {
     private static final String PH_NAME = SignUpLogic.PH_NAME;
     private static final String PH_PHONE = SignUpLogic.PH_PHONE;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าต่างลงทะเบียนสมัครสมาชิก (Sign Up)
+     */
     public SignUpUI() {
         setTitle("KU Dormitory - Sign Up");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -85,10 +108,18 @@ public class SignUpUI extends JFrame {
         setContentPane(bgPanel);
     }
 
+    /**
+     * โหลดรูปภาพพื้นหลังสำหรับหน้าลงทะเบียน
+     */
     private void loadBgImage() {
         bgImg = ImageLoader.load("img/content2.png");
     }
 
+    /**
+     * สร้างการ์ดสไตล์กลาสมอร์ฟิซึมพร้อมฟอร์มกรอกข้อมูลสมัครสมาชิก
+     * 
+     * @return JPanel แผงการ์ดกระจก
+     */
     private JPanel createGlassCard() {
         JPanel card = new JPanel() {
             @Override
@@ -202,6 +233,9 @@ public class SignUpUI extends JFrame {
         return card;
     }
 
+    /**
+     * ประมวลผลการสมัครสมาชิก โดยอ่านค่าจากฟอร์ม ส่งให้ SignUpLogic ตรวจสอบและบันทึกลงไฟล์
+     */
     private void processSignUp() {
         try {
             String u = userField.getText().trim();
@@ -247,13 +281,30 @@ public class SignUpUI extends JFrame {
     //  ส่วน UI ช่วยเหลือ
     // ==================================================================
 
+    /**
+     * ตัวกรองเอกสารสำหรับจำกัดให้พิมพ์ได้เฉพาะตัวเลขและความยาวไม่เกินที่กำหนด
+     */
     static class NumericDocumentFilter extends DocumentFilter {
         private final int maxLength;
 
+        /**
+         * สร้างตัวกรองตัวเลขพร้อมจำกัดความยาวสูงสุด
+         * 
+         * @param maxLength จำนวนตัวอักษรสูงสุดที่อนุญาต
+         */
         public NumericDocumentFilter(int maxLength) {
             this.maxLength = maxLength;
         }
 
+        /**
+         * กรองการแทรกข้อความใหม่ ให้ยอมรับเฉพาะตัวเลขและความยาวไม่เกินกำหนด
+         * 
+         * @param fb FilterBypass
+         * @param offset ตำแหน่งแทรก
+         * @param string ข้อความที่แทรก
+         * @param attr แอตทริบิวต์
+         * @throws BadLocationException เมื่อตำแหน่งผิดพลาด
+         */
         @Override
         public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
             if (string == null) return;
@@ -262,6 +313,16 @@ public class SignUpUI extends JFrame {
             }
         }
 
+        /**
+         * กรองการแทนที่ข้อความเดิม ให้ยอมรับเฉพาะตัวเลขและความยาวรวมไม่เกินกำหนด
+         * 
+         * @param fb FilterBypass
+         * @param offset ตำแหน่ง
+         * @param length ความยาวเดิม
+         * @param text ข้อความใหม่
+         * @param attrs แอตทริบิวต์
+         * @throws BadLocationException เมื่อตำแหน่งผิดพลาด
+         */
         @Override
         public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
             if (text == null) return;
@@ -270,11 +331,24 @@ public class SignUpUI extends JFrame {
             }
         }
 
+        /**
+         * ตรวจสอบว่าข้อความเป็นตัวเลขล้วนหรือไม่
+         * 
+         * @param str ข้อความที่ต้องการตรวจสอบ
+         * @return true หากเป็นตัวเลขล้วน
+         */
         private boolean isNumeric(String str) {
             return str.matches("\\d*");
         }
     }
 
+    /**
+     * สร้างกล่องข้อความกรอกข้อมูลสไตล์โมเดิร์นกึ่งโปร่งใส
+     * 
+     * @param ph ข้อความแนะนำในช่องกรอก
+     * @param isPass กำหนดว่าเป็นช่องรหัสผ่านหรือไม่
+     * @return JTextField ช่องกรอกข้อความที่สร้างขึ้น
+     */
     private JTextField createModernField(String ph, boolean isPass) {
         final boolean[] focus = {false};
         final boolean[] isPlaceholder = {true};
@@ -363,6 +437,12 @@ public class SignUpUI extends JFrame {
         return f;
     }
 
+    /**
+     * สร้างปุ่มกดไล่ระดับสีสวยงามพร้อมเอฟเฟกต์ Rollover
+     * 
+     * @param text ข้อความบนปุ่ม
+     * @return JButton ปุ่มที่สร้างขึ้น
+     */
     private JButton createGradientButton(String text) {
         JButton btn = new JButton(text) {
             private boolean hovered = false;

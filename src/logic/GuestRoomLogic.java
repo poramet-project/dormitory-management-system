@@ -1,9 +1,20 @@
 package logic;
 /**
- * 
- * GuestRoomLogic
+ * GuestRoomLogic คือคลาสสำหรับจัดการข้อมูลรายละเอียดห้องพักและตรรกะการจองห้องพักสำหรับผู้เยี่ยมชม
+ * roomName คือ ชื่อ/หมายเลขห้องพัก (เช่น ห้อง 101)
+ * roomType คือ ประเภทห้องพัก (เช่น ห้องแอร์, ห้องพัดลม)
+ * roomPrice คือ อัตราค่าเช่าต่อเดือน
+ * roomStatus คือ สถานะความพร้อมของห้องพัก (เช่น ว่าง, มีผู้เช่า)
  */
 public class GuestRoomLogic {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(roomName, roomType, roomPrice, roomStatus) คือ ตรรกะแสดงรายละเอียดและการยื่นคำขอจองห้องพัก 1 ห้อง
+    // RI
+    // 1. roomName, roomType, roomPrice, roomStatus ต้องไม่เป็น null
+    // 2. roomName ต้องมีหมายเลขห้องระบุอยู่
+
     private final String roomName;
     private final String roomType;
     private final String roomPrice;
@@ -11,6 +22,14 @@ public class GuestRoomLogic {
 
     public enum BookResult { OK, PENDING_EXISTS, ALREADY_HAS_ROOM, ROOM_NOT_AVAILABLE, ROOM_NOT_FOUND }
 
+    /**
+     * คอนสตรักเตอร์สำหรับสร้างตรรกะข้อมูลรายละเอียดห้องพัก
+     * 
+     * @param roomName ชื่อหรือข้อความหมายเลขห้องพัก เช่น "ห้อง 101"
+     * @param roomType ประเภทห้องพัก เช่น "ห้องแอร์", "ห้องพัดลม"
+     * @param roomPrice ข้อความอัตราค่าเช่า
+     * @param roomStatus ข้อความสถานะห้องพัก
+     */
     public GuestRoomLogic(String roomName, String roomType, String roomPrice, String roomStatus) {
         this.roomName = roomName;
         this.roomType = roomType;
@@ -18,20 +37,58 @@ public class GuestRoomLogic {
         this.roomStatus = roomStatus;
     }
 
+    /**
+     * ดึงชื่อห้องพัก
+     * 
+     * @return ชื่อห้องพัก เช่น "ห้อง 101"
+     */
     public String getRoomName() { return roomName; }
+
+    /**
+     * ดึงประเภทห้องพัก
+     * 
+     * @return ประเภทห้องพัก เช่น "ห้องแอร์"
+     */
     public String getRoomType() { return roomType; }
+
+    /**
+     * ดึงข้อความอัตราค่าเช่าห้องพัก
+     * 
+     * @return อัตราค่าเช่า
+     */
     public String getRoomPrice() { return roomPrice; }
+
+    /**
+     * ดึงสถานะห้องพัก
+     * 
+     * @return สถานะห้องพัก
+     */
     public String getRoomStatus() { return roomStatus; }
 
+    /**
+     * ดึงเฉพาะตัวเลขห้องพักโดยตัดคำว่า "ห้อง " ออก
+     * 
+     * @return หมายเลขห้องพัก เช่น "101"
+     */
     public String getRoomNumberOnly() {
         return roomName.replace("ห้อง ", "").trim();
     }
 
+    /**
+     * ดึงตัวอักษรระบุชั้นจากตัวเลขห้องพัก
+     * 
+     * @return ตัวอักษรระบุชั้น เช่น '1', '2'
+     */
     public char getFloorChar() {
         String num = getRoomNumberOnly();
         return num.isEmpty() ? '1' : num.charAt(0);
     }
 
+    /**
+     * ดึงรายการสิ่งอำนวยความสะดวกและเฟอร์นิเจอร์ภายในห้องพักตามประเภทห้อง
+     * 
+     * @return อาร์เรย์ของรายการสิ่งอำนวยความสะดวก
+     */
     public String[] getFurnitureList() {
         if (roomType != null && (roomType.contains("แอร์") || roomType.equalsIgnoreCase("Air"))) {
             return new String[]{
@@ -55,15 +112,29 @@ public class GuestRoomLogic {
         }
     }
 
+    /**
+     * ตรวจสอบว่าห้องพักนี้มีสถานะว่างพร้อมให้จองหรือไม่
+     * 
+     * @return true หากห้องว่าง
+     */
     public boolean isAvailable() {
-        return roomStatus == null || !roomStatus.contains("มีผู้เช่า");
+        return roomStatus != null && roomStatus.contains("ว่าง");
     }
 
+    /**
+     * ดึงข้อมูลผู้ใช้งานที่กำลังเข้าสู่ระบบอยู่
+     * 
+     * @return ออบเจ็กต์ User หรือ null
+     */
     public LoginLogic.User getCurrentUser() {
         return LoginLogic.getCurrentUser();
     }
 
-    /** เช็คว่า User ปัจจุบันเป็นคนส่งคำขอจองห้องนี้ค้างไว้หรือไม่ */
+    /**
+     * ตรวจสอบว่าผู้ใช้งานปัจจุบันเป็นผู้ส่งคำขอจองห้องนี้และกำลังรออนุมัติอยู่หรือไม่
+     * 
+     * @return true หากผู้ใช้ปัจจุบันมีคำขอจองค้างอยู่สำหรับห้องนี้
+     */
     public boolean isPendingByCurrentUser() {
         LoginLogic.User u = getCurrentUser();
         if (u == null) return false;
@@ -72,6 +143,12 @@ public class GuestRoomLogic {
         return r != null && DataStore.isRoomPendingByUser(r.id, fullName);
     }
 
+    /**
+     * ดำเนินการยื่นคำขอจองห้องพักสำหรับผู้ใช้งาน
+     * 
+     * @param user ผู้ใช้งานที่ต้องการจองห้อง
+     * @return ผลลัพธ์ของการจองห้องพักในรูปแบบ BookResult
+     */
     public BookResult bookRoom(LoginLogic.User user) {
         if (user == null) return BookResult.ROOM_NOT_FOUND;
 
@@ -86,7 +163,7 @@ public class GuestRoomLogic {
 
         String roomNumOnly = getRoomNumberOnly();
         DataStore.Room r = DataStore.roomByNumber(roomNumOnly);
-        if (r == null || "OCCUPIED".equalsIgnoreCase(r.status)) {
+        if (r == null || !"AVAILABLE".equalsIgnoreCase(r.status)) {
             return BookResult.ROOM_NOT_AVAILABLE;
         }
 

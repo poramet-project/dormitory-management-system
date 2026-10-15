@@ -10,7 +10,34 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * AdminBookingUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการพิจารณาคำขอจองห้องพัก
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการข้อมูลคำขอจองห้องพัก
+ * searchField คือ ช่องสำหรับค้นหาคำขอจองห้องพัก
+ * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะคำขอ
+ * table คือ ตารางแสดงรายการคำขอจองห้องพัก
+ * tableModel คือ โมเดลข้อมูลของตารางคำขอจองห้องพัก
+ * detailTitle คือ ป้ายแสดงหัวเรื่องรายละเอียดคำขอที่เลือก
+ * detailSub คือ ป้ายแสดงคำอธิบายย่อยของรายละเอียด
+ * lblName คือ ป้ายแสดงชื่อผู้ขอจอง
+ * lblPhone คือ ป้ายแสดงเบอร์โทรศัพท์ของผู้ขอจอง
+ * lblRoom คือ ป้ายแสดงหมายเลขห้องพักที่ขอจอง
+ * lblDate คือ ป้ายแสดงวันที่ยื่นคำขอจอง
+ * lblStatus คือ ป้ายแสดงสถานะปัจจุบันของคำขอ
+ * lblCount คือ ป้ายแสดงจำนวนรายการคำขอที่แสดงผล
+ * txtDescription คือ กล่องข้อความแสดงรายละเอียดความต้องการเพิ่มเติม
+ * btnApprove คือ ปุ่มกดสำหรับอนุมัติคำขอจองห้อง
+ * btnReject คือ ปุ่มกดสำหรับปฏิเสธคำขอจองห้อง
+ * currentBooking คือ ข้อมูลคำขอจองห้องที่กำลังเลือกดูรายละเอียดอยู่ในปัจจุบัน
+ */
 public class AdminBookingUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, table, tableModel, currentBooking) คือ หน้าจอสำหรับแสดงรายการคำขอจองห้องพัก ตรวจสอบรายละเอียด และบันทึกผลการพิจารณาคำขอ
+    // RI
+    // 1. logic ต้องไม่เป็น null
+    // 2. table และ tableModel ต้องไม่เป็น null
 
     static final Color PRIMARY = AdminUI.PRIMARY;
     static final Color BG = AdminUI.BG;
@@ -27,11 +54,14 @@ public class AdminBookingUI extends JPanel {
     JTable table;
     DefaultTableModel tableModel;
     JLabel detailTitle, detailSub, lblName, lblPhone, lblRoom, lblDate, lblStatus, lblCount;
-    JTextArea txtDescription, txtNote;
+    JTextArea txtDescription;
     JButton btnApprove, btnReject;
 
     private AdminBookingLogic.BookingModel currentBooking = null;
 
+    /**
+     * คอนสตรักเตอร์สร้างหน้าจอจัดการคำขอจองห้องพักสำหรับผู้ดูแลระบบ
+     */
     public AdminBookingUI() {
         setLayout(null);
         setBackground(BG);
@@ -44,6 +74,9 @@ public class AdminBookingUI extends JPanel {
         refreshData();
     }
 
+    /**
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองสถานะและป้ายแสดงจำนวนรายการ
+     */
     private void createToolbar() {
         statusFilter = styledCombo(new String[] { "สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ" });
         statusFilter.setBounds(20, 20, 200, 34);
@@ -55,6 +88,11 @@ public class AdminBookingUI extends JPanel {
         add(lblCount);
     }
 
+    /**
+     * สร้างและจัดรูปแบบตารางแสดงรายการคำขอจองห้องพัก
+     * 
+     * @return JScrollPane ที่ครอบตารางคำขอจองห้อง
+     */
     private JScrollPane createTable() {
         String[] columns = { "เลขคำขอ", "ชื่อผู้ยื่น", "ห้อง", "วันที่ยื่น", "สถานะ" };
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
@@ -86,6 +124,11 @@ public class AdminBookingUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างพาเนลแสดงรายละเอียดคำขอจองห้องพักที่เลือกและปุ่มอนุมัติ/ปฏิเสธ
+     * 
+     * @return JPanel แสดงรายละเอียดคำขอ
+     */
     private JPanel createDetailPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
@@ -109,24 +152,23 @@ public class AdminBookingUI extends JPanel {
 
         p.add(fieldLabel("ห้องที่ขอจอง", 242));
         txtDescription = textArea(false);
-        p.add(areaScroll(txtDescription, 264, 86));
+        p.add(areaScroll(txtDescription, 264, 110));
 
-        p.add(fieldLabel("บันทึกผลพิจารณา (ระบุเหตุผลเมื่อปฏิเสธ)", 366));
-        txtNote = textArea(true);
-        p.add(areaScroll(txtNote, 388, 90));
-
-        p.add(divider(498));
+        p.add(divider(398));
         btnReject = new AdminRoomUI.FlatButton("ปฏิเสธคำขอ", false);
         btnReject.setForeground(AdminUI.RED);
-        btnReject.setBounds(20, 516, 132, 40);
+        btnReject.setBounds(20, 420, 132, 40);
         p.add(btnReject);
 
         btnApprove = new AdminRoomUI.FlatButton("อนุมัติคำขอ", true);
-        btnApprove.setBounds(162, 516, 134, 40);
+        btnApprove.setBounds(162, 420, 134, 40);
         p.add(btnApprove);
         return p;
     }
 
+    /**
+     * โหลดข้อมูลคำขอจองห้องพักใหม่และอัปเดตการแสดงผลในตารางตามตัวกรอง
+     */
     public void refreshData() {
         tableModel.setRowCount(0);
         List<AdminBookingLogic.BookingModel> all = logic.getAllBookings();
@@ -156,6 +198,9 @@ public class AdminBookingUI extends JPanel {
         }
     }
 
+    /**
+     * ล้างข้อมูลในพาเนลแสดงรายละเอียดให้เป็นค่าเริ่มต้น
+     */
     private void clearDetailPanel() {
         currentBooking = null;
         detailSub.setText("- • จองห้อง");
@@ -165,11 +210,13 @@ public class AdminBookingUI extends JPanel {
         lblDate.setText("-");
         lblStatus.setText("-");
         txtDescription.setText("");
-        txtNote.setText("");
         if (btnApprove != null) btnApprove.setEnabled(false);
         if (btnReject != null) btnReject.setEnabled(false);
     }
 
+    /**
+     * ผูก Listener การเลือกแถวในตารางเพื่อแสดงรายละเอียดคำขอที่เลือกในพาเนลด้านขวา
+     */
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
@@ -196,6 +243,9 @@ public class AdminBookingUI extends JPanel {
         });
     }
 
+    /**
+     * กำหนด Event Handlers สำหรับตัวกรองสถานะ ปุ่มอนุมัติ และปุ่มปฏิเสธคำขอ
+     */
     private void initActions() {
         statusFilter.addActionListener(e -> refreshData());
 
@@ -225,6 +275,15 @@ public class AdminBookingUI extends JPanel {
         });
     }
 
+    /**
+     * สร้างแถวแสดงข้อมูลรายละเอียดคู่หัวข้อและค่า
+     * 
+     * @param p พาเนลที่จะวางองค์ประกอบ
+     * @param title หัวข้อรายละเอียด
+     * @param text ค่ารายละเอียด
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel แสดงค่ารายละเอียด
+     */
     private static JLabel detailRow(JPanel p, String title, String text, int y) {
         JLabel label = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         label.setBounds(20, y, 110, 20);
@@ -236,12 +295,25 @@ public class AdminBookingUI extends JPanel {
         return value;
     }
 
+    /**
+     * สร้างป้ายข้อความกำกับฟิลด์ข้อมูล
+     * 
+     * @param title ข้อความหัวข้อ
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel ป้ายกำกับ
+     */
     private static JLabel fieldLabel(String title, int y) {
         JLabel label = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         label.setBounds(20, y, 276, 18);
         return label;
     }
 
+    /**
+     * สร้างเส้นแบ่งแนวนอน
+     * 
+     * @param y ตำแหน่งแกน Y
+     * @return JPanel เส้นแบ่ง
+     */
     private static JPanel divider(int y) {
         JPanel line = new JPanel();
         line.setBackground(BORDER);
@@ -249,6 +321,12 @@ public class AdminBookingUI extends JPanel {
         return line;
     }
 
+    /**
+     * สร้างกล่องข้อความหลายบรรทัด
+     * 
+     * @param editable กำหนดว่าสามารถแก้ไขข้อความได้หรือไม่
+     * @return JTextArea ที่จัดรูปแบบแล้ว
+     */
     private static JTextArea textArea(boolean editable) {
         JTextArea area = new JTextArea();
         area.setFont(AdminUI.font(Font.PLAIN, 12));
@@ -261,6 +339,14 @@ public class AdminBookingUI extends JPanel {
         return area;
     }
 
+    /**
+     * สร้าง JScrollPane ครอบกล่องข้อความพร้อมกำหนดพิกัดและความสูง
+     * 
+     * @param area กล่องข้อความ
+     * @param y ตำแหน่งแกน Y
+     * @param height ความสูง
+     * @return JScrollPane
+     */
     private static JScrollPane areaScroll(JTextArea area, int y, int height) {
         JScrollPane scroll = new JScrollPane(area);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -268,6 +354,12 @@ public class AdminBookingUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์พร้อมตกแต่งรูปแบบตามธีมระบบ
+     * 
+     * @param items รายการตัวเลือก
+     * @return JComboBox ที่จัดรูปแบบแล้ว
+     */
     private static JComboBox<String> styledCombo(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(AdminUI.font(Font.PLAIN, 12));
@@ -284,7 +376,19 @@ public class AdminBookingUI extends JPanel {
         return cb;
     }
 
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำขอจองห้อง
+     */
     static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางให้มีสีและฟอนต์ตามธีมระบบ
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของส่วนหัวตารางคำขอจองห้องพัก
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
                 int col) {
@@ -298,7 +402,19 @@ public class AdminBookingUI extends JPanel {
         }
     }
 
+    /**
+     * CellRenderer คือคลาสกำหนดการแสดงผลข้อมูลแต่ละเซลล์ในตารางคำขอจองห้อง
+     */
     static class CellRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์เซลล์ตารางพร้อมป้ายสถานะ Badge
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของแต่ละเซลล์ในตารางคำขอจองห้องพักพร้อม Badge แสดงสถานะ
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
                 int col) {

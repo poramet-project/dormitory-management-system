@@ -10,7 +10,35 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * AdminRoomChangeUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการพิจารณาคำขอย้ายห้องพัก
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการคำขอย้ายห้องพัก
+ * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะคำขอย้ายห้อง
+ * lblCount คือ ป้ายแสดงจำนวนรายการคำขอที่แสดงผล
+ * table คือ ตารางแสดงรายการคำขอย้ายห้องพัก
+ * tableModel คือ โมเดลข้อมูลของตารางคำขอย้ายห้องพัก
+ * detailTitle คือ ป้ายแสดงหัวเรื่องรายละเอียดคำขอย้ายห้อง
+ * detailSub คือ ป้ายแสดงคำอธิบายย่อยของรายละเอียด
+ * applicantName คือ ป้ายแสดงชื่อผู้ยื่นคำขอย้ายห้อง
+ * lblMoveId คือ ป้ายแสดงรหัสคำขอย้ายห้อง
+ * lblStatus คือ ป้ายแสดงสถานะปัจจุบันของคำขอ
+ * lblPhone คือ ป้ายแสดงเบอร์โทรศัพท์ของผู้ยื่นคำขอ
+ * lblOldRoom คือ ป้ายแสดงหมายเลขห้องพักเดิม
+ * lblNewRoom คือ ป้ายแสดงหมายเลขห้องพักใหม่ที่ต้องการย้ายไป
+ * lblDate คือ ป้ายแสดงวันที่ยื่นคำขอย้ายห้อง
+ * txtReason คือ กล่องข้อความแสดงเหตุผลการขอย้ายห้อง
+ * btnApprove คือ ปุ่มกดสำหรับอนุมัติคำขอย้ายห้อง
+ * btnReject คือ ปุ่มกดสำหรับปฏิเสธคำขอย้ายห้อง
+ * currentMove คือ ข้อมูลคำขอย้ายห้องที่กำลังเลือกดูรายละเอียดอยู่ในปัจจุบัน
+ */
 public class AdminRoomChangeUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, table, tableModel, currentMove) คือ หน้าจอสำหรับแสดงรายการคำขอย้ายห้องพัก ตรวจสอบห้องเดิม-ห้องใหม่ และบันทึกผลการพิจารณา
+    // RI
+    // 1. logic ต้องไม่เป็น null
+    // 2. table และ tableModel ต้องไม่เป็น null
 
     static final Color PRIMARY    = AdminUI.PRIMARY;
     static final Color BG         = AdminUI.BG;
@@ -33,6 +61,9 @@ public class AdminRoomChangeUI extends JPanel {
 
     private AdminRoomChangeLogic.MoveModel currentMove = null;
 
+    /**
+     * คอนสตรักเตอร์สร้างหน้าจอจัดการคำขอย้ายห้องพักสำหรับผู้ดูแลระบบ
+     */
     public AdminRoomChangeUI() {
         setLayout(null);
         setBackground(BG);
@@ -46,6 +77,9 @@ public class AdminRoomChangeUI extends JPanel {
         refreshData();
     }
 
+    /**
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองสถานะและป้ายแสดงจำนวนรายการ
+     */
     private void createToolbar() {
         statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "รอพิจารณา", "อนุมัติ", "ปฏิเสธ"}, WHITE);
         statusFilter.setBounds(20, 20, 200, 34);
@@ -57,6 +91,11 @@ public class AdminRoomChangeUI extends JPanel {
         add(lblCount);
     }
 
+    /**
+     * สร้างและจัดรูปแบบตารางแสดงรายการคำขอย้ายห้องพัก
+     * 
+     * @return JScrollPane ที่ครอบตารางคำขอย้ายห้อง
+     */
     private JScrollPane createTable() {
         String[] columns = {"เลขคำขอ", "ชื่อผู้เช่า", "การย้ายห้อง", "วันที่ยื่น", "สถานะ"};
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
@@ -70,6 +109,9 @@ public class AdminRoomChangeUI extends JPanel {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setDefaultRenderer(Object.class, new CellRenderer());
         table.getTableHeader().setDefaultRenderer(new HeaderRenderer());
+        table.getTableHeader().setPreferredSize(new Dimension(0, 36));
+        table.getTableHeader().setReorderingAllowed(false);
+        applyColumnWidths();
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -78,6 +120,22 @@ public class AdminRoomChangeUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * กำหนดความกว้างของแต่ละคอลัมน์ในตารางคำขอย้ายห้องพักให้เหมาะสม ไม่ตกหล่น
+     */
+    private void applyColumnWidths() {
+        // ลดความกว้างช่องก่อนหน้า (เลขคำขอ 65, ชื่อผู้เช่า 110) เพื่อให้ช่องการย้ายห้องกว้าง 180 แสดงข้อความได้ครบถ้วนไม่ตกหล่น
+        int[] widths = { 65, 110, 180, 95, 90 };
+        for (int i = 0; i < widths.length && i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+        }
+    }
+
+    /**
+     * สร้างพาเนลแสดงรายละเอียดคำขอย้ายห้องพักที่เลือกและปุ่มอนุมัติ/ปฏิเสธ
+     * 
+     * @return JPanel แสดงรายละเอียดคำขอย้ายห้อง
+     */
     private JPanel createDetailPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
@@ -132,6 +190,9 @@ public class AdminRoomChangeUI extends JPanel {
         return p;
     }
 
+    /**
+     * โหลดข้อมูลคำขอย้ายห้องใหม่และอัปเดตการแสดงผลในตารางตามตัวกรองสถานะ
+     */
     public void refreshData() {
         String filter = statusFilter != null ? (String) statusFilter.getSelectedItem() : "สถานะทั้งหมด";
         List<AdminRoomChangeLogic.MoveModel> all = logic.getAllMoves();
@@ -143,13 +204,12 @@ public class AdminRoomChangeUI extends JPanel {
             }
         }
 
-        Object[][] rows = new Object[filtered.size()][5];
-        for (int i = 0; i < filtered.size(); i++) {
-            AdminRoomChangeLogic.MoveModel m = filtered.get(i);
-            rows[i] = new Object[]{m.id, m.name, "จากห้อง " + m.oldRoomNum + " ย้ายไป " + m.newRoomNum, m.date, m.status};
+        tableModel.setRowCount(0);
+        for (AdminRoomChangeLogic.MoveModel m : filtered) {
+            tableModel.addRow(new Object[]{m.id, m.name, "จากห้อง " + m.oldRoomNum + " ย้ายไป " + m.newRoomNum, m.date, m.status});
         }
+        applyColumnWidths();
 
-        tableModel.setDataVector(rows, new String[]{"เลขคำขอ", "ชื่อผู้เช่า", "การย้ายห้อง", "วันที่ยื่น", "สถานะ"});
         if (lblCount != null) {
             lblCount.setText("แสดง " + filtered.size() + " รายการ จากทั้งหมด " + all.size() + " รายการ");
         }
@@ -161,6 +221,9 @@ public class AdminRoomChangeUI extends JPanel {
         }
     }
 
+    /**
+     * ล้างข้อมูลในพาเนลแสดงรายละเอียดคำขอย้ายห้องให้เป็นค่าเริ่มต้น
+     */
     private void clearDetailPanel() {
         currentMove = null;
         if (applicantName != null) applicantName.setText("-");
@@ -176,6 +239,9 @@ public class AdminRoomChangeUI extends JPanel {
         if (btnReject != null) btnReject.setEnabled(false);
     }
 
+    /**
+     * ผูก Listener การเลือกแถวในตารางเพื่อแสดงรายละเอียดคำขอย้ายห้องในพาเนลด้านขวา
+     */
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
@@ -204,6 +270,9 @@ public class AdminRoomChangeUI extends JPanel {
         });
     }
 
+    /**
+     * กำหนด Event Handlers สำหรับตัวกรองสถานะ ปุ่มอนุมัติ และปุ่มปฏิเสธคำขอย้ายห้อง
+     */
     private void initActions() {
         if (statusFilter != null) {
             statusFilter.addActionListener(e -> refreshData());
@@ -251,6 +320,15 @@ public class AdminRoomChangeUI extends JPanel {
         });
     }
 
+    /**
+     * สร้างแถวแสดงข้อมูลรายละเอียดคู่หัวข้อและค่า
+     * 
+     * @param p พาเนลที่จะวางองค์ประกอบ
+     * @param title หัวข้อรายละเอียด
+     * @param value ค่ารายละเอียด
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel แสดงค่ารายละเอียด
+     */
     private static JLabel detailRow(JPanel p, String title, String value, int y) {
         JLabel t = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         t.setBounds(20, y, 120, 18); p.add(t);
@@ -260,7 +338,19 @@ public class AdminRoomChangeUI extends JPanel {
         return v;
     }
 
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำขอย้ายห้อง
+     */
     static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวตารางคำขอย้ายห้อง
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของส่วนหัวตารางคำขอย้ายห้องพัก
+         */
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             super.getTableCellRendererComponent(t, v, sel, focus, row, col);
             setFont(AdminUI.font(Font.PLAIN, 11)); setForeground(TEXT_GRAY); setBackground(WHITE);
@@ -269,7 +359,19 @@ public class AdminRoomChangeUI extends JPanel {
         }
     }
 
+    /**
+     * CellRenderer คือคลาสกำหนดการแสดงผลข้อมูลแต่ละเซลล์ในตารางคำขอย้ายห้อง
+     */
     static class CellRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์เซลล์ตารางพร้อมป้ายสถานะ Badge
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของแต่ละเซลล์ในตารางคำขอย้ายห้องพักพร้อม Badge แสดงสถานะ
+         */
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             Color rowBg = sel ? ROW_SELECT : WHITE;
             if (col == 4) {
@@ -283,18 +385,25 @@ public class AdminRoomChangeUI extends JPanel {
                     fg = AdminUI.RED;
                 }
                 AdminUI.Badge badge = new AdminUI.Badge(s, bg, fg);
-                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
                 cell.setBackground(rowBg); cell.add(badge);
                 return cell;
             }
             super.getTableCellRendererComponent(t, v, false, false, row, col);
-            setBackground(rowBg); setBorder(new EmptyBorder(0, 10, 0, 10));
+            setBackground(rowBg); setBorder(new EmptyBorder(0, 8, 0, 8));
             setFont(AdminUI.font(col == 0 ? Font.BOLD : Font.PLAIN, 11));
-            setForeground(col == 0 ? PRIMARY : (col == 2 ? PRIMARY : TEXT));
+            setForeground(col == 0 ? PRIMARY : TEXT);
             return this;
         }
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์พร้อมจัดรูปแบบและสีพื้นหลังตามที่กำหนด
+     * 
+     * @param items รายการตัวเลือก
+     * @param bg สีพื้นหลัง
+     * @return JComboBox ที่จัดรูปแบบแล้ว
+     */
     private static JComboBox<String> styledCombo(String[] items, Color bg) {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(AdminUI.font(Font.PLAIN, 12));

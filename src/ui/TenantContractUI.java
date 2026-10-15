@@ -6,9 +6,25 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/**
+ * TenantContractUI คือคลาสหน้าจอแสดงข้อมูลสัญญาเช่าและข้อกำหนดเงื่อนไขของผู้เช่า
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับดึงและจัดรูปแบบข้อมูลสัญญาเช่า
+ */
 public class TenantContractUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic) คือ หน้าจอแสดงแถบสรุปเลขที่สัญญา วันเริ่ม-สิ้นสุดสัญญา และข้อความข้อกำหนดสัญญาเช่า
+    // RI
+    // 1. logic ต้องไม่เป็น null
+
     private final TenantContractLogic logic;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าจอแสดงสัญญาเช่าของผู้ใช้งาน
+     * 
+     * @param user ข้อมูลผู้ใช้งานที่เข้าสู่ระบบ
+     */
     public TenantContractUI(LoginLogic.User user) {
         this.logic = new TenantContractLogic(user);
         setLayout(new BorderLayout());
@@ -56,6 +72,13 @@ public class TenantContractUI extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * สร้างเซลล์แสดงหัวข้อและค่าสรุปข้อมูลสัญญา
+     * 
+     * @param t หัวข้อข้อมูล
+     * @param v ค่าข้อมูล
+     * @return JPanel เซลล์สรุปข้อมูล
+     */
     private JPanel createCell(String t, String v) {
         JPanel p = new JPanel(new GridLayout(2, 1, 0, 2));
         p.setOpaque(false);

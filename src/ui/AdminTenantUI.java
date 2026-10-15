@@ -12,7 +12,37 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AdminTenantUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการจัดการทะเบียนผู้เช่าและสัญญาเช่า
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการข้อมูลผู้เช่าและสัญญาเช่า
+ * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะสัญญาเช่า
+ * lblCount คือ ป้ายแสดงจำนวนรายการผู้เช่าที่แสดงผล
+ * table คือ ตารางแสดงรายชื่อผู้เช่าและสัญญาเช่า
+ * tableModel คือ โมเดลข้อมูลของตารางผู้เช่า
+ * detailSub คือ ป้ายแสดงคำอธิบายย่อยของรายละเอียดผู้เช่า
+ * tenantName คือ ป้ายแสดงชื่อผู้เช่า
+ * lblContractId คือ ป้ายแสดงเลขที่สัญญาเช่า
+ * lblStatus คือ ป้ายแสดงสถานะสัญญาเช่า
+ * lblPhone คือ ป้ายแสดงเบอร์โทรศัพท์ผู้เช่า
+ * lblRoomType คือ ป้ายแสดงประเภทห้องพัก
+ * lblRent คือ ป้ายแสดงอัตราค่าเช่า
+ * lblDeposit คือ ป้ายแสดงเงินมัดจำประกัน
+ * lblStart คือ ป้ายแสดงวันที่เริ่มต้นสัญญา
+ * lblEnd คือ ป้ายแสดงวันที่สิ้นสุดสัญญา
+ * btnAdd คือ ปุ่มกดสำหรับทำสัญญาเช่าใหม่
+ * btnEdit คือ ปุ่มกดสำหรับแก้ไขข้อมูลสัญญา
+ * btnRenew คือ ปุ่มกดสำหรับต่ออายุสัญญาเช่า
+ * btnTerminate คือ ปุ่มกดสำหรับยกเลิกสัญญาเช่า
+ * currentTenant คือ ข้อมูลผู้เช่าที่กำลังเลือกดูรายละเอียดอยู่ในปัจจุบัน
+ */
 public class AdminTenantUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, table, tableModel, currentTenant) คือ หน้าจอสำหรับแสดงทะเบียนผู้เช่า ตรวจสอบสัญญา ทำสัญญาใหม่ ต่ออายุ และยกเลิกสัญญาเช่า
+    // RI
+    // 1. logic ต้องไม่เป็น null
+    // 2. table และ tableModel ต้องไม่เป็น null
 
     static final Color PRIMARY    = AdminUI.PRIMARY;
     static final Color BG         = AdminUI.BG;
@@ -34,6 +64,10 @@ public class AdminTenantUI extends JPanel {
 
     private AdminTenantLogic.TenantModel currentTenant = null;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าจอจัดการทะเบียนผู้เช่าและสัญญาเช่า
+     * กำหนดการจัดวางองค์ประกอบ แถบเครื่องมือ ตาราง ข้อมูลรายละเอียด และการผูกเหตุการณ์
+     */
     public AdminTenantUI() {
         setLayout(null);
         setBackground(BG);
@@ -47,6 +81,9 @@ public class AdminTenantUI extends JPanel {
         refreshData();
     }
 
+    /**
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองสถานะสัญญา จำนวนรายการ และปุ่มทำสัญญาใหม่
+     */
     private void createToolbar() {
         statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ใช้งานอยู่", "รออนุมัติ", "หมดอายุ", "ยกเลิกสัญญา"}, WHITE);
         statusFilter.setBounds(20, 20, 170, 34);
@@ -62,8 +99,13 @@ public class AdminTenantUI extends JPanel {
         add(btnAdd);
     }
 
+    /**
+     * สร้างตารางแสดงรายชื่อผู้เช่า ข้อมูลห้อง วันที่สัญญา และสถานะสัญญา
+     * 
+     * @return JScrollPane ที่บรรจุตารางผู้เช่า
+     */
     private JScrollPane createTable() {
-        String[] columns = {"ชื่อผู้เช่า", "ห้อง", "เริ่มสัญญา", "สิ้นสุดสัญญา", "สถานะ", "การจัดการ"};
+        String[] columns = {"ชื่อผู้เช่า", "ห้อง", "เริ่มสัญญา", "สิ้นสุดสัญญา", "สถานะ"};
         tableModel = new DefaultTableModel(new Object[0][0], columns) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -83,6 +125,11 @@ public class AdminTenantUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างแผงแสดงรายละเอียดสัญญาเช่าของผู้เช่าที่ถูกเลือก พร้อมปุ่มจัดการสัญญา
+     * 
+     * @return JPanel แผงรายละเอียดสัญญา
+     */
     private JPanel createDetailPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
@@ -127,6 +174,9 @@ public class AdminTenantUI extends JPanel {
         return p;
     }
 
+    /**
+     * ดึงข้อมูลผู้เช่าและสัญญาเช่าทั้งหมดจาก DataStore มากรองตามสถานะและแสดงผลในตาราง
+     */
     public void refreshData() {
         tableModel.setRowCount(0);
         List<AdminTenantLogic.TenantModel> all = logic.getAllTenants();
@@ -149,12 +199,12 @@ public class AdminTenantUI extends JPanel {
             }
 
             if (match) {
-                tableModel.addRow(new Object[]{t.name, t.room, t.startDate, t.endDate, t.status, ""});
+                tableModel.addRow(new Object[]{t.name, t.room, t.startDate, t.endDate, t.status});
                 matched++;
             }
         }
 
-        int[] widths = {120, 60, 95, 95, 110, 60};
+        int[] widths = {110, 50, 95, 95, 190};
         for (int i = 0; i < widths.length && i < table.getColumnModel().getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
@@ -170,6 +220,9 @@ public class AdminTenantUI extends JPanel {
         }
     }
 
+    /**
+     * ล้างข้อมูลในแผงรายละเอียดสัญญาและปิดการใช้งานปุ่มคำสั่งเมื่อไม่มีการเลือกแถวในตาราง
+     */
     private void clearDetailPanel() {
         currentTenant = null;
         detailSub.setText("-");
@@ -188,6 +241,9 @@ public class AdminTenantUI extends JPanel {
         if (btnTerminate != null) btnTerminate.setEnabled(false);
     }
 
+    /**
+     * ผูกเหตุการณ์การเลือกแถวในตาราง เพื่อดึงข้อมูลสัญญาเช่าของผู้เช่านั้นมาแสดงในแผงรายละเอียด
+     */
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() != -1) {
@@ -218,6 +274,9 @@ public class AdminTenantUI extends JPanel {
         });
     }
 
+    /**
+     * กำหนดการทำงานของส่วนควบคุมและปุ่มคำสั่งต่างๆ บนหน้าจอ
+     */
     private void initActions() {
         statusFilter.addActionListener(e -> refreshData());
 
@@ -255,7 +314,11 @@ public class AdminTenantUI extends JPanel {
         });
     }
 
-    /** Form Dialog กลางรองรับทั้ง เพิ่มสัญญาใหม่ และ แก้ไขสัญญาเดิม */
+    /**
+     * แสดงหน้าต่าง Dialog สำหรับการกรอกข้อมูลสัญญาเช่า (รองรับทั้งการทำสัญญาใหม่และการแก้ไขสัญญาเดิม)
+     * 
+     * @param model ข้อมูลสัญญาเดิมกรณีแก้ไข หรือ null กรณีทำสัญญาใหม่
+     */
     private void showFormDialog(AdminTenantLogic.TenantModel model) {
         boolean isEdit = (model != null);
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), isEdit ? "แก้ไขสัญญา" : "ทำสัญญาใหม่", true);
@@ -320,6 +383,15 @@ public class AdminTenantUI extends JPanel {
         dialog.setVisible(true);
     }
 
+    /**
+     * สร้างแถวแสดงข้อมูลหัวข้อและค่าของรายละเอียดสัญญา พร้อมเพิ่มลงในแผง
+     * 
+     * @param p แผงพาเนลเป้าหมาย
+     * @param title หัวข้อข้อมูล
+     * @param value ค่าข้อมูล
+     * @param y พิกัดแกน Y
+     * @return JLabel ป้ายข้อความแสดงค่าข้อมูล
+     */
     private static JLabel detailRow(JPanel p, String title, String value, int y) {
         JLabel t = AdminUI.label(title, Font.PLAIN, 11, TEXT_GRAY);
         t.setBounds(20, y, 120, 18); p.add(t);
@@ -329,7 +401,27 @@ public class AdminTenantUI extends JPanel {
         return v;
     }
 
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางผู้เช่า
+     */
     static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางผู้เช่า
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดรูปแบบและสีส่วนหัวตารางผู้เช่า
+         * 
+         * @param t ตาราง
+         * @param v ค่าหัวตาราง
+         * @param sel ถูกเลือกหรือไม่
+         * @param focus มีโฟกัสหรือไม่
+         * @param row ดัชนีแถว
+         * @param col ดัชนีคอลัมน์
+         * @return คอมโพเนนต์สำหรับแสดงผลหัวตาราง
+         */
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             super.getTableCellRendererComponent(t, v, sel, focus, row, col);
             setFont(AdminUI.font(Font.PLAIN, 11)); setForeground(TEXT_GRAY); setBackground(WHITE);
@@ -338,14 +430,46 @@ public class AdminTenantUI extends JPanel {
         }
     }
 
+    /**
+     * CellRenderer คือคลาสกำหนดการแสดงผลข้อมูลแต่ละเซลล์ในตารางผู้เช่า
+     */
     static class CellRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์เซลล์ตารางผู้เช่าพร้อมป้ายสถานะ Badge
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดรูปแบบเซลล์ตารางผู้เช่า และวาดป้ายสถานะ (Badge) สำหรับคอลัมน์สถานะ
+         * 
+         * @param t ตาราง
+         * @param v ค่าข้อมูล
+         * @param sel เซลล์ถูกเลือกหรือไม่
+         * @param focus เซลล์มีโฟกัสหรือไม่
+         * @param row ลำดับแถว
+         * @param col ลำดับคอลัมน์
+         * @return คอมโพเนนต์สำหรับแสดงผลเซลล์
+         */
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             Color rowBg = sel ? ROW_SELECT : WHITE;
             if (col == 4) {
                 String s = String.valueOf(v);
-                boolean active = s.contains("ใช้งานอยู่") || s.contains("Active");
-                AdminUI.Badge badge = new AdminUI.Badge(s, active ? new Color(209, 250, 229) : new Color(254, 226, 226), active ? new Color(4, 120, 87) : new Color(220, 38, 38));
-                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+                Color bg = new Color(254, 226, 226);
+                Color fg = new Color(220, 38, 38);
+                if (s.contains("ใช้งานอยู่") || s.contains("Active")) {
+                    bg = new Color(209, 250, 229);
+                    fg = new Color(4, 120, 87);
+                } else if (s.contains("รออนุมัติ") || s.contains("Pending")) {
+                    bg = new Color(254, 243, 199);
+                    fg = new Color(180, 83, 9);
+                } else if (s.contains("หมดอายุ") || s.contains("Expired")) {
+                    bg = new Color(243, 244, 246);
+                    fg = new Color(107, 114, 128);
+                }
+                AdminUI.Badge badge = new AdminUI.Badge(s, bg, fg);
+                badge.setPreferredSize(badge.getSize());
+                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
                 cell.setBackground(rowBg); cell.add(badge);
                 return cell;
             }
@@ -357,6 +481,13 @@ public class AdminTenantUI extends JPanel {
         }
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์ที่จัดรูปแบบสีและขอบโค้งมนตามมาตรฐานระบบ
+     * 
+     * @param items รายการตัวเลือก
+     * @param bg สีพื้นหลัง
+     * @return JComboBox ที่ตกแต่งแล้ว
+     */
     private static JComboBox<String> styledCombo(String[] items, Color bg) {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(AdminUI.font(Font.PLAIN, 12));

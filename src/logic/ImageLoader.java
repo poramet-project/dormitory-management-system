@@ -6,17 +6,29 @@ import java.io.File;
 import java.net.URL;
 
 /**
- * โหลดรูปภาพโดยลองหลายที่ จึงไม่ขึ้นกับว่ารันโปรแกรมจากโฟลเดอร์ไหน
- * ลำดับ: classpath ( /ชื่อไฟล์ และ /img/ชื่อไฟล์ ) แล้วค่อยหาในไฟล์ตามโฟลเดอร์ต่าง ๆ
- * เช่น src/img, img, ../src/img
+ * ImageLoader คือคลาสยูทิลิตี้สำหรับโหลดรูปภาพของระบบหอพักจากตำแหน่งต่าง ๆ
+ * DIRS คือ รายการไดเรกทอรีและโฟลเดอร์ที่เป็นไปได้สำหรับค้นหารูปภาพ
  */
 public final class ImageLoader {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(DIRS) คือ ตัวช่วยค้นหาและโหลดทรัพยากรรูปภาพ (Image) ทั้งจาก Classpath และระบบไฟล์ในเครื่อง
+    // RI
+    // 1. DIRS ต้องไม่เป็น null และมีองค์ประกอบอย่างน้อย 1 โฟลเดอร์
+
     private ImageLoader() { }
 
     private static final String[] DIRS = {
             "", "src/", "img/", "src/img/", "../src/", "../src/img/", "../img/", "DMS/src/img/", "DMS/img/"
     };
 
+    /**
+     * ค้นหาและโหลดทรัพยากรรูปภาพจาก Classpath หรือระบบไฟล์ตามรายชื่อและพาธที่กำหนด
+     * 
+     * @param names รายชื่อไฟล์หรือพาธของรูปภาพที่ต้องการค้นหาและโหลด
+     * @return ออบเจ็กต์ Image ที่โหลดสำเร็จ หรือ null หากไม่พบไฟล์รูปภาพ
+     */
     public static Image load(String... names) {
         for (String n : names) {
             String base = n.substring(Math.max(n.lastIndexOf('/'), n.lastIndexOf('\\')) + 1);

@@ -7,9 +7,24 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 
+/**
+ * LoginUI คือคลาสหน้าต่างเข้าสู่ระบบ (Login Screen) ของระบบจัดการหอพัก
+ * bgImg คือ รูปภาพพื้นหลังของหน้าเข้าสู่ระบบ
+ */
 public class LoginUI extends JFrame {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(bgImg) คือ หน้าต่างกราฟิกสำหรับรับข้อมูลชื่อผู้ใช้และรหัสผ่านเพื่อยืนยันตัวตนเข้าสู่ระบบ
+    // RI
+    // - bgImg อาจเป็น null ได้หากไม่พบไฟล์รูปภาพ
+
     private Image bgImg;
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าต่างเข้าสู่ระบบ (Login)
+     * กำหนดการแสดงผลพื้นหลังภาพ และการ์ดกระจก (Glass Card) กึ่งกลางหน้าจอ
+     */
     public LoginUI() {
         setTitle("KU Dormitory - Login");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -41,7 +56,13 @@ public class LoginUI extends JFrame {
         setVisible(true);
     }
 
-    /** ตรวจสอบผู้ใช้ผ่าน LogicLogin แล้วเปิดหน้าตามบทบาท (ส่วนแสดง dialog อยู่ที่นี่) */
+    /**
+     * ตรวจสอบข้อมูลชื่อผู้ใช้และรหัสผ่านผ่าน LoginLogic และเปิดหน้าจอหลักตามบทบาทของผู้ใช้งาน
+     * 
+     * @param username ชื่อผู้ใช้งาน
+     * @param password รหัสผ่าน
+     * @return true หากเข้าสู่ระบบสำเร็จ, false หากไม่สำเร็จ
+     */
     private boolean login(String username, String password) {
         if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter Username and Password",
@@ -96,6 +117,12 @@ public class LoginUI extends JFrame {
         }
     }
 
+    /**
+     * สร้างอินสแตนซ์ของหน้าต่างหลักตามบทบาท (Role) ของผู้ใช้งาน
+     * 
+     * @param role บทบาทของผู้ใช้ เช่น ADMIN, TENANT หรือ GUEST
+     * @return JFrame หน้าต่างเป้าหมาย
+     */
     private JFrame createUIByRole(String role) {
         switch (LoginLogic.screenFor(role)) {
             case "ADMIN":  return new AdminUI();
@@ -104,10 +131,18 @@ public class LoginUI extends JFrame {
         }
     }
 
+    /**
+     * โหลดรูปภาพพื้นหลังสำหรับหน้าต่างเข้าสู่ระบบ
+     */
     private void loadBgImage() {
         bgImg = ImageLoader.load("img/content.png");
     }
 
+    /**
+     * สร้างการ์ดสไตล์กลาสมอร์ฟิซึม (Glassmorphism) ตรงกลางหน้าจอ พร้อมจัดวางฟอร์มเข้าสู่ระบบ
+     * 
+     * @return JPanel แผงการ์ดกระจก
+     */
     private JPanel createGlassCard() {
         JPanel card = new JPanel() {
             @Override
@@ -198,6 +233,11 @@ public class LoginUI extends JFrame {
         return card;
     }
 
+    /**
+     * สร้างโลโก้ตัวอักษร KU พร้อมพื้นหลังไล่ระดับสีและขอบมน
+     * 
+     * @return JPanel แผงโลโก้
+     */
     private JPanel createLogo() {
         JPanel logo = new JPanel() {
             @Override
@@ -223,6 +263,11 @@ public class LoginUI extends JFrame {
         return logo;
     }
 
+    /**
+     * สร้างข้อความหัวเรื่อง "Dormitory"
+     * 
+     * @return JPanel แผงหัวเรื่อง
+     */
     private JPanel createTitle() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         p.setOpaque(false);
@@ -235,6 +280,13 @@ public class LoginUI extends JFrame {
         return p;
     }
 
+    /**
+     * สร้างช่องกรอกข้อความหรือรหัสผ่านพร้อมข้อความแนะนำ (Placeholder) และการจัดการ Focus
+     * 
+     * @param ph ข้อความแนะนำในช่องกรอก
+     * @param isPass กำหนดว่าเป็นช่องรหัสผ่าน (JPasswordField) หรือไม่
+     * @return JTextField ช่องกรอกข้อความที่สร้างขึ้น
+     */
     private JTextField createField(String ph, boolean isPass) {
         final boolean[] focus = {false};
 
@@ -303,6 +355,12 @@ public class LoginUI extends JFrame {
         return f;
     }
 
+    /**
+     * สร้างปุ่มกดพร้อมการไล่ระดับสีและเอฟเฟกต์สีเมื่อชี้เมาส์
+     * 
+     * @param text ข้อความบนปุ่ม
+     * @return JButton ปุ่มที่สร้างขึ้น
+     */
     private JButton createButton(String text) {
         JButton btn = new JButton(text) {
             private boolean hovered = false;

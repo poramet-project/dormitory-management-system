@@ -5,11 +5,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Logic สำหรับจัดการห้องพัก (อ่าน/เพิ่ม/อัปเดต ข้อมูลเฉพาะไฟล์ rooms.csv เท่านั้น)
+ * AdminRoomLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของข้อมูลห้องพักสำหรับผู้ดูแล
+ * ให้บริการอ่านข้อมูลห้องพัก เพิ่มห้องพักใหม่ แก้ไขข้อมูลห้องพัก และอัปเดตสถานะห้องพักใน rooms.csv
  */
 public class AdminRoomLogic {
 
+    // ===== representation =====
+    // Abstraction Function:
+    // AF() คือ ตรรกะการจัดการข้อมูลห้องพักทั้งหมดที่บันทึกอยู่ในไฟล์ rooms.csv
+    // RI
+    // 1. rooms.csv ต้องมีข้อมูลคอลัมน์ roomId, roomNumber, roomType, baseRent, status อย่างครบถ้วน
+    // 2. ค่าเช่าห้องพัก (baseRent) ต้องเป็นจำนวนเต็มบวก
+
+    /**
+     * RoomModel คือคลาสสำหรับเก็บข้อมูลห้องพักที่ผ่านการจัดรูปแบบเพื่อแสดงผลบนตาราง
+     * id คือ รหัสห้องพัก (เช่น R101)
+     * number คือ หมายเลขห้องพัก (เช่น ห้อง 101)
+     * floor คือ ชั้นที่ตั้งของห้องพัก (เช่น ชั้น 1)
+     * type คือ ประเภทห้องพักภาษาไทย (ห้องแอร์, ห้องพัดลม)
+     * rent คือ อัตราค่าเช่าพร้อมจัดรูปแบบตัวเลข (เช่น 2,800)
+     * statusThai คือ สถานะห้องพักภาษาไทย (ห้องว่าง, มีผู้เช่า, ปิดปรับปรุง)
+     * statusRaw คือ สถานะห้องพักภาษาอังกฤษตามฐานข้อมูล (AVAILABLE, OCCUPIED, ฯลฯ)
+     */
     public static class RoomModel {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, number, floor, type, rent, statusThai, statusRaw) คือ ข้อมูลจำลองของห้องพัก 1 ห้อง
+        // RI
+        // 1. id, number, floor, type, statusThai, statusRaw ต้องไม่เป็น null
+        // 2. statusThai ต้องสอดคล้องกับ statusRaw
+
         public final String id;
         public final String number;
         public final String floor;
@@ -18,6 +44,11 @@ public class AdminRoomLogic {
         public final String statusThai;
         public final String statusRaw;
 
+        /**
+         * คอนสตรักเตอร์สำหรับสร้าง RoomModel จากอ็อบเจกต์ DataStore.Room
+         *
+         * @param r อ็อบเจกต์ Room ข้อมูลห้องพักจาก DataStore
+         */
         public RoomModel(DataStore.Room r) {
             this.id = r.id;
             this.number = "ห้อง " + r.number;
@@ -36,7 +67,11 @@ public class AdminRoomLogic {
         }
     }
 
-    /** ดึงรายการห้องพักทั้งหมดจาก rooms.csv แปลงเป็น Model สำหรับแสดงตาราง */
+    /**
+     * ดึงรายการห้องพักทั้งหมดจาก rooms.csv แปลงเป็น RoomModel สำหรับนำไปแสดงผลบนตาราง
+     *
+     * @return รายการ List ของ RoomModel ทั้งหมด
+     */
     public static List<RoomModel> getAllRooms() {
         List<RoomModel> list = new ArrayList<>();
         for (DataStore.Room r : DataStore.rooms()) {
@@ -46,7 +81,17 @@ public class AdminRoomLogic {
     }
 
     /**
-     * บันทึกหรืออัปเดตข้อมูลห้องพักในไฟล์ rooms.csv
+     * บันทึกข้อมูลห้องพักใหม่ หรืออัปเดตข้อมูลห้องพักเดิมลงในไฟล์ rooms.csv
+     * พร้อมตรวจสอบเงื่อนไขความถูกต้อง (ห้ามเลขห้องซ้ำ, ห้ามเปลี่ยนสถานะเป็นว่างหากยังมีสัญญา ACTIVE)
+     *
+     * @param roomId รหัสห้องพัก (หากเป็นค่าว่างจะถือว่าเป็นการเพิ่มห้องใหม่)
+     * @param roomNumber หมายเลขห้องพัก
+     * @param roomType ประเภทห้องพัก (แอร์ หรือ พัดลม)
+     * @param rent อัตราค่าเช่าต่อเดือน
+     * @param status สถานะห้องพัก (ห้องว่าง, มีผู้เช่า, ปิดปรับปรุง)
+     * @return true หากบันทึกข้อมูลสำเร็จ
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านหรือเขียนไฟล์
+     * @throws IllegalStateException หากข้อมูลไม่ผ่านเงื่อนไขความถูกต้องของระบบ
      */
     public static boolean saveOrUpdateRoom(String roomId, String roomNumber, String roomType, int rent, String status) throws IOException {
         String typeVal = roomType.contains("แอร์") ? "Air" : "Fan";

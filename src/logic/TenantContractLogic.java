@@ -2,12 +2,30 @@ package logic;
 
 
 
-/** Logic ของหน้าสัญญาเช่า (ไม่มี Swing) */
+/**
+ * TenantContractLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของข้อมูลสัญญาเช่าฝั่งผู้เช่า
+ * user คือ ข้อมูลผู้เช่าปัจจุบันที่กำลังเข้าสู่ระบบ
+ * contract คือ สัญญาเช่าที่ผูกกับผู้เช่าปัจจุบัน
+ * room คือ ข้อมูลห้องพักที่ระบุตามสัญญาเช่า
+ */
 public class TenantContractLogic {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(user, contract, room) คือ ตัวแทนตรรกะสำหรับแสดงข้อมูลสรุปสัญญาเช่าและเงื่อนไขข้อตกลงแก่ผู้เช่า
+    // RI
+    // 1. user ต้องไม่เป็น null เพื่อระบุตัวตนของผู้เช่าในการดึงสัญญา
+    // 2. หากมี contract ข้อมูล roomId ในสัญญาต้องสอดคล้องกับห้องพักในระบบ
+
     private final LoginLogic.User user;
     private final DataStore.Contract contract;
     private final DataStore.Room room;
 
+    /**
+     * คอนสตรักเตอร์สำหรับสร้างตรรกะข้อมูลสัญญาเช่าของผู้เช่า
+     * 
+     * @param user ข้อมูลผู้เช่าที่กำลังเข้าสู่ระบบ
+     */
     public TenantContractLogic(LoginLogic.User user) {
         this.user = user;
         this.contract = DataStore.contractFor(user);
@@ -15,7 +33,11 @@ public class TenantContractLogic {
         this.room = DataStore.room(roomId);
     }
 
-    /** คืนค่าแถบสรุปสัญญา เป็นคู่ {หัวข้อ, ค่า} */
+    /**
+     * คืนค่าข้อมูลสรุปสาระสำคัญของสัญญาเช่า ในรูปแบบตารางคู่ {หัวข้อ, ค่า}
+     * 
+     * @return อาร์เรย์ 2 มิติของคู่หัวข้อและค่าสรุปสัญญา เช่น เลขที่สัญญา สถานะ วันเริ่มต้น วันสิ้นสุด
+     */
     public String[][] summaryCells() {
         if (contract != null) {
             return new String[][]{
@@ -33,6 +55,11 @@ public class TenantContractLogic {
         };
     }
 
+    /**
+     * สร้างข้อความรายละเอียดสัญญาเช่าและข้อตกลงระเบียบหอพักแบบเต็ม
+     * 
+     * @return ข้อความรายละเอียดสัญญาเช่าและข้อตกลงหอพัก
+     */
     public String buildTerms() {
         String name = (user == null) ? "-" : TenantLogic.orDefault(user.fullName, "-");
         String phone = (user == null) ? "-" : TenantLogic.orDefault(user.phone, "-");

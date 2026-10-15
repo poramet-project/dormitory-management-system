@@ -9,14 +9,40 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
+/**
+ * GuestRoomUI คือคลาสหน้าจอแสดงรายละเอียดของห้องพักที่เลือกและฟอร์มยื่นคำขอจองห้องพัก
+ * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการข้อมูลห้องพักและการจองห้องพัก
+ * mainUI คือ อ็อบเจกต์หน้าต่างหลัก GuestUI สำหรับการสลับมุมมองหน้าจอกลับ
+ */
 public class GuestRoomUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(logic, mainUI) คือ หน้าจอแสดงรายละเอียดห้องพัก อัตราค่าเช่า สิ่งอำนวยความสะดวก และปุ่มจองห้องพัก
+    // RI
+    // 1. logic ต้องไม่เป็น null
+
     private final GuestRoomLogic logic;
     private final GuestUI mainUI;
 
+    /**
+     * คอนสตรัคเตอร์เริ่มต้นสำหรับสร้างหน้าจอแสดงรายละเอียดห้องพัก (ใช้ห้อง 101 เป็นค่าเริ่มต้น)
+     * 
+     * @param mainUI หน้าต่างหลัก GuestUI
+     */
     public GuestRoomUI(GuestUI mainUI) {
         this(mainUI, "ห้อง 101", "ห้องพัดลม", "2,800", "ว่าง");
     }
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าจอแสดงรายละเอียดห้องพักตามข้อมูลห้องที่ระบุ
+     * 
+     * @param mainUI หน้าต่างหลัก GuestUI
+     * @param roomName ชื่อหรือหมายเลขห้องพัก
+     * @param roomType ประเภทห้องพัก
+     * @param roomPrice อัตราค่าเช่า
+     * @param roomStatus สถานะความพร้อมของห้องพัก
+     */
     public GuestRoomUI(GuestUI mainUI, String roomName, String roomType, String roomPrice, String roomStatus) {
         this.mainUI = mainUI;
         this.logic = new GuestRoomLogic(roomName, roomType, roomPrice, roomStatus);
@@ -139,7 +165,11 @@ public class GuestRoomUI extends JPanel {
             btnBook.setForeground(new Color(133, 77, 14));
         } else if (!logic.isAvailable()) {
             btnBook.setEnabled(false);
-            btnBook.setText("ห้องนี้ไม่ว่าง");
+            if (logic.getRoomStatus() != null && logic.getRoomStatus().contains("ปรับปรุง")) {
+                btnBook.setText("ห้องนี้ปิดปรับปรุง (ไม่สามารถจองได้)");
+            } else {
+                btnBook.setText("ห้องนี้ไม่ว่าง");
+            }
             btnBook.setBackground(new Color(203, 213, 225));
             btnBook.setForeground(new Color(100, 116, 139));
         }
@@ -198,10 +228,26 @@ public class GuestRoomUI extends JPanel {
         add(btnBook);
     }
 
-    // 🟢 Component รูปภาพพร้อมการแสดงกรอบว่างแบบครอบคลุม
+    /**
+     * RoomImage คือคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักขนาดใหญ่ในหน้ารายละเอียด
+     * photo คือ อ็อบเจกต์รูปภาพห้องพักที่โหลดมาแสดงผล
+     */
     static class RoomImage extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(photo) คือ พาเนลแสดงรูปภาพห้องพัก หรือแสดงกรอบว่างพร้อมสัญลักษณ์เมื่อไม่มีภาพ
+        // RI
+        // - photo อาจเป็น null ได้หากไม่มีไฟล์รูปภาพ
+
         private final Image photo;
 
+        /**
+         * สร้างคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักตามขนาดที่กำหนด
+         * 
+         * @param paths รายการพาธของไฟล์รูปภาพที่ต้องการค้นหาและโหลด
+         * @param width ความกว้าง
+         * @param height ความสูง
+         */
         RoomImage(String[] paths, int width, int height) {
             this.photo = ImageLoader.load(paths);
             setOpaque(false);
@@ -209,6 +255,11 @@ public class GuestRoomUI extends JPanel {
             setSize(width, height);
         }
 
+        /**
+         * วาดรูปภาพห้องพักขอบโค้งมน หรือวาดไอคอนรูปกล้องและข้อความแจ้งเตือนเมื่อไม่มีภาพ
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);

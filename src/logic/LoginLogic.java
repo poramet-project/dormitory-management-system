@@ -8,12 +8,53 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Logic การล็อกอิน (ตรวจสอบผู้ใช้จาก users.csv และเก็บผู้ใช้ปัจจุบัน) ไม่มี Swing */
+/**
+ * LoginLogic คือคลาสสำหรับจัดการระบบยืนยันตัวตนและการเข้าสู่ระบบ (Authentication) ของผู้ใช้
+ * currentUser คือ บัญชีผู้ใช้งานที่กำลังเข้าสู่ระบบอยู่ในปัจจุบัน (Session)
+ * HEADER คือ ส่วนหัวคอลัมน์ของไฟล์ users.csv
+ * CSV_PATHS คือ รายการพาธไฟล์ users.csv ที่เป็นไปได้
+ */
 public class LoginLogic {
 
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(currentUser) คือ ระบบจัดการ Session และยืนยันตัวตนของผู้ใช้กับไฟล์ users.csv
+    // RI
+    // 1. CSV_PATHS ต้องไม่เป็น null และมีขนาดอย่างน้อย 1 รายการ
+    // 2. หาก currentUser ไม่เป็น null ต้องมี username และ role ระบุอยู่
+
+    /**
+     * User คือคลาสสำหรับเก็บข้อมูลของผู้ใช้งานในระบบ
+     * userId คือ รหัสประจำตัวผู้ใช้ (เช่น U001)
+     * username คือ ชื่อบัญชีผู้ใช้สำหรับเข้าสู่ระบบ
+     * password คือ รหัสผ่าน
+     * fullName คือ ชื่อและนามสกุลจริง
+     * phone คือ หมายเลขโทรศัพท์
+     * role คือ บทบาทหน้าที่ในระบบ ("ADMIN", "TENANT", "GUEST")
+     * roomId คือ รหัสห้องพักที่ผูกกับผู้ใช้ (หรือ "-" หากไม่มีห้องพัก)
+     */
     public static class User {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(userId, username, password, fullName, phone, role, roomId) คือ บัญชีข้อมูลผู้ใช้งาน 1 คนในระบบ
+        // RI
+        // 1. username, password, fullName, role ต้องไม่เป็น null
+        // 2. role ต้องเป็น ADMIN, TENANT, หรือ GUEST
+
         public final String userId, username, password, fullName, phone, role, roomId;
 
+        /**
+         * คอนสตรักเตอร์สำหรับสร้างข้อมูลผู้ใช้ (แบบระบุ userId)
+         * 
+         * @param userId รหัสประจำตัวผู้ใช้
+         * @param username ชื่อบัญชีผู้ใช้
+         * @param password รหัสผ่าน
+         * @param fullName ชื่อและนามสกุลจริง
+         * @param phone หมายเลขโทรศัพท์
+         * @param role บทบาทในระบบ
+         * @param roomId รหัสห้องพักที่ผูกกับผู้ใช้
+         */
         public User(String userId, String username, String password, String fullName,
                     String phone, String role, String roomId) {
             this.userId = userId;
@@ -25,7 +66,16 @@ public class LoginLogic {
             this.roomId = roomId;
         }
 
-        // คอนสตรัคเตอร์เดิม (6 พารามิเตอร์) เพื่อให้โค้ดเก่า เช่น TenantUI fallback ยังคอมไพล์ได้
+        /**
+         * คอนสตรัคเตอร์สำหรับสร้างข้อมูลผู้ใช้ (แบบ 6 พารามิเตอร์ดั้งเดิม)
+         * 
+         * @param username ชื่อบัญชีผู้ใช้
+         * @param password รหัสผ่าน
+         * @param fullName ชื่อและนามสกุลจริง
+         * @param phone หมายเลขโทรศัพท์
+         * @param role บทบาทในระบบ
+         * @param roomId รหัสห้องพักที่ผูกกับผู้ใช้
+         */
         public User(String username, String password, String fullName,
                     String phone, String role, String roomId) {
             this("", username, password, fullName, phone, role, roomId);
@@ -34,8 +84,23 @@ public class LoginLogic {
 
     private static User currentUser;
 
+    /**
+     * ดึงข้อมูลผู้ใช้งานที่กำลังเข้าสู่ระบบอยู่ในปัจจุบัน (Session)
+     * 
+     * @return ออบเจ็กต์ User หรือ null หากยังไม่ได้เข้าสู่ระบบ
+     */
     public static User getCurrentUser() { return currentUser; }
+
+    /**
+     * กำหนดข้อมูลผู้ใช้งานที่กำลังเข้าสู่ระบบในปัจจุบัน
+     * 
+     * @param user ออบเจ็กต์ User ที่เข้าสู่ระบบ
+     */
     public static void setCurrentUser(User user) { currentUser = user; }
+
+    /**
+     * ดำเนินการออกจากระบบ โดยล้างข้อมูล Session ของผู้ใช้ปัจจุบัน
+     */
     public static void logout()         { currentUser = null; }
 
     private static final String HEADER = "userId,username,password,fullName,phone,role,roomId";
@@ -44,13 +109,24 @@ public class LoginLogic {
             "users.csv", "src/users.csv", "data/users.csv", "src/data/users.csv", "DMS/src/data/users.csv"
     };
 
-    /** "-" หรือค่าว่าง ถือว่าไม่มีห้อง (คืนค่าเป็น "" เพื่อให้ UI เช็ค isEmpty() ได้) */
+    /**
+     * จัดการแปลงรหัสห้องพักให้เป็นรูปแบบมาตรฐาน (ค่าว่างหรือ "-" จะแปลงเป็น "")
+     * 
+     * @param room สตริงรหัสห้องพัก
+     * @return รหัสห้องที่ผ่านการแปลง
+     */
     private static String normalizeRoom(String room) {
         if (room == null) return "";
         room = room.trim();
         return room.equals("-") ? "" : room;
     }
 
+    /**
+     * โหลดรายชื่อผู้ใช้งานทั้งหมดจากไฟล์ users.csv
+     * 
+     * @return รายการออบเจ็กต์ User ทั้งหมด
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านไฟล์
+     */
     private static List<User> loadUsers() throws IOException {
         Path path = null;
         for (String p : CSV_PATHS) {
@@ -92,6 +168,14 @@ public class LoginLogic {
         return users;
     }
 
+    /**
+     * ตรวจสอบและยืนยันตัวตนของผู้ใช้งานด้วยชื่อบัญชีและรหัสผ่าน
+     * 
+     * @param username ชื่อบัญชีผู้ใช้
+     * @param password รหัสผ่าน
+     * @return ออบเจ็กต์ User หากข้อมูลถูกต้อง หรือ null หากไม่ถูกต้อง
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านไฟล์ข้อมูล
+     */
     public static User authenticate(String username, String password) throws IOException {
         for (User u : loadUsers()) {
             if (u.username.equalsIgnoreCase(username) && u.password.equals(password)) {
@@ -102,8 +186,11 @@ public class LoginLogic {
     }
 
     /**
-     * หลังจองห้องสำเร็จ: อัปเดตแถวของผู้ใช้ใน users.csv ให้เป็น TENANT พร้อมเลขห้อง
-     * และอัปเดตผู้ใช้ปัจจุบันในหน่วยความจำด้วย
+     * มอบหมายห้องพักให้ผู้ใช้ ปรับบทบาทเป็น TENANT และอัปเดตไฟล์ users.csv พร้อม Session
+     * 
+     * @param userId รหัสประจำตัวผู้ใช้
+     * @param roomId รหัสห้องพักที่มอบหมาย
+     * @return true หากบันทึกสำเร็จ
      */
     public static synchronized boolean assignRoom(String userId, String roomId) {
         try {
@@ -160,7 +247,12 @@ public class LoginLogic {
         }
     }
 
-    /** หาผู้ใช้จาก userId (หรือ username กรณีไฟล์รูปแบบเก่า) คืน null ถ้าไม่พบ */
+    /**
+     * ค้นหาข้อมูลผู้ใช้งานจาก userId หรือ username
+     * 
+     * @param idOrUsername รหัสประจำตัวผู้ใช้หรือชื่อบัญชี
+     * @return ออบเจ็กต์ User ที่พบ หรือ null หากไม่พบ
+     */
     public static User findUser(String idOrUsername) {
         if (idOrUsername == null) return null;
         try {
@@ -173,7 +265,12 @@ public class LoginLogic {
         return null;
     }
 
-    /** แปลง role เป็นหน้าจอที่ต้องเปิด: "ADMIN", "TENANT" หรือ "GUEST" (APPLICANT/GUEST/อื่น ๆ) */
+    /**
+     * แปลงบทบาท (role) เป็นชื่อหน้าจอหลักที่ต้องเปิดแสดงผล ("ADMIN", "TENANT" หรือ "GUEST")
+     * 
+     * @param role ชื่อบทบาท เช่น "ADMIN", "TENANT", "GUEST", "APPLICANT"
+     * @return ชื่อหน้าจอเป้าหมาย
+     */
     public static String screenFor(String role) {
         switch (role) {
             case "ADMIN":     return "ADMIN";

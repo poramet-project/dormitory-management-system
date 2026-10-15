@@ -4,14 +4,59 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 /**
- * 
- * AdminBookingLogic
+ * AdminBookingLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของคำขอจองห้องพักในระบบของผู้ดูแล
+ * ให้บริการดึงข้อมูลคำขอจองทั้งหมด อนุมัติการจอง และปฏิเสธการจอง
  */
 public class AdminBookingLogic {
 
+    // ===== representation =====
+    // Abstraction Function:
+    // AF() คือ ตัวแทนชุดคำสั่งสำหรับจัดการคำขอจองห้องพักที่บันทึกอยู่ใน DataStore.BOOKINGS_FILE
+    // RI
+    // 1. ตารางไฟล์การจอง DataStore.BOOKINGS_FILE ต้องมีอยู่จริงในระบบ
+    // 2. การอนุมัติหรือปฏิเสธคำขอต้องระบุ bookingId ที่ถูกต้องและมีอยู่ในระบบ
+
+    /**
+     * BookingModel คือคลาสสำหรับเก็บข้อมูลคำขอจองห้องพักแต่ละรายการ
+     * id คือ รหัสคำขอจอง (เช่น BK001)
+     * userId คือ รหัสผู้ใช้งานที่ทำการจอง
+     * name คือ ชื่อ-นามสกุลของผู้ยื่นคำขอ
+     * phone คือ หมายเลขโทรศัพท์ติดต่อ
+     * roomId คือ รหัสห้องพักที่ขอจอง
+     * roomNumber คือ หมายเลขห้องพัก
+     * date คือ วันที่ยื่นคำขอจอง
+     * status คือ สถานะคำขอ (รอพิจารณา, อนุมัติ, ปฏิเสธ)
+     * type คือ ประเภทคำขอ
+     * detail คือ รายละเอียดคำขอ
+     * roomDetail คือ รายละเอียดข้อมูลห้องพักและค่าเช่า
+     */
     public static class BookingModel {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, userId, name, phone, roomId, roomNumber, date, status, type, detail, roomDetail) คือ
+        // ข้อมูลจำลองของคำขอจองห้องพัก 1 รายการในหอพัก
+        // RI
+        // 1. id, name, roomId, status ต้องไม่เป็น null
+        // 2. phone ต้องไม่เป็น null
+        // 3. status ต้องเป็นค่าสถานะที่ถูกต้อง ("รอพิจารณา", "อนุมัติ", "ปฏิเสธ")
+
         public String id, userId, name, phone, roomId, roomNumber, date, status, type, detail, roomDetail;
 
+        /**
+         * คอนสตรักเตอร์สำหรับกำหนดค่าเริ่มต้นของข้อมูลคำขอจองห้องพัก
+         *
+         * @param id รหัสคำขอจอง
+         * @param userId รหัสผู้ใช้งานที่ทำการจอง
+         * @param name ชื่อ-นามสกุลของผู้ยื่นคำขอ
+         * @param phone หมายเลขโทรศัพท์ติดต่อ
+         * @param roomId รหัสห้องพักที่ขอจอง
+         * @param roomNumber หมายเลขห้องพัก
+         * @param date วันที่ยื่นคำขอจอง
+         * @param status สถานะคำขอจอง (เช่น รอพิจารณา, อนุมัติ, ปฏิเสธ)
+         * @param type ประเภทของคำขอ
+         * @param detail รายละเอียดคำขอ
+         */
         public BookingModel(String id, String userId, String name, String phone, String roomId, String roomNumber, String date, String status, String type, String detail) {
             this.id = id;
             this.userId = userId;
@@ -27,6 +72,13 @@ public class AdminBookingLogic {
         }
     }
 
+    /**
+     * ดึงข้อมูลคำขอจองห้องพักทั้งหมดจากไฟล์ bookings.csv
+     * ทำการเชื่อมโยงข้อมูลกับห้องพัก (rooms.csv) และผู้ใช้งาน (users.csv)
+     * เพื่อแปลงสถานะและวันที่ให้อยู่ในรูปแบบภาษาไทยพร้อมนำไปแสดงผล
+     *
+     * @return รายการ (List) ของ BookingModel ที่มีข้อมูลคำขอจองครบถ้วน
+     */
     public List<BookingModel> getAllBookings() {
         List<BookingModel> list = new ArrayList<>();
         List<Map<String, String>> rows = DataStore.readTable(DataStore.BOOKINGS_FILE);
@@ -60,6 +112,13 @@ public class AdminBookingLogic {
         return list;
     }
 
+    /**
+     * แปลงรายการคำขอจองห้องพักให้อยู่ในรูปแบบ Object[][]
+     * เพื่อนำไปใช้เป็นข้อมูลตารางสำหรับ JTable และ DefaultTableModel
+     * โดยมี 5 คอลัมน์ ได้แก่ เลขคำขอ, ชื่อผู้ยื่น, ห้อง, วันที่ยื่น, สถานะ
+     *
+     * @return อาร์เรย์ 2 มิติของข้อมูลสำหรับแสดงผลในตาราง
+     */
     public Object[][] getTableRows() {
         List<BookingModel> list = getAllBookings();
         Object[][] rows = new Object[list.size()][5];
@@ -71,7 +130,16 @@ public class AdminBookingLogic {
     }
 
     /**
-     * อนุมัติการจอง + บังคับอัปเดตบทบาทใน users.csv เป็น TENANT + เขียนสัญญา (ประกัน x 2)
+     * ดำเนินการอนุมัติคำขอจองห้องพักตาม bookingId
+     * ทำหน้าที่:
+     * 1. ตรวจสอบและค้นหา userId ของผู้ยื่นคำขอ
+     * 2. อัปเดตสถานะคำขอใน bookings.csv เป็น APPROVED
+     * 3. สร้างสัญญาเช่าใหม่ใน contracts.csv โดยคิดเงินประกัน 2 เท่าของค่าห้อง
+     * 4. ปรับปรุงสถานะห้องพักใน rooms.csv เป็น OCCUPIED (มีผู้เช่า)
+     * 5. ปรับบทบาทผู้ใช้งานใน users.csv เป็น TENANT พร้อมบันทึก roomId
+     *
+     * @param bookingId รหัสคำขอจองห้องพักที่ต้องการอนุมัติ
+     * @return true หากทำการอนุมัติสำเร็จ, false หากไม่พบคำขอจอง
      */
     public boolean approveBooking(String bookingId) {
         for (Map<String, String> m : DataStore.readTable(DataStore.BOOKINGS_FILE)) {
@@ -130,6 +198,13 @@ public class AdminBookingLogic {
         return false;
     }
 
+    /**
+     * ดำเนินการปฏิเสธคำขอจองห้องพักตาม bookingId
+     * ทำหน้าที่อัปเดตสถานะของคำขอใน bookings.csv เป็น REJECTED
+     *
+     * @param bookingId รหัสคำขอจองห้องพักที่ต้องการปฏิเสธ
+     * @return true หากทำการปฏิเสธและอัปเดตไฟล์สำเร็จ, false หากเกิดข้อผิดพลาดหรือไม่พบข้อมูล
+     */
     public boolean rejectBooking(String bookingId) {
         return DataStore.updateCell(DataStore.BOOKINGS_FILE, "bookingId", bookingId, "status", "REJECTED");
     }

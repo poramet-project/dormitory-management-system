@@ -11,7 +11,28 @@ import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AdminUI คือคลาสหน้าต่างหลัก (Main Window) สำหรับส่วนของผู้ดูแลระบบหอพัก
+ * cardLayout คือ ตัวจัดการเลย์เอาต์แบบ CardLayout สำหรับสลับการแสดงผลหน้าย่อย
+ * centerCardsPanel คือ พาเนลหลักสำหรับบรรจุหน้าย่อยต่าง ๆ ของระบบ
+ * headerTitleLabel คือ ป้ายแสดงชื่อเรื่องของหน้าปัจจุบันที่กำลังเปิดใช้งาน
+ * menuItems คือ รายการปุ่มเมนูแถบด้านข้างสำหรับเลือกเปลี่ยนหน้า
+ * dashboardPanel คือ พาเนลหน้าแดชบอร์ดสรุปภาพรวม
+ * roomUI คือ พาเนลจัดการข้อมูลห้องพัก
+ * tenantUI คือ พาเนลจัดการทะเบียนผู้เช่าและสัญญาเช่า
+ * bookingUI คือ พาเนลพิจารณาคำขอจองห้องพัก
+ * roomChangeUI คือ พาเนลพิจารณาคำขอย้ายห้องพัก
+ * reportUI คือ พาเนลจัดการคำร้องเรียนและงานแจ้งซ่อม
+ */
 public class AdminUI extends JFrame {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(cardLayout, centerCardsPanel, headerTitleLabel, menuItems, dashboardPanel, roomUI, tenantUI, bookingUI, roomChangeUI, reportUI)
+    // คือ หน้าต่างหลักของผู้ดูแลระบบที่รวบรวมเมนูและหน้าการทำงานย่อยทั้งหมดของระบบหอพัก
+    // RI
+    // 1. centerCardsPanel และ cardLayout ต้องไม่เป็น null
+    // 2. menuItems ต้องไม่เป็น null
 
     static final Color PRIMARY     = new Color(15, 118, 110);
     static final Color PRIMARY_BG  = new Color(204, 251, 241);
@@ -53,6 +74,10 @@ public class AdminUI extends JFrame {
             "จัดการคำร้องเรียนและงานแจ้งซ่อม"
     };
 
+    /**
+     * คอนสตรัคเตอร์สำหรับสร้างหน้าต่างหลักของผู้ดูแลระบบหอพัก
+     * กำหนดการตั้งค่าเฟรม แถบเมนูด้านข้าง แถบส่วนหัวด้านบน และแผง CardLayout สำหรับบรรจุหน้าย่อย
+     */
     public AdminUI() {
         setTitle("KU Dormitory - แผงควบคุมผู้ดูแล");
         setSize(1100, 700);
@@ -99,7 +124,9 @@ public class AdminUI extends JFrame {
     }
 
     /**
-     * สลับหน้า และรีเฟรชข้อมูลของหน้านั้น ๆ อัตโนมัติโดยไม่ต้องเปิดโปรแกรมใหม่
+     * สลับหน้าจอการทำงานไปยังหน้าย่อยที่ระบุตามดัชนี พร้อมสั่งรีเฟรชข้อมูลล่าสุดของหน้านั้น
+     * 
+     * @param index ดัชนีของหน้าย่อยที่ต้องการเปิด (0 ถึง 5)
      */
     public void showPage(int index) {
         cardLayout.show(centerCardsPanel, PAGE_KEYS[index]);
@@ -138,6 +165,11 @@ public class AdminUI extends JFrame {
         }
     }
 
+    /**
+     * สร้างแถบเมนูด้านข้าง (Sidebar) ประกอบด้วยโลโก้ รายการเมนูหลัก และปุ่มออกจากระบบ
+     * 
+     * @return JPanel แถบด้านข้าง
+     */
     private JPanel buildSidebar() {
         JPanel side = new JPanel(null);
         side.setBackground(WHITE);
@@ -184,6 +216,11 @@ public class AdminUI extends JFrame {
         return side;
     }
 
+    /**
+     * สร้างและรวบรวมคอมโพเนนต์สำหรับหน้าแผงควบคุมหลัก (Dashboard)
+     * 
+     * @return JPanel แผงควบคุมแดชบอร์ด
+     */
     private JPanel buildDashboardContent() {
         JPanel p = new JPanel(null);
         p.setOpaque(false);
@@ -193,6 +230,13 @@ public class AdminUI extends JFrame {
         return p;
     }
 
+    /**
+     * สร้างแถบเมนูด้านข้างพื้นฐาน
+     * 
+     * @param frame หน้าต่างหลัก
+     * @param activeIndex ลำดับเมนูที่เปิดอยู่
+     * @return JPanel แถบด้านข้าง
+     */
     public static JPanel createSidebar(JFrame frame, int activeIndex) {
         JPanel side = new JPanel(null);
         side.setBackground(WHITE);
@@ -201,6 +245,12 @@ public class AdminUI extends JFrame {
         return side;
     }
 
+    /**
+     * สร้างแถบส่วนหัวด้านบน (Header Bar) แสดงชื่อหน้าและข้อมูลโปรไฟล์ผู้ดูแลระบบ
+     * 
+     * @param pageTitle ชื่อเรื่องของหน้า
+     * @return JPanel แถบส่วนหัว
+     */
     public static JPanel createHeader(String pageTitle) {
         JPanel header = new JPanel(null);
         header.setBackground(WHITE);
@@ -227,6 +277,11 @@ public class AdminUI extends JFrame {
         return header;
     }
 
+    /**
+     * สร้างการ์ดแสดงข้อมูลสรุปตัวเลขสถิติ 4 ใบ (ห้องพักทั้งหมด, ห้องว่าง, ห้องเต็ม, คำขอรอพิจารณา)
+     * 
+     * @param root พาเนลสำหรับเพิ่มการ์ดสถิติ
+     */
     private void createStatCards(JPanel root) {
         int x = 20, y = 18, w = 202, h = 88, gap = 16;
         int total = AdminLogic.getTotalRooms();
@@ -234,13 +289,46 @@ public class AdminUI extends JFrame {
         int occupied = AdminLogic.getOccupiedRoomsCount();
         int rate = AdminLogic.getOccupancyRate();
         int pending = AdminLogic.getPendingRequestsCount();
+        int tenants = AdminLogic.getTenantCount();
 
         root.add(statCard("ห้องพักทั้งหมด", total + " ห้อง", TEXT, "ใช้งานอยู่ " + rate + "%", x, y, w, h));
         root.add(statCard("ห้องว่างปัจจุบัน", avail + " ห้อง", GREEN, "พร้อมให้เช่า", x + (w + gap), y, w, h));
-        root.add(statCard("ห้องเต็ม / มีผู้เช่า", occupied + " ห้อง", RED, "คิดเป็น " + rate + "% ของทั้งหมด", x + (w + gap) * 2, y, w, h));
-        root.add(statCard("คำขอรอพิจารณา", pending + " รายการ", PRIMARY, "ตรวจสอบรายการรอดำเนินการ", x + (w + gap) * 3, y, w, h));
+        root.add(statCard("ห้องเต็ม / มีผู้เช่า", occupied + " ห้อง", RED, "ผู้เข้าพักจริง " + tenants + " คน (" + rate + "%)", x + (w + gap) * 2, y, w, h));
+
+        JPanel pendingCard = statCard("คำขอรอพิจารณา", pending + " รายการ", PRIMARY, "ตรวจสอบรายการรอดำเนินการ", x + (w + gap) * 3, y, w, h);
+        pendingCard.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        pendingCard.setToolTipText("คลิกเพื่อดูคำขอจองห้อง");
+        pendingCard.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                showPage(3); // ไปหน้าพิจารณาคำขอจองห้อง
+            }
+            @Override public void mouseEntered(MouseEvent e) {
+                if (pendingCard instanceof RoundedPanel) {
+                    ((RoundedPanel) pendingCard).setBorderColor(PRIMARY);
+                }
+            }
+            @Override public void mouseExited(MouseEvent e) {
+                if (pendingCard instanceof RoundedPanel) {
+                    ((RoundedPanel) pendingCard).setBorderColor(BORDER);
+                }
+            }
+        });
+        root.add(pendingCard);
     }
 
+    /**
+     * สร้างการ์ดแสดงค่าสถิติใบเดียวพร้อมระบุสีและคำอธิบายย่อย
+     * 
+     * @param title หัวข้อสถิติ
+     * @param value ค่าตัวเลขหรือข้อความสถิติ
+     * @param valueColor สีของค่าตัวเลข
+     * @param sub คำอธิบายย่อย
+     * @param x ตำแหน่ง X
+     * @param y ตำแหน่ง Y
+     * @param w ความกว้าง
+     * @param h ความสูง
+     * @return JPanel การ์ดสถิติ
+     */
     private JPanel statCard(String title, String value, Color valueColor, String sub, int x, int y, int w, int h) {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
@@ -260,6 +348,11 @@ public class AdminUI extends JFrame {
         return card;
     }
 
+    /**
+     * สร้างการ์ดแสดงกราฟแท่งประวัติอัตราการเข้าพักรายเดือนย้อนหลัง
+     * 
+     * @return JPanel การ์ดกราฟสถิติ
+     */
     private JPanel createChartCard() {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
@@ -270,7 +363,9 @@ public class AdminUI extends JFrame {
         card.add(title);
 
         int total = AdminLogic.getTotalRooms();
-        JLabel sub = label("จำนวนห้องที่มีผู้เช่า (จากทั้งหมด " + total + " ห้อง)", Font.PLAIN, 10, TEXT_LIGHT);
+        int occupied = AdminLogic.getOccupiedRoomsCount();
+        int tenants = AdminLogic.getTenantCount();
+        JLabel sub = label("ผู้เข้าพักจริง " + tenants + " คน (" + occupied + " จากทั้งหมด " + total + " ห้อง)", Font.PLAIN, 10, TEXT_LIGHT);
         sub.setBounds(16, 34, 300, 14);
         card.add(sub);
 
@@ -278,15 +373,18 @@ public class AdminUI extends JFrame {
         badge.setLocation(520 - 16 - badge.getWidth(), 16);
         card.add(badge);
 
-        String[] months = {"พ.ย.", "ธ.ค.", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย."};
-        int occupied = AdminLogic.getOccupiedRoomsCount();
-        int[] values = {Math.max(0, occupied - 2), Math.max(0, occupied - 1), occupied, occupied, occupied, occupied};
-        BarChart chart = new BarChart(months, values, Math.max(10, total), " ห้อง");
+        AdminLogic.MonthlyOccupancy occ = AdminLogic.getMonthlyOccupancyHistory(6);
+        BarChart chart = new BarChart(occ.months, occ.counts, Math.max(10, total), " ห้อง");
         chart.setBounds(16, 60, 488, 178);
         card.add(chart);
         return card;
     }
 
+    /**
+     * สร้างการ์ดแสดงรายการคำร้องที่รอดำเนินการ (คำขอจอง, ย้ายห้อง, แจ้งซ่อม)
+     * 
+     * @return JPanel การ์ดรายการคำร้อง
+     */
     private JPanel createRequestCard() {
         RoundedPanel card = new RoundedPanel(WHITE, BORDER, 12);
         card.setLayout(null);
@@ -305,10 +403,12 @@ public class AdminUI extends JFrame {
         int displayLimit = Math.min(requests.size(), 5);
         for (int i = 0; i < displayLimit; i++) {
             AdminLogic.RequestItemModel req = requests.get(i);
-            Color tagBg = req.type.equals("repair") ? new Color(254, 243, 199) : PRIMARY_BG;
-            Color tagFg = req.type.equals("repair") ? new Color(180, 83, 9) : PRIMARY;
+            Color tagBg = req.type.equals("repair") ? new Color(254, 243, 199) :
+                          req.type.equals("booking") ? new Color(224, 231, 255) : PRIMARY_BG;
+            Color tagFg = req.type.equals("repair") ? new Color(180, 83, 9) :
+                          req.type.equals("booking") ? new Color(67, 56, 202) : PRIMARY;
 
-            card.add(requestItem(req.tag, tagBg, tagFg, req.room, req.desc, req.time, startY));
+            card.add(requestItem(req.tag, tagBg, tagFg, req.room, req.desc, req.time, startY, req.type));
             startY += 70;
         }
 
@@ -321,7 +421,20 @@ public class AdminUI extends JFrame {
         return card;
     }
 
-    private JPanel requestItem(String tag, Color tagBg, Color tagFg, String room, String desc, String time, int y) {
+    /**
+     * สร้างรายการแสดงคำร้องแต่ละรายการในการ์ดคำร้อง
+     * 
+     * @param tag ป้ายประเภทคำร้อง
+     * @param tagBg สีพื้นหลังป้าย
+     * @param tagFg สีตัวอักษรป้าย
+     * @param room หมายเลขห้อง
+     * @param desc คำอธิบายปัญหาหรือรายละเอียด
+     * @param time เวลาหรือวันที่
+     * @param y ตำแหน่งแกน Y
+     * @param type ประเภทคำร้อง (booking, move, repair)
+     * @return JPanel แผงรายการคำร้อง
+     */
+    private JPanel requestItem(String tag, Color tagBg, Color tagFg, String room, String desc, String time, int y, String type) {
         RoundedPanel item = new RoundedPanel(ITEM_BG, BORDER, 10);
         item.setLayout(null);
         item.setBounds(14, y, 292, 60);
@@ -347,14 +460,39 @@ public class AdminUI extends JFrame {
         item.addMouseListener(new MouseAdapter() {
             @Override public void mouseEntered(MouseEvent e) { item.setBorderColor(PRIMARY); }
             @Override public void mouseExited(MouseEvent e)  { item.setBorderColor(BORDER); }
+            @Override public void mouseClicked(MouseEvent e) {
+                if ("booking".equalsIgnoreCase(type)) {
+                    showPage(3);
+                } else if ("move".equalsIgnoreCase(type)) {
+                    showPage(4);
+                } else if ("repair".equalsIgnoreCase(type)) {
+                    showPage(5);
+                }
+            }
         });
         return item;
     }
 
+    /**
+     * สร้างแบบอักษร Font ตามรูปแบบและขนาดที่กำหนด
+     * 
+     * @param style รูปแบบฟอนต์ (Font.PLAIN, Font.BOLD)
+     * @param size ขนาดตัวอักษร
+     * @return Font อ็อบเจกต์ฟอนต์
+     */
     static Font font(int style, int size) {
         return new Font(FONT_NAME, style, size);
     }
 
+    /**
+     * สร้างป้ายข้อความ JLabel พร้อมกำหนดฟอนต์และสี
+     * 
+     * @param text ข้อความ
+     * @param style รูปแบบฟอนต์
+     * @param size ขนาดตัวอักษร
+     * @param color สีข้อความ
+     * @return JLabel ป้ายข้อความ
+     */
     static JLabel label(String text, int style, int size, Color color) {
         JLabel l = new JLabel(text);
         l.setFont(font(style, size));
@@ -362,6 +500,12 @@ public class AdminUI extends JFrame {
         return l;
     }
 
+    /**
+     * กำหนดการวาดภาพกราฟิกแบบลบรอยหยัก (Anti-aliasing) เพื่อความคมชัดและสวยงาม
+     * 
+     * @param g กราฟิกส์คอนเท็กซ์เดิม
+     * @return Graphics2D กราฟิกส์คอนเท็กซ์ที่เปิดใช้งาน Anti-aliasing แล้ว
+     */
     static Graphics2D smooth(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -375,6 +519,13 @@ public class AdminUI extends JFrame {
         private Color border;
         private final int radius;
 
+        /**
+         * สร้างแผงพาเนลขอบโค้งมน
+         * 
+         * @param bg สีพื้นหลัง
+         * @param border สีเส้นขอบ (null หากไม่ต้องการเส้นขอบ)
+         * @param radius รัศมีความโค้งมนของมุม
+         */
         RoundedPanel(Color bg, Color border, int radius) {
             this.bg = bg;
             this.border = border;
@@ -382,8 +533,18 @@ public class AdminUI extends JFrame {
             setOpaque(false);
         }
 
+        /**
+         * เปลี่ยนสีเส้นขอบของแผงพาเนลและวาดใหม่
+         * 
+         * @param c สีเส้นขอบใหม่
+         */
         void setBorderColor(Color c) { border = c; repaint(); }
 
+        /**
+         * วาดพื้นหลังและขอบโค้งมนตามรัศมีที่ระบุ
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
@@ -398,18 +559,42 @@ public class AdminUI extends JFrame {
         }
     }
 
+    /**
+     * Badge คือคอมโพเนนต์ป้ายข้อความขนาดเล็กพร้อมพื้นหลังโค้งมน
+     * bg คือ สีพื้นหลังของป้าย
+     */
     static class Badge extends JLabel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(bg) คือ ป้ายกำกับสถานะพร้อมสีพื้นหลังที่กำหนด
+        // RI
+        // 1. bg ต้องไม่เป็น null
+
         private final Color bg;
 
+        /**
+         * สร้างป้ายข้อความ Badge ขนาดกะทัดรัด
+         * 
+         * @param text ข้อความบนป้าย
+         * @param bg สีพื้นหลัง
+         * @param fg สีตัวอักษร
+         */
         Badge(String text, Color bg, Color fg) {
             super(text, SwingConstants.CENTER);
             this.bg = bg;
             setFont(font(Font.BOLD, 10));
             setForeground(fg);
             FontMetrics fm = getFontMetrics(getFont());
-            setSize(fm.stringWidth(text) + 16, 20);
+            int w = fm.stringWidth(text) + 16;
+            setSize(w, 20);
+            setPreferredSize(new Dimension(w, 20));
         }
 
+        /**
+         * วาดพื้นหลังขอบมนของป้าย Badge
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
@@ -420,9 +605,26 @@ public class AdminUI extends JFrame {
         }
     }
 
+    /**
+     * AvatarPanel คือคอมโพเนนต์แสดงรูปโปรไฟล์ผู้ดูแลระบบแบบวงกลม
+     */
     static class AvatarPanel extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์กราฟิกแสดงสัญลักษณ์อวตารผู้ใช้งาน
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * สร้างคอมโพเนนต์ไอคอนอวตารแบบโปร่งใส
+         */
         AvatarPanel() { setOpaque(false); }
 
+        /**
+         * วาดรูปสัญลักษณ์บุคคลในวงกลม
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
@@ -440,12 +642,33 @@ public class AdminUI extends JFrame {
         }
     }
 
+    /**
+     * MenuItem คือคอมโพเนนต์ปุ่มเมนูแถบด้านข้างสำหรับเลือกเปลี่ยนหน้าการทำงาน
+     * text คือ ข้อความชื่อเมนู
+     * iconType คือ รหัสประเภทไอคอนของเมนู
+     * active คือ สถานะว่าเมนูนี้กำลังถูกเลือกใช้งานอยู่หรือไม่
+     * hover คือ สถานะว่าเมาส์กำลังชี้อยู่เหนือปุ่มเมนูหรือไม่
+     */
     static class MenuItem extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(text, iconType, active, hover) คือ ปุ่มเมนูการนำทางพร้อมการตอบสนองต่อการคลิกและการชี้เมาส์
+        // RI
+        // 1. text ต้องไม่เป็น null
+
         private final String text;
         private final int iconType;
         private boolean active;
         private boolean hover;
 
+        /**
+         * สร้างปุ่มเมนูนำทางด้านข้าง
+         * 
+         * @param text ข้อความชื่อเมนู
+         * @param iconType ประเภทไอคอน (0 ถึง 5)
+         * @param active สถานะกำลังเปิดใช้งานอยู่หรือไม่
+         * @param onClick โค้ดการทำงานเมื่อคลิกเลือกเมนู
+         */
         MenuItem(String text, int iconType, boolean active, Runnable onClick) {
             this.text = text;
             this.iconType = iconType;
@@ -459,11 +682,21 @@ public class AdminUI extends JFrame {
             });
         }
 
+        /**
+         * กำหนดสถานะการเลือกเมนูและสั่งวาดใหม่
+         * 
+         * @param s ค่าความจริงว่าถูกเลือกหรือไม่
+         */
         void setSelected(boolean s) {
             this.active = s;
             repaint();
         }
 
+        /**
+         * วาดพื้นหลัง ไอคอน และข้อความชื่อเมนูตามสถานะการเลือกหรือการชี้เมาส์
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
@@ -485,6 +718,15 @@ public class AdminUI extends JFrame {
             g2.dispose();
         }
 
+        /**
+         * วาดไอคอนแบบเวกเตอร์ตามประเภทของเมนู
+         * 
+         * @param g2 กราฟิกส์คอนเท็กซ์
+         * @param type ประเภทไอคอน
+         * @param x พิกัด X
+         * @param y พิกัด Y
+         * @param c สีของไอคอน
+         */
         private void drawIcon(Graphics2D g2, int type, int x, int y, Color c) {
             g2.setColor(c);
             g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -540,12 +782,34 @@ public class AdminUI extends JFrame {
         }
     }
 
+    /**
+     * BarChart คือคอมโพเนนต์แสดงกราฟแท่งสถิติข้อมูล
+     * labels คือ รายการป้ายชื่อแท่งกราฟ
+     * values คือ ค่าข้อมูลตัวเลขของแต่ละแท่ง
+     * max คือ ค่าสูงสุดของข้อมูลสำหรับปรับสเกลความสูงกราฟ
+     * unit คือ หน่วยของข้อมูล
+     */
     static class BarChart extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(labels, values, max, unit) คือ กราฟแท่งแสดงข้อมูลสถิติเปรียบเทียบในระบบ
+        // RI
+        // 1. labels และ values ต้องไม่เป็น null
+        // 2. max ต้องมีค่ามากกว่า 0
+
         private final String[] labels;
         private final int[] values;
         private final int max;
         private final String unit;
 
+        /**
+         * สร้างคอมโพเนนต์กราฟแท่ง
+         * 
+         * @param labels ป้ายกำกับใต้แท่งกราฟ
+         * @param values ค่าตัวเลขของแต่ละแท่ง
+         * @param max ค่าสูงสุดของแกนกราฟ
+         * @param unit หน่วยของข้อมูล
+         */
         BarChart(String[] labels, int[] values, int max, String unit) {
             this.labels = labels;
             this.values = values;
@@ -554,6 +818,11 @@ public class AdminUI extends JFrame {
             setOpaque(false);
         }
 
+        /**
+         * วาดเส้นฐาน แท่งกราฟ ค่าตัวเลข และป้ายกำกับของแต่ละเดือน
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
@@ -569,9 +838,13 @@ public class AdminUI extends JFrame {
                 int bx = slot * i + (slot - barW) / 2;
                 int by = bottom - bh;
 
-                g2.setColor(PRIMARY);
-                g2.fillRoundRect(bx, by, barW, bh, 6, 6);
-                g2.fillRect(bx, by + 4, barW, bh - 4);
+                if (bh > 0) {
+                    g2.setColor(PRIMARY);
+                    g2.fillRoundRect(bx, by, barW, bh, 6, 6);
+                    if (bh > 4) {
+                        g2.fillRect(bx, by + 4, barW, bh - 4);
+                    }
+                }
 
                 g2.setFont(font(Font.PLAIN, 10));
                 g2.setColor(new Color(55, 65, 81));

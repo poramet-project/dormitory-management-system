@@ -13,7 +13,33 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * AdminRoomUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการจัดการข้อมูลห้องพัก
+ * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะห้องพัก
+ * lblCount คือ ป้ายแสดงจำนวนห้องพักที่แสดงผล
+ * btnAdd คือ ปุ่มกดสำหรับเพิ่มข้อมูลห้องพักใหม่
+ * table คือ ตารางแสดงรายการห้องพักทั้งหมด
+ * tableModel คือ โมเดลข้อมูลของตารางห้องพัก
+ * formTitle คือ ป้ายแสดงหัวเรื่องของฟอร์มกรอกข้อมูลห้องพัก
+ * formSub คือ ป้ายแสดงคำอธิบายของฟอร์ม
+ * txtNumber คือ ช่องกรอกหมายเลขห้องพัก
+ * txtRent คือ ช่องกรอกอัตราค่าเช่าห้องพัก
+ * cbType คือ คอมโบ้บ็อกซ์สำหรับเลือกประเภทห้องพัก
+ * rbAvailable คือ ปุ่มตัวเลือกสถานะห้องว่าง
+ * rbOccupied คือ ปุ่มตัวเลือกสถานะมีผู้เช่า
+ * rbMaintenance คือ ปุ่มตัวเลือกสถานะปิดปรับปรุง
+ * btnSave คือ ปุ่มกดสำหรับบันทึกข้อมูลห้องพัก
+ * selectedRoomId คือ รหัสห้องพักที่กำลังเลือกแก้ไขข้อมูลอยู่ในปัจจุบัน
+ * previousStatus คือ ตัวแปรสำหรับเก็บสถานะเดิมของห้องพักก่อนการแก้ไข
+ */
 public class AdminRoomUI extends JPanel {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF(table, tableModel, selectedRoomId, previousStatus) คือ หน้าจอสำหรับแสดงรายการห้องพัก เพิ่ม แก้ไข และปรับปรุงสถานะห้องพักในระบบ
+    // RI
+    // 1. table และ tableModel ต้องไม่เป็น null
+    // 2. previousStatus ต้องไม่เป็น null
 
     static final Color PRIMARY    = AdminUI.PRIMARY;
     static final Color BG         = AdminUI.BG;
@@ -39,6 +65,9 @@ public class AdminRoomUI extends JPanel {
     private String selectedRoomId = "";
     private String previousStatus = "AVAILABLE"; // ตัวแปรสำหรับเก็บสถานะเดิมของห้องพัก
 
+    /**
+     * คอนสตรักเตอร์สร้างหน้าจอจัดการข้อมูลห้องพักสำหรับผู้ดูแลระบบ
+     */
     public AdminRoomUI() {
         setLayout(null);
         setBackground(BG);
@@ -51,6 +80,9 @@ public class AdminRoomUI extends JPanel {
         initActions();
     }
 
+    /**
+     * โหลดข้อมูลห้องพักทั้งหมดและอัปเดตการแสดงผลในตารางตามตัวกรองสถานะห้อง
+     */
     public void loadTableData() {
         tableModel.setRowCount(0);
         List<AdminRoomLogic.RoomModel> rooms = AdminRoomLogic.getAllRooms();
@@ -89,6 +121,9 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * ล้างข้อมูลในฟอร์มแก้ไขห้องพักให้เป็นค่าว่าง
+     */
     private void clearForm() {
         selectedRoomId = "";
         if (txtNumber != null) txtNumber.setText("");
@@ -97,6 +132,9 @@ public class AdminRoomUI extends JPanel {
         if (btnSave != null) btnSave.setEnabled(false);
     }
 
+    /**
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองสถานะห้อง ป้ายแสดงจำนวน และปุ่มเพิ่มห้องใหม่
+     */
     private void createToolbar() {
         statusFilter = styledCombo(new String[]{"สถานะทั้งหมด", "ห้องว่าง", "มีผู้เช่า", "ปิดปรับปรุง"}, WHITE);
         statusFilter.setBounds(20, 20, 180, 34);
@@ -112,6 +150,11 @@ public class AdminRoomUI extends JPanel {
         add(btnAdd);
     }
 
+    /**
+     * สร้างและจัดรูปแบบตารางแสดงรายการห้องพัก
+     * 
+     * @return JScrollPane ที่ครอบตารางห้องพัก
+     */
     private JScrollPane createTable() {
         String[] columns = {"รหัส", "เลขห้อง", "ชั้น", "ประเภท", "ราคา/เดือน", "สถานะ"};
 
@@ -147,6 +190,11 @@ public class AdminRoomUI extends JPanel {
         return scroll;
     }
 
+    /**
+     * สร้างพาเนลฟอร์มสำหรับแก้ไขรายละเอียดห้องพัก
+     * 
+     * @return JPanel แผงฟอร์มแก้ไขห้องพัก
+     */
     private JPanel createFormPanel() {
         JPanel p = new JPanel(null);
         p.setBackground(WHITE);
@@ -199,6 +247,9 @@ public class AdminRoomUI extends JPanel {
         return p;
     }
 
+    /**
+     * กำหนด Event Handlers สำหรับการโต้ตอบกับตาราง การบันทึกแก้ไข และการเปิดหน้าต่างเพิ่มห้องใหม่
+     */
     private void initActions() {
         statusFilter.addActionListener(e -> loadTableData());
 
@@ -260,7 +311,9 @@ public class AdminRoomUI extends JPanel {
         btnAdd.addActionListener(e -> showAddRoomDialog());
     }
 
-    /** 🟢 Pop-up Dialog เฉพาะสำหรับการเพิ่มห้องพักใหม่ */
+    /**
+     * แสดงหน้าต่าง Pop-up Dialog สำหรับการเพิ่มห้องพักใหม่ลงในระบบ
+     */
     private void showAddRoomDialog() {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "เพิ่มห้องพักใหม่", true);
         dialog.setSize(340, 360);
@@ -350,6 +403,9 @@ public class AdminRoomUI extends JPanel {
         dialog.setVisible(true);
     }
 
+    /**
+     * คืนค่าการเลือกของ Radio Button สถานะห้องพักกลับเป็นสถานะเดิมก่อนแก้ไข
+     */
     private void resetStatusToPrevious() {
         if ("AVAILABLE".equals(previousStatus)) {
             rbAvailable.setSelected(true);
@@ -360,12 +416,25 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * สร้างป้ายข้อความกำกับฟิลด์ข้อมูล
+     * 
+     * @param text ข้อความหัวข้อ
+     * @param y ตำแหน่งแกน Y
+     * @return JLabel ป้ายกำกับ
+     */
     private static JLabel fieldLabel(String text, int y) {
         JLabel l = AdminUI.label(text, Font.PLAIN, 11, TEXT_GRAY);
         l.setBounds(20, y, 276, 16);
         return l;
     }
 
+    /**
+     * สร้างเส้นแบ่งแนวนอน
+     * 
+     * @param y ตำแหน่งแกน Y
+     * @return JPanel เส้นแบ่ง
+     */
     private static JPanel divider(int y) {
         JPanel line = new JPanel();
         line.setBackground(BORDER);
@@ -373,6 +442,12 @@ public class AdminRoomUI extends JPanel {
         return line;
     }
 
+    /**
+     * สร้างปุ่มตัวเลือก Radio Button พร้อมตกแต่งไอคอนเฉพาะของระบบ
+     * 
+     * @param text ข้อความตัวเลือก
+     * @return JRadioButton ที่จัดรูปแบบแล้ว
+     */
     private static JRadioButton radio(String text) {
         JRadioButton rb = new JRadioButton(text);
         rb.setFont(AdminUI.font(Font.PLAIN, 11));
@@ -387,6 +462,13 @@ public class AdminRoomUI extends JPanel {
         return rb;
     }
 
+    /**
+     * สร้างคอมโบ้บ็อกซ์พร้อมจัดรูปแบบและสีพื้นหลังตามที่กำหนด
+     * 
+     * @param items รายการตัวเลือก
+     * @param bg สีพื้นหลัง
+     * @return JComboBox ที่จัดรูปแบบแล้ว
+     */
     private static JComboBox<String> styledCombo(String[] items, Color bg) {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(AdminUI.font(Font.PLAIN, 12));
@@ -418,11 +500,30 @@ public class AdminRoomUI extends JPanel {
         return cb;
     }
 
+    /**
+     * RoundField คือคอมโพเนนต์กล่องข้อความขอบโค้งมนพร้อมข้อความตัวอย่าง (Placeholder)
+     * placeholder คือ ข้อความแนะนำในช่องกรอกเมื่อยังไม่มีข้อมูล
+     * bg คือ สีพื้นหลังของช่องกรอก
+     * searchIcon คือ ตัวกำหนดว่าต้องวาดไอคอนรูปแว่นขยายค้นหาหรือไม่
+     */
     public static class RoundField extends JTextField {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(placeholder, bg, searchIcon) คือ กล่องข้อความกรอกข้อมูลที่มีขอบโค้งมนและแสดงไอคอนค้นหาตามต้องการ
+        // RI
+        // 1. bg ต้องไม่เป็น null
+
         private final String placeholder;
         private final Color bg;
         private final boolean searchIcon;
 
+        /**
+         * สร้างกล่องข้อความขอบมนพร้อมกำหนดข้อความตัวอย่าง สีพื้นหลัง และไอคอนค้นหา
+         * 
+         * @param placeholder ข้อความแนะนำในช่องกรอก
+         * @param bg สีพื้นหลัง
+         * @param searchIcon กำหนดว่าต้องวาดไอคอนแว่นขยายหรือไม่
+         */
         public RoundField(String placeholder, Color bg, boolean searchIcon) {
             this.placeholder = placeholder;
             this.bg = bg;
@@ -434,6 +535,11 @@ public class AdminRoomUI extends JPanel {
             setBorder(new EmptyBorder(0, searchIcon ? 32 : 12, 0, 12));
         }
 
+        /**
+         * วาดพื้นหลังขอบมน เส้นขอบ ไอคอนค้นหา และข้อความ placeholder
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์สำหรับวาด
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = AdminUI.smooth(g);
@@ -463,9 +569,25 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * FlatButton คือคอมโพเนนต์ปุ่มกดดีไซน์แบนราบแบบโมเดิร์น
+     * primary คือ ตัวกำหนดว่าปุ่มนี้เป็นปุ่มหลัก (เน้นสีธีม) หรือปุ่มรอง
+     */
     public static class FlatButton extends JButton {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(primary) คือ ปุ่มกดสไตล์โมเดิร์นที่ปรับสีตามประเภทหลักหรือรอง
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
         private final boolean primary;
 
+        /**
+         * สร้างปุ่มกดสไตล์โมเดิร์น
+         * 
+         * @param text ข้อความบนปุ่ม
+         * @param primary กำหนดว่าเป็นปุ่มหลัก (สีเด่น) หรือปุ่มรอง
+         */
         public FlatButton(String text, boolean primary) {
             super(text);
             this.primary = primary;
@@ -477,6 +599,11 @@ public class AdminRoomUI extends JPanel {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
 
+        /**
+         * วาดปุ่มขอบมนและเอฟเฟกต์สีเมื่อเมาส์ชี้ผ่าน (Rollover)
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์สำหรับวาด
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = AdminUI.smooth(g);
@@ -495,7 +622,19 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * ChevronButton คือคอมโพเนนต์ปุ่มลูกศรชี้ลงสำหรับคอมโบ้บ็อกซ์
+     */
     public static class ChevronButton extends JButton {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ ปุ่มไอคอนรูปลูกศรชี้ลงสำหรับเลือกรายการ
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * สร้างปุ่มลูกศรชี้ลงแบบโปร่งใสไม่มีเส้นขอบเริ่มต้น
+         */
         public ChevronButton() {
             setContentAreaFilled(false);
             setBorderPainted(false);
@@ -503,6 +642,11 @@ public class AdminRoomUI extends JPanel {
             setOpaque(false);
         }
 
+        /**
+         * วาดสัญลักษณ์ลูกศรชี้ลงด้วยลายเส้นโค้งมน
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์สำหรับวาด
+         */
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = AdminUI.smooth(g);
@@ -515,7 +659,24 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * RadioIcon คือไอคอนแบบกำหนดเองสำหรับปุ่มตัวเลือก Radio Button
+     */
     static class RadioIcon implements Icon {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ ไอคอนวงกลมแสดงสถานะเลือกหรือไม่เลือกของ Radio Button
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * วาดไอคอนปุ่มวิทยุ (Radio) ตามสถานะการเลือกของปุ่ม
+         * 
+         * @param c คอมโพเนนต์ที่เรียกใช้วาดไอคอน
+         * @param g กราฟิกส์คอนเท็กซ์
+         * @param x ตำแหน่งแกน X
+         * @param y ตำแหน่งแกน Y
+         */
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
             AbstractButton b = (AbstractButton) c;
@@ -531,11 +692,43 @@ public class AdminRoomUI extends JPanel {
             }
             g2.dispose();
         }
+
+        /**
+         * คืนค่าความกว้างของไอคอน
+         * 
+         * @return ความกว้าง 16 พิกเซล
+         */
         @Override public int getIconWidth()  { return 16; }
+
+        /**
+         * คืนค่าความสูงของไอคอน
+         * 
+         * @return ความสูง 16 พิกเซล
+         */
         @Override public int getIconHeight() { return 16; }
     }
 
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางห้องพัก
+     */
     static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวตารางห้องพัก
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดรูปแบบและฟอนต์สำหรับส่วนหัวตาราง
+         * 
+         * @param t ตาราง
+         * @param v ค่าของเซลล์หัวตาราง
+         * @param sel ถูกเลือกหรือไม่
+         * @param focus มีโฟกัสหรือไม่
+         * @param row ดัชนีแถว
+         * @param col ดัชนีคอลัมน์
+         * @return คอมโพเนนต์ที่ใช้แสดงผลหัวตาราง
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             super.getTableCellRendererComponent(t, v, sel, focus, row, col);
@@ -549,7 +742,27 @@ public class AdminRoomUI extends JPanel {
         }
     }
 
+    /**
+     * CellRenderer คือคลาสกำหนดการแสดงผลข้อมูลแต่ละเซลล์ในตารางห้องพัก
+     */
     static class CellRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์เซลล์ตารางห้องพักพร้อมป้ายสถานะ Badge
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลเซลล์ตารางห้องพัก พร้อมวาดป้ายสถานะ (Badge) สำหรับคอลัมน์สถานะ
+         * 
+         * @param t ตาราง
+         * @param v ค่าข้อมูลในเซลล์
+         * @param sel เซลล์ถูกเลือกหรือไม่
+         * @param focus เซลล์มีโฟกัสหรือไม่
+         * @param row ลำดับแถว
+         * @param col ลำดับคอลัมน์
+         * @return คอมโพเนนต์สำหรับแสดงผลเซลล์
+         */
         @Override
         public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
             Color rowBg = sel ? ROW_SELECT : WHITE;

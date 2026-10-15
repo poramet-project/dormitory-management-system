@@ -15,8 +15,25 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Logic ของหน้าสมัครสมาชิก: ตรวจข้อมูลและบันทึกลง users.csv (ไม่มี Swing) */
+/**
+ * SignUpLogic คือคลาสสำหรับจัดการตรรกะการตรวจสอบข้อมูลและลงทะเบียนผู้ใช้งานใหม่ลงใน users.csv
+ * PH_USER, PH_PASS, PH_NAME, PH_PHONE คือ ข้อความ placeholder ของช่องกรอกข้อมูล
+ * HEADER คือ ส่วนหัวคอลัมน์ของไฟล์ users.csv
+ * ID_PREFIX คือ ตัวอักษรนำหน้ารหัสผู้ใช้ ("U")
+ * ID_DIGITS คือ จำนวนหลักของรหัสผู้ใช้ (3 หลัก เช่น U001)
+ * DEFAULT_ROLE คือ บทบาทเริ่มต้นของผู้ใช้งานที่สมัครใหม่ ("GUEST")
+ * NO_ROOM คือ สัญลักษณ์ระบุว่ายังไม่มีห้องพัก ("-")
+ */
 public class SignUpLogic {
+
+    // ===== representation =====
+    // Abstraction Function:
+    // AF() คือ ตรรกะตรวจสอบความถูกต้องของข้อมูล (Validation) และการสร้างบัญชีผู้ใช้งานใหม่ลงในฐานข้อมูล CSV
+    // RI
+    // 1. username ต้องไม่ซ้ำกับผู้ใช้ที่มีอยู่แล้วในระบบ และไม่มีภาษาไทย
+    // 2. password ต้องไม่เป็นค่าว่าง
+    // 3. phone ต้องเป็นตัวเลขและมีความยาวถูกต้อง (9-10 หลัก)
+    // 4. fullName ต้องไม่เป็นค่าว่าง
 
     public static final String PH_USER = "Username";
     public static final String PH_PASS = "Password";
@@ -32,14 +49,23 @@ public class SignUpLogic {
 
     private SignUpLogic() { }
 
-    /** ตรวจสอบว่าข้อความมีตัวอักษรภาษาไทยปนอยู่หรือไม่ */
+    /**
+     * ตรวจสอบว่าข้อความมีตัวอักษรภาษาไทยปนอยู่หรือไม่
+     * 
+     * @param text ข้อความที่ต้องการตรวจสอบ
+     * @return true หากพบตัวอักษรภาษาไทย
+     */
     private static boolean containsThai(String text) {
         return text != null && text.matches(".*[\\u0E00-\\u0E7F].*");
     }
 
     /**
-     * ตรวจสอบข้อมูลและบันทึกผู้ใช้ใหม่
+     * ตรวจสอบความถูกต้องของข้อมูลและบันทึกผู้ใช้รายใหม่ลงใน users.csv
      *
+     * @param u ชื่อบัญชีผู้ใช้งาน (Username)
+     * @param p รหัสผ่าน (Password)
+     * @param n ชื่อ-นามสกุลจริง (Full Name)
+     * @param ph เบอร์โทรศัพท์ (Phone)
      * @throws NumberFormatException    เบอร์โทรไม่ถูกต้อง
      * @throws IllegalArgumentException ข้อมูลไม่ครบ/ไม่ถูกต้อง
      * @throws IllegalStateException    username ซ้ำ
@@ -100,6 +126,11 @@ public class SignUpLogic {
     //  ส่วนจัดการไฟล์ users.csv
     // ==================================================================
 
+    /**
+     * ค้นหาและคืนค่าออบเจ็กต์ File ของ users.csv ตามลำดับพาธที่รองรับ
+     * 
+     * @return ออบเจ็กต์ File ของ users.csv
+     */
     private static File resolveCsvFile() {
         String[] paths = {
             "users.csv",
@@ -116,10 +147,10 @@ public class SignUpLogic {
     }
 
     /**
-     * ถ้าไฟล์เก่ายังไม่มีคอลัมน์ userId ให้เติมให้อัตโนมัติ (ทำครั้งเดียว)
-     * - เพิ่ม userId (U001, U002, ...) ตามลำดับแถว
-     * - roomId ที่ว่าง จะถูกแทนด้วย "-"
-     * - ลบบรรทัดว่างทิ้ง
+     * ตรวจสอบและแปลงไฟล์ users.csv เดิมให้มีคอลัมน์ userId ในส่วนหัวและแถวข้อมูล (Migration)
+     * 
+     * @param file ไฟล์ users.csv
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านหรือเขียนไฟล์
      */
     private static void ensureUserIdColumn(File file) throws IOException {
         if (!file.exists() || file.length() == 0) return;
@@ -149,7 +180,13 @@ public class SignUpLogic {
         Files.write(file.toPath(), out, StandardCharsets.UTF_8);
     }
 
-    /** สร้าง userId ถัดไป เช่น U001, U002, ... โดยหาเลขสูงสุดในไฟล์แล้วบวก 1 */
+    /**
+     * คำนวณและสร้างรหัสผู้ใช้ถัดไป (เช่น U001, U002, ...) จากค่าสูงสุดในไฟล์
+     * 
+     * @param file ไฟล์ users.csv
+     * @return รหัสประจำตัวผู้ใช้ถัดไป
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านไฟล์
+     */
     private static String nextUserId(File file) throws IOException {
         int max = 0;
         if (file.exists()) {
@@ -165,7 +202,14 @@ public class SignUpLogic {
         return String.format("%s%0" + ID_DIGITS + "d", ID_PREFIX, max + 1);
     }
 
-    /** ตรวจ username ซ้ำ (username อยู่คอลัมน์ index 1 เพราะ index 0 คือ userId) */
+    /**
+     * ตรวจสอบว่าชื่อบัญชีผู้ใช้ (Username) ซ้ำกับที่มีอยู่แล้วในไฟล์หรือไม่
+     * 
+     * @param file ไฟล์ users.csv
+     * @param username ชื่อบัญชีที่ต้องการตรวจสอบ
+     * @return true หากมีชื่อบัญชีนี้อยู่แล้ว
+     * @throws IOException หากเกิดข้อผิดพลาดในการอ่านไฟล์
+     */
     private static boolean isUsernameTaken(File file, String username) throws IOException {
         if (!file.exists()) return false;
         try (BufferedReader reader = new BufferedReader(
@@ -183,6 +227,19 @@ public class SignUpLogic {
         return false;
     }
 
+    /**
+     * บันทึกข้อมูลแถวผู้ใช้ใหม่ลงในไฟล์ users.csv ด้วยการเข้ารหัส UTF-8
+     * 
+     * @param file ไฟล์ users.csv
+     * @param userId รหัสผู้ใช้
+     * @param u ชื่อบัญชีผู้ใช้
+     * @param p รหัสผ่าน
+     * @param name ชื่อ-นามสกุลจริง
+     * @param phone เบอร์โทรศัพท์
+     * @param role บทบาทในระบบ
+     * @param roomId รหัสห้องพัก
+     * @throws IOException หากเกิดข้อผิดพลาดในการเขียนไฟล์
+     */
     private static void saveUserToCsv(File file, String userId, String u, String p,
                                       String name, String phone, String role, String roomId) throws IOException {
         boolean hasContent = file.exists() && file.length() > 0;
@@ -199,7 +256,13 @@ public class SignUpLogic {
         }
     }
 
-    /** เช็คว่าตัวอักษรสุดท้ายของไฟล์เป็นขึ้นบรรทัดใหม่หรือไม่ */
+    /**
+     * ตรวจสอบว่าตัวอักษรสุดท้ายของไฟล์ลงท้ายด้วยการขึ้นบรรทัดใหม่หรือไม่
+     * 
+     * @param file ไฟล์ที่ต้องการตรวจสอบ
+     * @return true หากลงท้ายด้วย \n หรือ \r หรือไฟล์ว่างเปล่า
+     * @throws IOException หากเกิดข้อผิดพลาดในการเข้าถึงไฟล์
+     */
     private static boolean endsWithNewline(File file) throws IOException {
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             if (raf.length() == 0) return true;

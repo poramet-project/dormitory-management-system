@@ -4,14 +4,61 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 /**
- * 
- * AdminTenantLogic
+ * AdminTenantLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบทะเบียนผู้เช่าและสัญญาเช่าสำหรับผู้ดูแล
+ * ให้บริการดึงรายการสัญญาเช่า ทำสัญญาใหม่ แก้ไขสัญญา ต่ออายุสัญญา และยกเลิกสัญญาเช่า
  */
 public class AdminTenantLogic {
 
+    // ===== representation =====
+    // Abstraction Function:
+    // AF() คือ ตัวแทนตรรกะการจัดการสัญญาเช่าและผู้เช่าใน contracts.csv และ users.csv
+    // RI
+    // 1. contracts.csv และ users.csv ต้องพร้อมใช้งานและสามารถบันทึกข้อมูลได้
+    // 2. การทำสัญญาใหม่หรือต่ออายุสัญญา ต้องมีเงินประกันและค่าเช่ามากกว่า 0
+
+    /**
+     * TenantModel คือคลาสสำหรับเก็บข้อมูลผู้เช่าและสัญญาเช่าเพื่อแสดงผลบนตาราง
+     * id คือ รหัสสัญญาเช่า (เช่น CNT001)
+     * userId คือ รหัสผู้เช่า
+     * name คือ ชื่อ-นามสกุลของผู้เช่า
+     * roomId คือ รหัสห้องพัก
+     * room คือ หมายเลขห้องพัก
+     * startDate คือ วันที่เริ่มต้นสัญญา
+     * endDate คือ วันที่สิ้นสุดสัญญา
+     * status คือ สถานะสัญญาเช่า
+     * phone คือ หมายเลขโทรศัพท์
+     * roomType คือ ประเภทห้องพัก
+     * rent คือ ค่าเช่ารายเดือน
+     * deposit คือ เงินประกันสัญญา
+     */
     public static class TenantModel {
+
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(id, userId, name, roomId, room, startDate, endDate, status, phone, roomType, rent, deposit) คือ
+        // ข้อมูลจำลองสัญญาเช่าของผู้เช่า 1 รายการ
+        // RI
+        // 1. id, userId, name, roomId, status ต้องไม่เป็น null
+        // 2. startDate และ endDate ต้องไม่เป็น null
+
         public String id, userId, name, roomId, room, startDate, endDate, status, phone, roomType, rent, deposit;
 
+        /**
+         * คอนสตรักเตอร์สำหรับสร้างอ็อบเจกต์ TenantModel
+         *
+         * @param id เลขที่สัญญาเช่า
+         * @param userId รหัสผู้ใช้งานผู้เช่า
+         * @param name ชื่อ-นามสกุลของผู้เช่า
+         * @param roomId รหัสห้องพัก
+         * @param room หมายเลขห้องพัก
+         * @param startDate วันที่เริ่มสัญญา
+         * @param endDate วันที่สิ้นสุดสัญญา
+         * @param status สถานะสัญญา (ใช้งานอยู่, รออนุมัติ, หมดอายุ, ยกเลิกสัญญา)
+         * @param phone เบอร์โทรศัพท์ติดต่อ
+         * @param roomType ข้อความระบุห้องพักและประเภทห้อง
+         * @param rent ข้อความแสดงอัตราค่าเช่า
+         * @param deposit ข้อความแสดงเงินมัดจำประกัน
+         */
         public TenantModel(String id, String userId, String name, String roomId, String room, String startDate, String endDate,
                            String status, String phone, String roomType, String rent, String deposit) {
             this.id = id;
@@ -29,7 +76,12 @@ public class AdminTenantLogic {
         }
     }
 
-    /** 1. ดึงรายการสัญญาเช่าทั้งหมด */
+    /**
+     * ดึงรายการสัญญาเช่าทั้งหมดจากฐานข้อมูล DataStore
+     * พร้อมเชื่อมโยงข้อมูลผู้เช่าและรายละเอียดห้องพักเพื่อเตรียมนำไปแสดงผล
+     *
+     * @return รายการ List ของ TenantModel ทั้งหมดในระบบ
+     */
     public List<TenantModel> getAllTenants() {
         List<TenantModel> list = new ArrayList<>();
         for (DataStore.Contract c : DataStore.contracts()) {
@@ -48,17 +100,32 @@ public class AdminTenantLogic {
         return list;
     }
 
+    /**
+     * แปลงรายการสัญญาเช่าให้อยู่ในรูปแบบ Object[][] สำหรับแสดงผลบน JTable
+     * ประกอบด้วย 5 คอลัมน์: ชื่อผู้เช่า, ห้องพัก, วันเริ่มสัญญา, วันสิ้นสุดสัญญา, สถานะ
+     *
+     * @return อาร์เรย์ 2 มิติของข้อมูลตารางผู้เช่า
+     */
     public Object[][] getTableRows() {
         List<TenantModel> list = getAllTenants();
-        Object[][] rows = new Object[list.size()][6];
+        Object[][] rows = new Object[list.size()][5];
         for (int i = 0; i < list.size(); i++) {
             TenantModel t = list.get(i);
-            rows[i] = new Object[]{t.name, t.room, t.startDate, t.endDate, t.status, ""};
+            rows[i] = new Object[]{t.name, t.room, t.startDate, t.endDate, t.status};
         }
         return rows;
     }
 
-    /** 2. เพิ่มสัญญาใหม่ */
+    /**
+     * สร้างและบันทึกสัญญาเช่าใหม่เข้าสู่ระบบ
+     * พร้อมปรับสถานะห้องพักเป็น OCCUPIED และตั้งค่าบทบาทผู้ใช้งานเป็น TENANT
+     *
+     * @param userId รหัสผู้ใช้งาน
+     * @param roomId รหัสห้องพัก
+     * @param rent อัตราค่าเช่าต่อเดือน
+     * @param deposit เงินประกันสัญญา
+     * @return true หากบันทึกสัญญาสำเร็จ, false หากเกิดข้อผิดพลาด
+     */
     public boolean addContract(String userId, String roomId, int rent, int deposit) {
         boolean ok = DataStore.saveContract(userId, roomId, rent);
         if (ok) {
@@ -68,7 +135,18 @@ public class AdminTenantLogic {
         return ok;
     }
 
-    /** 3. แก้ไขสัญญา (ซิงค์ห้องและผู้ใช้หากมีการเปลี่ยนแปลง) */
+    /**
+     * แก้ไขข้อมูลสัญญาเช่าที่มีอยู่เดิม พร้อมซิงค์ข้อมูลผู้ใช้งานและห้องพักที่เกี่ยวข้อง
+     *
+     * @param contractId เลขที่สัญญาเช่า
+     * @param oldUserId รหัสผู้ใช้เดิม
+     * @param newUserId รหัสผู้ใช้ใหม่
+     * @param oldRoomId รหัสห้องเดิม
+     * @param newRoomId รหัสห้องใหม่
+     * @param rent อัตราค่าเช่าใหม่
+     * @param deposit เงินมัดจำประกันใหม่
+     * @return true หากแก้ไขสำเร็จ
+     */
     public boolean updateContract(String contractId, String oldUserId, String newUserId, String oldRoomId, String newRoomId, int rent, int deposit) {
         DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "userId", newUserId);
         DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "roomId", newRoomId);
@@ -91,7 +169,12 @@ public class AdminTenantLogic {
         return true;
     }
 
-    /** 4. ต่ออายุสัญญา (+1 ปี จากวันสิ้นสุดสัญญาเดิม) */
+    /**
+     * ต่ออายุสัญญาเช่าเพิ่มอีก 1 ปี จากวันสิ้นสุดสัญญาเดิม และปรับสถานะเป็น ACTIVE
+     *
+     * @param contractId เลขที่สัญญาเช่าที่ต้องการต่ออายุ
+     * @return true หากต่ออายุสำเร็จ, false หากไม่พบสัญญาหรือเกิดข้อผิดพลาด
+     */
     public boolean renewContract(String contractId) {
         for (DataStore.Contract c : DataStore.contracts()) {
             if (c.id.equalsIgnoreCase(contractId.trim())) {
@@ -120,7 +203,15 @@ public class AdminTenantLogic {
         return false;
     }
 
-    /** 5. ยกเลิกสัญญา (คืนห้องพักเป็นห้องว่าง) */
+    /**
+     * ยกเลิกสัญญาเช่า (TERMINATED) พร้อมคืนสถานะห้องพักเป็นห้องว่าง (AVAILABLE)
+     * และปรับบทบาทผู้ใช้กลับเป็น GUEST
+     *
+     * @param contractId เลขที่สัญญาเช่า
+     * @param roomId รหัสห้องพัก
+     * @param userId รหัสผู้ใช้งาน
+     * @return true หากยกเลิกสัญญาสำเร็จ
+     */
     public boolean terminateContract(String contractId, String roomId, String userId) {
         boolean ok = DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "status", "TERMINATED");
         if (ok) {
