@@ -3,18 +3,15 @@ package logic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 /**
- * AdminBookingLogic
- * คือคลาสสำหรับจัดการตรรกะทางธุรกิจของคำขอจองห้องพักในระบบของผู้ดูแล
+ * AdminBookingLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของคำขอจองห้องพักในระบบของผู้ดูแล
  * ให้บริการดึงข้อมูลคำขอจองทั้งหมด อนุมัติการจอง และปฏิเสธการจอง
  */
 public class AdminBookingLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF() คือ ตัวแทนชุดคำสั่งสำหรับจัดการคำขอจองห้องพักที่บันทึกอยู่ใน
-    // DataStore.BOOKINGS_FILE
+    // AF() คือ ตัวแทนชุดคำสั่งสำหรับจัดการคำขอจองห้องพักที่บันทึกอยู่ใน DataStore.BOOKINGS_FILE
     // RI
     // 1. ตารางไฟล์การจอง DataStore.BOOKINGS_FILE ต้องมีอยู่จริงในระบบ
     // 2. การอนุมัติหรือปฏิเสธคำขอต้องระบุ bookingId ที่ถูกต้องและมีอยู่ในระบบ
@@ -37,8 +34,7 @@ public class AdminBookingLogic {
 
         // ===== representation =====
         // Abstraction Function:
-        // AF(id, userId, name, phone, roomId, roomNumber, date, status, type, detail,
-        // roomDetail) คือ
+        // AF(id, userId, name, phone, roomId, roomNumber, date, status, type, detail, roomDetail) คือ
         // ข้อมูลจำลองของคำขอจองห้องพัก 1 รายการในหอพัก
         // RI
         // 1. id, name, roomId, status ต้องไม่เป็น null
@@ -50,19 +46,18 @@ public class AdminBookingLogic {
         /**
          * คอนสตรักเตอร์สำหรับกำหนดค่าเริ่มต้นของข้อมูลคำขอจองห้องพัก
          *
-         * @param id         รหัสคำขอจอง
-         * @param userId     รหัสผู้ใช้งานที่ทำการจอง
-         * @param name       ชื่อ-นามสกุลของผู้ยื่นคำขอ
-         * @param phone      หมายเลขโทรศัพท์ติดต่อ
-         * @param roomId     รหัสห้องพักที่ขอจอง
+         * @param id รหัสคำขอจอง
+         * @param userId รหัสผู้ใช้งานที่ทำการจอง
+         * @param name ชื่อ-นามสกุลของผู้ยื่นคำขอ
+         * @param phone หมายเลขโทรศัพท์ติดต่อ
+         * @param roomId รหัสห้องพักที่ขอจอง
          * @param roomNumber หมายเลขห้องพัก
-         * @param date       วันที่ยื่นคำขอจอง
-         * @param status     สถานะคำขอจอง (เช่น รอพิจารณา, อนุมัติ, ปฏิเสธ)
-         * @param type       ประเภทของคำขอ
-         * @param detail     รายละเอียดคำขอ
+         * @param date วันที่ยื่นคำขอจอง
+         * @param status สถานะคำขอจอง (เช่น รอพิจารณา, อนุมัติ, ปฏิเสธ)
+         * @param type ประเภทของคำขอ
+         * @param detail รายละเอียดคำขอ
          */
-        public BookingModel(String id, String userId, String name, String phone, String roomId, String roomNumber,
-                String date, String status, String type, String detail) {
+        public BookingModel(String id, String userId, String name, String phone, String roomId, String roomNumber, String date, String status, String type, String detail) {
             this.id = id;
             this.userId = userId;
             this.name = name;
@@ -97,8 +92,8 @@ public class AdminBookingLogic {
             String statusRaw = m.getOrDefault("status", "PENDING");
 
             String dateThai = DataStore.thaiDate(dateRaw);
-            String statusThai = "APPROVED".equalsIgnoreCase(statusRaw) ? "อนุมัติ"
-                    : ("REJECTED".equalsIgnoreCase(statusRaw) ? "ปฏิเสธ" : "รอพิจารณา");
+            String statusThai = "APPROVED".equalsIgnoreCase(statusRaw) ? "อนุมัติ" :
+                               ("REJECTED".equalsIgnoreCase(statusRaw) ? "ปฏิเสธ" : "รอพิจารณา");
 
             String uId = name;
             for (Map<String, String> u : DataStore.readTable("users.csv")) {
@@ -110,12 +105,9 @@ public class AdminBookingLogic {
 
             DataStore.Room r = DataStore.room(rId);
             String roomNum = r != null ? r.number : rId;
-            String roomDetail = r != null
-                    ? "ห้อง " + r.number + " • " + r.typeShort() + " • " + DataStore.money(r.rent) + " บาท/เดือน"
-                    : "ห้อง " + rId;
+            String roomDetail = r != null ? "ห้อง " + r.number + " • " + r.typeShort() + " • " + DataStore.money(r.rent) + " บาท/เดือน" : "ห้อง " + rId;
 
-            list.add(
-                    new BookingModel(bId, uId, name, phone, rId, roomNum, dateThai, statusThai, "จองห้อง", roomDetail));
+            list.add(new BookingModel(bId, uId, name, phone, rId, roomNum, dateThai, statusThai, "จองห้อง", roomDetail));
         }
         return list;
     }
@@ -132,7 +124,7 @@ public class AdminBookingLogic {
         Object[][] rows = new Object[list.size()][5];
         for (int i = 0; i < list.size(); i++) {
             BookingModel b = list.get(i);
-            rows[i] = new Object[] { b.id, b.name, b.roomNumber, b.date, b.status };
+            rows[i] = new Object[]{b.id, b.name, b.roomNumber, b.date, b.status};
         }
         return rows;
     }
@@ -156,11 +148,6 @@ public class AdminBookingLogic {
                 String name = m.getOrDefault("fullName", "").trim();
                 String phone = m.getOrDefault("phone", "").trim();
 
-                // ป้องกันการอนุมัติหากห้องพักมีผู้อาศัยอยู่แล้ว
-                if (AdminTenantLogic.isRoomOccupied(roomId)) {
-                    return false;
-                }
-
                 // 1. ค้นหา userId ที่ตรงกับชื่อ หรือ เบอร์โทร ใน users.csv
                 String targetUserId = null;
                 for (Map<String, String> u : DataStore.readTable("users.csv")) {
@@ -178,26 +165,20 @@ public class AdminBookingLogic {
 
                 DataStore.Room r = DataStore.room(roomId);
                 int rent = r != null ? r.rent : 2800;
-                int deposit = (r != null && (r.isAir() || (r.type != null && r.type.toLowerCase().contains("air"))))
-                        ? 7000
-                        : (rent * 2);
-
-                // หากผู้ใช้นี้มีสัญญา ACTIVE เดิมอยู่
-                // ให้ยกเลิกสัญญาเดิมก่อนและปล่อยห้องเดิมเป็น AVAILABLE
-                for (DataStore.Contract oldC : DataStore.contracts()) {
-                    if (oldC.userId.equalsIgnoreCase(targetUserId) && oldC.isActive()) {
-                        DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", oldC.id, "status", "TERMINATED");
-                        if (!oldC.roomId.equalsIgnoreCase(roomId)) {
-                            DataStore.setRoomStatus(oldC.roomId, "AVAILABLE");
-                        }
-                    }
-                }
+                int deposit = rent * 2; // เงินประกัน = 2 เท่าของค่าห้อง
 
                 // 2. อัปเดตใบจองเป็น APPROVED
                 DataStore.updateCell(DataStore.BOOKINGS_FILE, "bookingId", bookingId, "status", "APPROVED");
 
-                // 3. สร้างสัญญาใน contracts.csv พร้อมระบุเงินประกัน
-                DataStore.saveContract(targetUserId, roomId, rent, deposit, "ACTIVE");
+                // 3. สร้างสัญญาใน contracts.csv
+                DataStore.saveContract(targetUserId, roomId, rent, "ACTIVE");
+
+                // 4. บันทึกเงินประกัน (ประกัน x 2) ลงในสัญญาฉบับล่าสุด
+                for (DataStore.Contract c : DataStore.contracts()) {
+                    if (c.userId.equalsIgnoreCase(targetUserId) && c.roomId.equalsIgnoreCase(roomId) && c.isActive()) {
+                        DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", c.id, "deposit", String.valueOf(deposit));
+                    }
+                }
 
                 // 5. ปรับสถานะห้องเป็น OCCUPIED
                 DataStore.setRoomStatus(roomId, "OCCUPIED");
@@ -209,8 +190,7 @@ public class AdminBookingLogic {
                 // เรียก LoginLogic เพื่อให้แรม/เซสชันซิงค์ตาม (ถ้ามี)
                 try {
                     LoginLogic.assignRoom(targetUserId, roomId);
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
 
                 return true;
             }
@@ -223,8 +203,7 @@ public class AdminBookingLogic {
      * ทำหน้าที่อัปเดตสถานะของคำขอใน bookings.csv เป็น REJECTED
      *
      * @param bookingId รหัสคำขอจองห้องพักที่ต้องการปฏิเสธ
-     * @return true หากทำการปฏิเสธและอัปเดตไฟล์สำเร็จ, false
-     *         หากเกิดข้อผิดพลาดหรือไม่พบข้อมูล
+     * @return true หากทำการปฏิเสธและอัปเดตไฟล์สำเร็จ, false หากเกิดข้อผิดพลาดหรือไม่พบข้อมูล
      */
     public boolean rejectBooking(String bookingId) {
         return DataStore.updateCell(DataStore.BOOKINGS_FILE, "bookingId", bookingId, "status", "REJECTED");

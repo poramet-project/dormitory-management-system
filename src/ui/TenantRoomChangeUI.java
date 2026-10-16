@@ -13,16 +13,14 @@ import java.util.List;
 
 /**
  * TenantRoomChangeUI คือคลาสหน้าจอสำหรับให้ผู้เช่ายื่นคำขอย้ายห้องพัก
- * เชื่อมโยงข้อมูลผู้เช่าและห้องพักปัจจุบัน
- * และแสดงสถานะคำขอที่อยู่ระหว่างดำเนินการ
+ * เชื่อมโยงข้อมูลผู้เช่าและห้องพักปัจจุบัน และแสดงสถานะคำขอที่อยู่ระหว่างดำเนินการ
  * logic คือ อ็อบเจกต์ตรรกะสำหรับตรวจสอบห้องว่างและบันทึกคำขอย้ายห้อง
  */
 public class TenantRoomChangeUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, outerContainer) คือ หน้าจอแบบฟอร์มแสดงห้องพักปัจจุบัน
-    // รายการห้องว่างที่สามารถย้ายได้ และช่องกรอกเหตุผลในการย้ายห้อง
+    // AF(logic, outerContainer) คือ หน้าจอแบบฟอร์มแสดงห้องพักปัจจุบัน รายการห้องว่างที่สามารถย้ายได้ และช่องกรอกเหตุผลในการย้ายห้อง
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. outerContainer ต้องไม่เป็น null
@@ -39,7 +37,6 @@ public class TenantRoomChangeUI extends JPanel {
 
     /**
      * คอนสตรักเตอร์สร้างหน้าจอยื่นคำขอย้ายห้องพักของผู้เช่า
-     * 
      * @param user ข้อมูลผู้เช่าที่กำลังเข้าใช้งานระบบ
      */
     public TenantRoomChangeUI(LoginLogic.User user) {
@@ -101,7 +98,6 @@ public class TenantRoomChangeUI extends JPanel {
 
     /**
      * สร้างการ์ดแสดงข้อความแจ้งเตือนตรงกลางหน้าจอ (เช่น เมื่อผู้ใช้ยังไม่มีห้องพัก)
-     * 
      * @param msg ข้อความแจ้งเตือน
      * @return พาเนลการ์ดข้อความ
      */
@@ -115,7 +111,6 @@ public class TenantRoomChangeUI extends JPanel {
 
     /**
      * สร้างการ์ดแบบฟอร์มแสดงความประสงค์ขอย้ายห้องพักและปุ่มยื่นคำขอ
-     * 
      * @return พาเนลแบบฟอร์ม
      */
     private JPanel buildForm() {
@@ -142,7 +137,8 @@ public class TenantRoomChangeUI extends JPanel {
             banner.setBackground(new Color(254, 249, 195)); // สีเหลืองเตือนนุ่มนวล
             banner.setBorder(new CompoundBorder(
                     new LineBorder(new Color(250, 204, 21), 1, true),
-                    new EmptyBorder(10, 14, 10, 14)));
+                    new EmptyBorder(10, 14, 10, 14)
+            ));
             JLabel bannerText = new JLabel("<html><b>📌 อยู่ระหว่างรอพิจารณา:</b> คุณได้ยื่นคำขอย้ายไปห้อง <b>"
                     + pending.newRoomNum + "</b> (รหัสคำขอ " + pending.id + ") เมื่อวันที่ " + pending.date
                     + "<br><span style='color: #854d0e;'>กรุณารอผู้ดูแลระบบ (Admin) ตรวจสอบและอนุมัติคำขอ</span></html>");
@@ -170,8 +166,7 @@ public class TenantRoomChangeUI extends JPanel {
         // 3. เลือกห้องพักปลายทาง
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 6, 0);
-        formCard.add(TenantUI.label("เลือกห้องพักที่ต้องการย้ายไป (เฉพาะห้องว่าง):", 13, Font.PLAIN, TenantUI.TEXT),
-                gbc);
+        formCard.add(TenantUI.label("เลือกห้องพักที่ต้องการย้ายไป (เฉพาะห้องว่าง):", 13, Font.PLAIN, TenantUI.TEXT), gbc);
 
         gbc.gridy++;
         List<DataStore.Room> available = logic.availableRooms();
@@ -241,8 +236,7 @@ public class TenantRoomChangeUI extends JPanel {
                                 "แจ้งเตือน", JOptionPane.WARNING_MESSAGE);
                         return;
                     case PENDING_EXISTS:
-                        JOptionPane.showMessageDialog(this,
-                                "คุณมีคำขอย้ายห้องที่รอพิจารณาอยู่แล้ว กรุณารอผู้ดูแลตอบกลับก่อน",
+                        JOptionPane.showMessageDialog(this, "คุณมีคำขอย้ายห้องที่รอพิจารณาอยู่แล้ว กรุณารอผู้ดูแลตอบกลับก่อน",
                                 "แจ้งเตือน", JOptionPane.WARNING_MESSAGE);
                         refresh();
                         return;
@@ -251,8 +245,7 @@ public class TenantRoomChangeUI extends JPanel {
                 }
 
                 JOptionPane.showMessageDialog(this,
-                        "ยื่นคำขอย้ายไปห้อง " + (target != null ? target.number : "") + " เรียบร้อย (รหัสคำขอ "
-                                + r.transferId + ")\n"
+                        "ยื่นคำขอย้ายไปห้อง " + (target != null ? target.number : "") + " เรียบร้อย (รหัสคำขอ " + r.transferId + ")\n"
                                 + "คำขอจะถูกส่งไปยังผู้ดูแลเพื่อพิจารณา",
                         "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                 refresh();
@@ -271,7 +264,6 @@ public class TenantRoomChangeUI extends JPanel {
 
     /**
      * กำหนดรูปแบบสไตล์ ขนาดตัวอักษร ความสูง และเส้นขอบของคอนโทรลรับข้อมูล
-     * 
      * @param comp คอมโพเนนต์ที่ต้องการจัดสไตล์
      */
     private void styleControl(JComponent comp) {
@@ -280,7 +272,8 @@ public class TenantRoomChangeUI extends JPanel {
         if (comp instanceof JTextField) {
             comp.setBorder(new CompoundBorder(
                     new LineBorder(BORDER_COLOR, 1, true),
-                    new EmptyBorder(0, 10, 0, 10)));
+                    new EmptyBorder(0, 10, 0, 10)
+            ));
         } else if (comp instanceof JComboBox) {
             comp.setBackground(Color.WHITE);
         }

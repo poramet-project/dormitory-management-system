@@ -11,8 +11,7 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * AdminReportUI
- * คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการจัดการคำร้องเรียนและงานแจ้งซ่อม
+ * AdminReportUI คือคลาสหน้าจอส่วนแสดงผลสำหรับผู้ดูแลระบบในการจัดการคำร้องเรียนและงานแจ้งซ่อม
  * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการคำร้องเรียนและงานแจ้งซ่อม
  * searchField คือ ช่องสำหรับค้นหาข้อมูลคำร้องเรียน
  * statusFilter คือ คอมโบ้บ็อกซ์สำหรับเลือกกรองตามสถานะ
@@ -37,8 +36,7 @@ public class AdminReportUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, table, tableModel) คือ หน้าจอสำหรับแสดงรายการคำร้องเรียน
-    // ติดตามสถานะงานซ่อม และปรับปรุงความคืบหน้าการซ่อมบำรุง
+    // AF(logic, table, tableModel) คือ หน้าจอสำหรับแสดงรายการคำร้องเรียน ติดตามสถานะงานซ่อม และปรับปรุงความคืบหน้าการซ่อมบำรุง
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. table และ tableModel ต้องไม่เป็น null
@@ -78,8 +76,7 @@ public class AdminReportUI extends JPanel {
     }
 
     /**
-     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองหมวดหมู่ ตัวกรองสถานะ
-     * และป้ายแสดงจำนวนรายการ
+     * สร้างแถบเครื่องมือด้านบน ประกอบด้วยตัวกรองหมวดหมู่ ตัวกรองสถานะ และป้ายแสดงจำนวนรายการ
      */
     private void createToolbar() {
         typeFilter = styledCombo(new String[] { "หมวดหมู่ทั้งหมด", "ระบบประปา", "ระบบไฟฟ้า", "เครื่องปรับอากาศ",
@@ -200,7 +197,7 @@ public class AdminReportUI extends JPanel {
                 if ("อื่นๆ".equals(selCat)) {
                     matchCat = p.category == null || p.category.contains("อื่น")
                             || (!p.category.contains("ประปา") && !p.category.contains("ไฟฟ้า")
-                                    && !p.category.contains("ปรับอากาศ") && !p.category.contains("แอร์")
+                                     && !p.category.contains("ปรับอากาศ") && !p.category.contains("แอร์")
                                     && !p.category.contains("เฟอร์นิเจอร์"));
                 } else if (p.category != null) {
                     String cleanKey = selCat.replace("ระบบ", "").replace("เครื่อง", "").trim();
@@ -250,8 +247,7 @@ public class AdminReportUI extends JPanel {
     }
 
     /**
-     * ผูก Listener
-     * การเลือกแถวในตารางเพื่อแสดงรายละเอียดคำร้องที่เลือกในพาเนลด้านขวา
+     * ผูก Listener การเลือกแถวในตารางเพื่อแสดงรายละเอียดคำร้องที่เลือกในพาเนลด้านขวา
      */
     private void bindSelection() {
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -283,8 +279,7 @@ public class AdminReportUI extends JPanel {
     }
 
     /**
-     * กำหนด Event Handlers สำหรับตัวกรองหมวดหมู่ ตัวกรองสถานะ
-     * และปุ่มรับเรื่องส่งช่าง
+     * กำหนด Event Handlers สำหรับตัวกรองหมวดหมู่ ตัวกรองสถานะ และปุ่มรับเรื่องส่งช่าง
      */
     private void initActions() {
         typeFilter.addActionListener(e -> refreshData());
@@ -313,10 +308,10 @@ public class AdminReportUI extends JPanel {
     /**
      * สร้างแถวแสดงข้อมูลรายละเอียดคู่หัวข้อและค่า
      * 
-     * @param p     พาเนลที่จะวางองค์ประกอบ
+     * @param p พาเนลที่จะวางองค์ประกอบ
      * @param title หัวข้อรายละเอียด
-     * @param text  ค่ารายละเอียด
-     * @param y     ตำแหน่งแกน Y
+     * @param text ค่ารายละเอียด
+     * @param y ตำแหน่งแกน Y
      * @return JLabel แสดงค่ารายละเอียด
      */
     private static JLabel detailRow(JPanel p, String title, String text, int y) {
@@ -334,7 +329,7 @@ public class AdminReportUI extends JPanel {
      * สร้างป้ายข้อความกำกับฟิลด์ข้อมูล
      * 
      * @param title ข้อความหัวข้อ
-     * @param y     ตำแหน่งแกน Y
+     * @param y ตำแหน่งแกน Y
      * @return JLabel ป้ายกำกับ
      */
     private static JLabel fieldLabel(String title, int y) {
@@ -377,8 +372,8 @@ public class AdminReportUI extends JPanel {
     /**
      * สร้าง JScrollPane ครอบกล่องข้อความพร้อมกำหนดพิกัดและความสูง
      * 
-     * @param area   กล่องข้อความ
-     * @param y      ตำแหน่งแกน Y
+     * @param area กล่องข้อความ
+     * @param y ตำแหน่งแกน Y
      * @param height ความสูง
      * @return JScrollPane
      */
@@ -411,7 +406,30 @@ public class AdminReportUI extends JPanel {
         return cb;
     }
 
-    static class HeaderRenderer extends UIComponents.HeaderRenderer {
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำร้องเรียน
+     */
+    static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางคำร้องเรียน
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของส่วนหัวตารางคำร้องเรียน
+         */
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
+            super.getTableCellRendererComponent(t, value, selected, focus, row, col);
+            setFont(AdminUI.font(Font.PLAIN, 11));
+            setForeground(TEXT_GRAY);
+            setBackground(WHITE);
+            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER),
+                    new EmptyBorder(0, 8, 0, 8)));
+            return this;
+        }
     }
 
     /**

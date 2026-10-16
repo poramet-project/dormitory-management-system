@@ -1,14 +1,16 @@
 package ui;
 
 import logic.GuestRoomLogic;
+import logic.ImageLoader;
 import logic.LoginLogic;
+
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 
 /**
- * GuestRoomUI
- * คือคลาสหน้าจอแสดงรายละเอียดของห้องพักที่เลือกและฟอร์มยื่นคำขอจองห้องพัก
+ * GuestRoomUI คือคลาสหน้าจอแสดงรายละเอียดของห้องพักที่เลือกและฟอร์มยื่นคำขอจองห้องพัก
  * logic คือ อ็อบเจกต์ตรรกะสำหรับจัดการข้อมูลห้องพักและการจองห้องพัก
  * mainUI คือ อ็อบเจกต์หน้าต่างหลัก GuestUI สำหรับการสลับมุมมองหน้าจอกลับ
  */
@@ -16,8 +18,7 @@ public class GuestRoomUI extends JPanel {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, mainUI) คือ หน้าจอแสดงรายละเอียดห้องพัก อัตราค่าเช่า
-    // สิ่งอำนวยความสะดวก และปุ่มจองห้องพัก
+    // AF(logic, mainUI) คือ หน้าจอแสดงรายละเอียดห้องพัก อัตราค่าเช่า สิ่งอำนวยความสะดวก และปุ่มจองห้องพัก
     // RI
     // 1. logic ต้องไม่เป็น null
 
@@ -25,8 +26,7 @@ public class GuestRoomUI extends JPanel {
     private final GuestUI mainUI;
 
     /**
-     * คอนสตรัคเตอร์เริ่มต้นสำหรับสร้างหน้าจอแสดงรายละเอียดห้องพัก (ใช้ห้อง 101
-     * เป็นค่าเริ่มต้น)
+     * คอนสตรัคเตอร์เริ่มต้นสำหรับสร้างหน้าจอแสดงรายละเอียดห้องพัก (ใช้ห้อง 101 เป็นค่าเริ่มต้น)
      * 
      * @param mainUI หน้าต่างหลัก GuestUI
      */
@@ -37,10 +37,10 @@ public class GuestRoomUI extends JPanel {
     /**
      * คอนสตรัคเตอร์สำหรับสร้างหน้าจอแสดงรายละเอียดห้องพักตามข้อมูลห้องที่ระบุ
      * 
-     * @param mainUI     หน้าต่างหลัก GuestUI
-     * @param roomName   ชื่อหรือหมายเลขห้องพัก
-     * @param roomType   ประเภทห้องพัก
-     * @param roomPrice  อัตราค่าเช่า
+     * @param mainUI หน้าต่างหลัก GuestUI
+     * @param roomName ชื่อหรือหมายเลขห้องพัก
+     * @param roomType ประเภทห้องพัก
+     * @param roomPrice อัตราค่าเช่า
      * @param roomStatus สถานะความพร้อมของห้องพัก
      */
     public GuestRoomUI(GuestUI mainUI, String roomName, String roomType, String roomPrice, String roomStatus) {
@@ -86,10 +86,8 @@ public class GuestRoomUI extends JPanel {
 
         String roomNumOnly = logic.getRoomNumberOnly();
 
-        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg
-        // หากไม่มีจะแสดงกรอบว่างๆ
-        RoomImage bigImg = new RoomImage(
-                new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, 240, 158);
+        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg หากไม่มีจะแสดงกรอบว่างๆ
+        RoomImage bigImg = new RoomImage(new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, 240, 158);
         bigImg.setBounds(16, 16, 240, 158);
         topCard.add(bigImg);
 
@@ -230,9 +228,83 @@ public class GuestRoomUI extends JPanel {
         add(btnBook);
     }
 
-    static class RoomImage extends UIComponents.RoomImage {
+    /**
+     * RoomImage คือคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักขนาดใหญ่ในหน้ารายละเอียด
+     * photo คือ อ็อบเจกต์รูปภาพห้องพักที่โหลดมาแสดงผล
+     */
+    static class RoomImage extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(photo) คือ พาเนลแสดงรูปภาพห้องพัก หรือแสดงกรอบว่างพร้อมสัญลักษณ์เมื่อไม่มีภาพ
+        // RI
+        // - photo อาจเป็น null ได้หากไม่มีไฟล์รูปภาพ
+
+        private final Image photo;
+
+        /**
+         * สร้างคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักตามขนาดที่กำหนด
+         * 
+         * @param paths รายการพาธของไฟล์รูปภาพที่ต้องการค้นหาและโหลด
+         * @param width ความกว้าง
+         * @param height ความสูง
+         */
         RoomImage(String[] paths, int width, int height) {
-            super(paths, width, height);
+            this.photo = ImageLoader.load(paths);
+            setOpaque(false);
+            setPreferredSize(new Dimension(width, height));
+            setSize(width, height);
+        }
+
+        /**
+         * วาดรูปภาพห้องพักขอบโค้งมน หรือวาดไอคอนรูปกล้องและข้อความแจ้งเตือนเมื่อไม่มีภาพ
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            int w = getWidth(), h = getHeight();
+
+            if (w > 0 && h > 0) {
+                g2.clipRect(0, 0, w, h);
+                g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 12, 12));
+
+                if (photo != null) {
+                    g2.drawImage(photo, 0, 0, w, h, this);
+                } else {
+                    // 🟢 ทำเป็นกรอบว่างๆ ขนาดใหญ่สำหรับหน้ารายละเอียดห้อง
+                    g2.setColor(new Color(248, 250, 252));
+                    g2.fillRect(0, 0, w, h);
+
+                    // วาดเส้นขอบประ
+                    float[] dash = { 6.0f, 4.0f };
+                    g2.setStroke(
+                            new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g2.setColor(new Color(203, 213, 225));
+                    g2.drawRoundRect(1, 1, w - 3, h - 3, 12, 12);
+
+                    // วาดไอคอนกล้อง
+                    g2.setStroke(new BasicStroke(1.8f));
+                    g2.setColor(new Color(148, 163, 184));
+                    int cx = w / 2, cy = h / 2 - 10;
+                    g2.drawRoundRect(cx - 20, cy - 14, 40, 28, 6, 6);
+                    g2.drawOval(cx - 7, cy - 7, 14, 14);
+
+                    // ข้อความระบุ
+                    Font baseFont = UIManager.getFont("Label.font");
+                    if (baseFont != null) {
+                        g2.setFont(baseFont.deriveFont(Font.PLAIN, 12f));
+                    }
+                    String msg = "ไม่มีรูปภาพประกอบห้องพัก";
+                    FontMetrics fm = g2.getFontMetrics();
+                    g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, cy + 30);
+                }
+            }
+            g2.dispose();
         }
     }
 }

@@ -262,13 +262,9 @@ public class AdminBookingUI extends JPanel {
                 String bookingId = String.valueOf(tableModel.getValueAt(row, 0));
                 if (logic.approveBooking(bookingId)) {
                     JOptionPane.showMessageDialog(this,
-                            "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่าเรียบร้อยแล้ว",
+                            "อนุมัติคำขอจอง ปรับบทบาทเป็น TENANT และสร้างสัญญาเช่า (เงินประกัน x 2) เรียบร้อยแล้ว",
                             "สำเร็จ", JOptionPane.INFORMATION_MESSAGE);
                     refreshData();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "ไม่สามารถอนุมัติได้ เนื่องจากห้องพักนี้มีผู้อาศัยอยู่แล้ว หรือห้องไม่ว่าง",
-                            "ห้องไม่ว่าง", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -387,7 +383,30 @@ public class AdminBookingUI extends JPanel {
         return cb;
     }
 
-    static class HeaderRenderer extends UIComponents.HeaderRenderer {
+    /**
+     * HeaderRenderer คือคลาสกำหนดการแสดงผลส่วนหัวของตารางคำขอจองห้อง
+     */
+    static class HeaderRenderer extends DefaultTableCellRenderer {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF() คือ คอมโพเนนต์เรนเดอร์ส่วนหัวของตารางให้มีสีและฟอนต์ตามธีมระบบ
+        // RI
+        // - ไม่มีตัวแปรสถานะภายใน
+
+        /**
+         * กำหนดการแสดงผลของส่วนหัวตารางคำขอจองห้องพัก
+         */
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row,
+                int col) {
+            super.getTableCellRendererComponent(t, value, selected, focus, row, col);
+            setFont(AdminUI.font(Font.PLAIN, 11));
+            setForeground(TEXT_GRAY);
+            setBackground(WHITE);
+            setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, BORDER),
+                    new EmptyBorder(0, 8, 0, 8)));
+            return this;
+        }
     }
 
     /**

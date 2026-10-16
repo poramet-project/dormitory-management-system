@@ -3,12 +3,9 @@ package logic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 /**
- * AdminReportLogic
- * คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบงานแจ้งซ่อมและข้อร้องเรียนสำหรับผู้ดูแล
- * ทำหน้าที่อ่านรายการปัญหา อัปเดตสถานะการส่งช่างเข้าตรวจสอบ
- * และแปลงข้อมูลเพื่อแสดงผลบนตาราง
+ * AdminReportLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบงานแจ้งซ่อมและข้อร้องเรียนสำหรับผู้ดูแล
+ * ทำหน้าที่อ่านรายการปัญหา อัปเดตสถานะการส่งช่างเข้าตรวจสอบ และแปลงข้อมูลเพื่อแสดงผลบนตาราง
  */
 public class AdminReportLogic {
 
@@ -46,20 +43,18 @@ public class AdminReportLogic {
         /**
          * คอนสตรักเตอร์สำหรับสร้างอ็อบเจกต์ ProblemModel
          *
-         * @param id       รหัสรายการแจ้งซ่อม
-         * @param name     ชื่อ-นามสกุลของผู้แจ้ง
-         * @param phone    เบอร์โทรศัพท์ของผู้แจ้ง
-         * @param room     หมายเลขห้องพัก
-         * @param date     วันที่แจ้งซ่อม
-         * @param time     เวลานัดหมายหรือเวลาที่แจ้ง
-         * @param status   สถานะการดำเนินการ (รอดำเนินการ, ช่างกำลังเข้าตรวจสอบ,
-         *                 เสร็จสิ้น)
+         * @param id รหัสรายการแจ้งซ่อม
+         * @param name ชื่อ-นามสกุลของผู้แจ้ง
+         * @param phone เบอร์โทรศัพท์ของผู้แจ้ง
+         * @param room หมายเลขห้องพัก
+         * @param date วันที่แจ้งซ่อม
+         * @param time เวลานัดหมายหรือเวลาที่แจ้ง
+         * @param status สถานะการดำเนินการ (รอดำเนินการ, ช่างกำลังเข้าตรวจสอบ, เสร็จสิ้น)
          * @param category หมวดหมู่งานซ่อม
-         * @param desc     รายละเอียดปัญหา
-         * @param topic    หัวข้อเรื่องที่แจ้ง
+         * @param desc รายละเอียดปัญหา
+         * @param topic หัวข้อเรื่องที่แจ้ง
          */
-        public ProblemModel(String id, String name, String phone, String room, String date, String time, String status,
-                String category, String desc, String topic) {
+        public ProblemModel(String id, String name, String phone, String room, String date, String time, String status, String category, String desc, String topic) {
             this.id = id;
             this.name = name;
             this.phone = phone;
@@ -99,8 +94,8 @@ public class AdminReportLogic {
             DataStore.Room r = DataStore.room(roomId);
             String roomNum = r != null ? r.number : roomId;
 
-            String statusThai = "IN_PROGRESS".equalsIgnoreCase(statusRaw) ? "ช่างกำลังเข้าตรวจสอบ"
-                    : ("RESOLVED".equalsIgnoreCase(statusRaw) ? "เสร็จสิ้น" : "รอดำเนินการ");
+            String statusThai = "IN_PROGRESS".equalsIgnoreCase(statusRaw) ? "ช่างกำลังเข้าตรวจสอบ" :
+                               ("RESOLVED".equalsIgnoreCase(statusRaw) ? "เสร็จสิ้น" : "รอดำเนินการ");
 
             String dateThai = DataStore.thaiDate(dateRaw);
             String timeThai = DataStore.thaiTime(dateRaw);
@@ -112,8 +107,7 @@ public class AdminReportLogic {
 
     /**
      * แปลงรายการแจ้งซ่อมให้อยู่ในรูปแบบ Object[][] สำหรับแสดงผลบน JTable
-     * ประกอบด้วย 6 คอลัมน์: รหัสแจ้งซ่อม, ชื่อผู้แจ้ง, ห้อง, หมวดหมู่, วันที่,
-     * สถานะ
+     * ประกอบด้วย 6 คอลัมน์: รหัสแจ้งซ่อม, ชื่อผู้แจ้ง, ห้อง, หมวดหมู่, วันที่, สถานะ
      *
      * @return อาร์เรย์ 2 มิติของข้อมูลสำหรับ DefaultTableModel
      */
@@ -122,7 +116,7 @@ public class AdminReportLogic {
         Object[][] rows = new Object[list.size()][6];
         for (int i = 0; i < list.size(); i++) {
             ProblemModel p = list.get(i);
-            rows[i] = new Object[] { p.id, p.name, p.room, p.category, p.date, p.status };
+            rows[i] = new Object[]{p.id, p.name, p.room, p.category, p.date, p.status};
         }
         return rows;
     }

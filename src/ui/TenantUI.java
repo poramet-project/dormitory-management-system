@@ -1,5 +1,4 @@
 package ui;
-
 import logic.*;
 
 import javax.swing.*;
@@ -28,9 +27,7 @@ public class TenantUI extends JFrame {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(cardLayout, centerCardsPanel, menuItems, logic, homePage, reportPage) คือ
-    // หน้าต่างหลักของผู้เช่าสำหรับนำทางไปยังหน้าข้อมูลห้อง สัญญา แจ้งซ่อม
-    // และย้ายห้อง
+    // AF(cardLayout, centerCardsPanel, menuItems, logic, homePage, reportPage) คือ หน้าต่างหลักของผู้เช่าสำหรับนำทางไปยังหน้าข้อมูลห้อง สัญญา แจ้งซ่อม และย้ายห้อง
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. cardLayout และ centerCardsPanel ต้องไม่เป็น null
@@ -50,9 +47,8 @@ public class TenantUI extends JFrame {
 
     /**
      * คืนค่าแบบอักษรตามรูปแบบและขนาดที่กำหนด
-     * 
      * @param style รูปแบบอักษร (เช่น Font.PLAIN, Font.BOLD)
-     * @param size  ขนาดตัวอักษร
+     * @param size ขนาดตัวอักษร
      * @return อ็อบเจกต์ Font
      */
     static Font font(int style, float size) {
@@ -61,9 +57,8 @@ public class TenantUI extends JFrame {
 
     /**
      * สร้างและคืนค่าคอมโพเนนต์ JLabel พร้อมจัดรูปแบบตัวอักษรและสี
-     * 
-     * @param text  ข้อความที่ต้องการแสดง
-     * @param size  ขนาดตัวอักษร
+     * @param text ข้อความที่ต้องการแสดง
+     * @param size ขนาดตัวอักษร
      * @param style รูปแบบตัวอักษร (Font.PLAIN, Font.BOLD)
      * @param color สีข้อความ
      * @return อ็อบเจกต์ JLabel ที่จัดรูปแบบแล้ว
@@ -77,8 +72,7 @@ public class TenantUI extends JFrame {
 
     /**
      * แปลงค่า null / ว่าง / "-" ให้เป็นข้อความที่แสดงผลได้
-     * 
-     * @param s        ข้อความต้นฉบับ
+     * @param s ข้อความต้นฉบับ
      * @param fallback ข้อความเริ่มต้นที่จะใช้หากค่าเดิมว่าง
      * @return ข้อความที่พร้อมแสดงผล
      */
@@ -139,8 +133,7 @@ public class TenantUI extends JFrame {
 
     /**
      * โหลดคอมโพเนนต์หน้าย่อยอย่างปลอดภัย หากเกิดข้อผิดพลาดจะคืนค่า Error Panel แทน
-     * 
-     * @param name    ชื่อหน้า
+     * @param name ชื่อหน้า
      * @param factory ฟังก์ชันสร้างคอมโพเนนต์หน้า
      * @return คอมโพเนนต์หน้าย่อยที่สร้างสำเร็จ หรือ Error Panel
      */
@@ -155,9 +148,8 @@ public class TenantUI extends JFrame {
 
     /**
      * สร้างพาเนลแจ้งเตือนข้อผิดพลาดพร้อมแสดง StackTrace
-     * 
      * @param pageName ชื่อหน้าที่เกิดข้อผิดพลาด
-     * @param t        ข้อผิดพลาดที่เกิดขึ้น
+     * @param t ข้อผิดพลาดที่เกิดขึ้น
      * @return คอมโพเนนต์พาเนลข้อผิดพลาด
      */
     private JComponent buildErrorPanel(String pageName, Throwable t) {
@@ -177,8 +169,7 @@ public class TenantUI extends JFrame {
 
     /**
      * สลับการแสดงผลหน้าย่อยตามชื่อหน้า และปรับสถานะการเลือกของเมนูด้านข้าง
-     * 
-     * @param pageName  คีย์ชื่อหน้าที่จะสลับไปแสดงผล
+     * @param pageName คีย์ชื่อหน้าที่จะสลับไปแสดงผล
      * @param menuIndex ดัชนีของปุ่มเมนูด้านข้างที่ต้องไฮไลต์
      */
     public void showPage(String pageName, int menuIndex) {
@@ -199,7 +190,6 @@ public class TenantUI extends JFrame {
 
     /**
      * สร้างแถบเมนูด้านข้าง (Sidebar) สำหรับนำทางไปยังส่วนต่างๆ และปุ่มออกจากระบบ
-     * 
      * @return พาเนล Sidebar
      */
     private JPanel buildSidebar() {
@@ -274,8 +264,7 @@ public class TenantUI extends JFrame {
     class MenuItem extends JPanel {
         // ===== representation =====
         // Abstraction Function:
-        // AF(selected, hover, text, icon) คือ
-        // ปุ่มเมนูนำทางที่เปลี่ยนสีตามสถานะการเลือกและการชี้เมาส์
+        // AF(selected, hover, text, icon) คือ ปุ่มเมนูนำทางที่เปลี่ยนสีตามสถานะการเลือกและการชี้เมาส์
         // RI
         // 1. text และ icon ต้องไม่เป็น null
 
@@ -285,9 +274,8 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้างคอมโพเนนต์ปุ่มเมนูด้านข้าง
-         * 
-         * @param name    ชื่อเมนู
-         * @param type    ประเภทไอคอนเส้น
+         * @param name ชื่อเมนู
+         * @param type ประเภทไอคอนเส้น
          * @param onClick การทำงานเมื่อคลิกเลือกเมนู
          */
         MenuItem(String name, LineIcon.Type type, Runnable onClick) {
@@ -323,7 +311,6 @@ public class TenantUI extends JFrame {
 
         /**
          * กำหนดสถานะการเลือกของปุ่มเมนู และปรับสีข้อความกับไอคอน
-         * 
          * @param s สถานะว่าเลือกเมนูนี้หรือไม่
          */
         void setSelected(boolean s) {
@@ -336,7 +323,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดพื้นหลังปุ่มเมนูเมื่อถูกเลือกหรือเมื่อนำเมาส์มาชี้
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -353,7 +339,6 @@ public class TenantUI extends JFrame {
 
     /**
      * สร้างแถบเมนูด้านบน (TopBar) แสดงรูปโปรไฟล์ ชื่อผู้ใช้ และบทบาท
-     * 
      * @return พาเนล TopBar
      */
     private JPanel buildTopBar() {
@@ -375,13 +360,63 @@ public class TenantUI extends JFrame {
         return top;
     }
 
+    /**
+     * ปรับแต่ง Graphics เป็น Graphics2D และเปิด Anti-aliasing
+     * @param g กราฟิกส์ดั้งเดิม
+     * @return อ็อบเจกต์ Graphics2D ที่ปรับแต่งแล้ว
+     */
     static Graphics2D aa(Graphics g) {
-        return UIComponents.smooth(g);
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        return g2;
     }
 
-    static class RoundedPanel extends UIComponents.RoundedPanel {
+    /**
+     * RoundedPanel คือคอมโพเนนต์พาเนลพื้นหลังขอบโค้งมน
+     * radius คือ รัศมีความโค้งของมุมพาเนล
+     * fill คือ สีพื้นหลังของพาเนล
+     * border คือ สีเส้นขอบของพาเนล
+     */
+    static class RoundedPanel extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(radius, fill, border) คือ พาเนลขอบโค้งมนตามรัศมีและสีที่กำหนด
+        // RI
+        // 1. radius >= 0
+
+        final int radius;
+        final Color fill;
+        final Color border;
+
+        /**
+         * คอนสตรักเตอร์สร้าง RoundedPanel
+         * @param radius รัศมีความโค้งมนของมุมพาเนล
+         * @param fill สีพื้นหลังของพาเนล
+         * @param border สีเส้นขอบของพาเนล (อาจเป็น null ได้หากไม่ต้องการเส้นขอบ)
+         */
         RoundedPanel(int radius, Color fill, Color border) {
-            super(radius, fill, border);
+            this.radius = radius;
+            this.fill = fill;
+            this.border = border;
+            setOpaque(false);
+        }
+
+        /**
+         * วาดพื้นหลังพาเนลขอบโค้งมนและเส้นขอบตามสีและรัศมีที่กำหนด
+         * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
+         */
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = aa(g);
+            g2.setColor(fill);
+            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
+            if (border != null) {
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, radius, radius);
+            }
+            g2.dispose();
         }
     }
 
@@ -397,7 +432,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้าง RoundButton
-         * 
          * @param text ข้อความบนปุ่ม
          */
         RoundButton(String text) {
@@ -412,7 +446,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดปุ่มกดขอบโค้งมนพร้อมเปลี่ยนสีตามสถานะการคลิกหรือการนำเมาส์มาชี้
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -442,12 +475,11 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้าง Pill
-         * 
-         * @param text   ข้อความในป้าย
-         * @param fill   สีพื้นหลังของป้าย
+         * @param text ข้อความในป้าย
+         * @param fill สีพื้นหลังของป้าย
          * @param border สีเส้นขอบของป้าย
-         * @param fg     สีตัวอักษร
-         * @param size   ขนาดตัวอักษร
+         * @param fg สีตัวอักษร
+         * @param size ขนาดตัวอักษร
          */
         Pill(String text, Color fill, Color border, Color fg, float size) {
             super(text, SwingConstants.CENTER);
@@ -459,7 +491,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดพื้นหลังป้ายรูปแคปซูลและเส้นขอบ
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -495,7 +526,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้าง CircleIcon
-         * 
          * @param icon อ็อบเจกต์ไอคอนภายในวงกลม
          * @param size ขนาดเส้นผ่านศูนย์กลางวงกลม
          */
@@ -506,7 +536,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดวงกลมพื้นหลังและวาดไอคอนไว้กึ่งกลางวงกลม
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -521,7 +550,6 @@ public class TenantUI extends JFrame {
 
     /**
      * สร้างไอคอนจุดวงกลมตามสีและขนาดที่กำหนด
-     * 
      * @param c สีของจุดวงกลม
      * @param d ขนาดเส้นผ่านศูนย์กลางจุด
      * @return อ็อบเจกต์ Icon รูปจุดวงกลม
@@ -562,7 +590,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้าง Avatar
-         * 
          * @param size ขนาดเส้นผ่านศูนย์กลางของกรอบวงกลม
          */
         Avatar(int size) {
@@ -573,7 +600,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดภาพโปรไฟล์หรือไอคอนตัวแทนผู้ใช้ในกรอบวงกลม
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -610,7 +636,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์โหลดและแสดงรูปภาพห้องพักตามรหัสห้อง
-         * 
          * @param roomId หมายเลขหรือรหัสห้องพัก
          */
         RoomImage(String roomId) {
@@ -619,7 +644,6 @@ public class TenantUI extends JFrame {
 
         /**
          * อัปเดตรูปภาพห้องพักตามรหัสห้องพักใหม่
-         * 
          * @param roomId หมายเลขหรือรหัสห้องพัก
          */
         public void setRoomId(String roomId) {
@@ -631,16 +655,17 @@ public class TenantUI extends JFrame {
                 }
 
                 this.img = loadImage(
-                        "src/img/room_" + roomNum + ".jpg",
-                        "src/img/room_" + roomNum + ".png",
-                        "room_" + roomNum + ".jpg",
-                        "room_" + roomNum + ".png",
-                        "src/img/room_" + cleanRoom + ".jpg",
-                        "src/img/room_" + cleanRoom + ".png",
-                        "room_" + cleanRoom + ".jpg",
-                        "room_" + cleanRoom + ".png",
-                        "src/img/room.jpg",
-                        "room.jpg");
+                    "src/img/room_" + roomNum + ".jpg", 
+                    "src/img/room_" + roomNum + ".png",
+                    "room_" + roomNum + ".jpg", 
+                    "room_" + roomNum + ".png",
+                    "src/img/room_" + cleanRoom + ".jpg",
+                    "src/img/room_" + cleanRoom + ".png",
+                    "room_" + cleanRoom + ".jpg",
+                    "room_" + cleanRoom + ".png",
+                    "src/img/room.jpg",
+                    "room.jpg"
+                );
             } else {
                 this.img = loadImage("src/img/room.jpg", "room.jpg");
             }
@@ -656,7 +681,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดภาพห้องพักขอบมนพร้อมปรับสเกลภาพให้พอดีกับพื้นที่
-         * 
          * @param g อ็อบเจกต์ Graphics สำหรับวาดกราฟิก
          */
         @Override
@@ -679,7 +703,6 @@ public class TenantUI extends JFrame {
 
     /**
      * โหลดรูปภาพจากชุดรายชื่อไฟล์ที่ระบุตามลำดับจนกว่าจะพบไฟล์ที่มีอยู่
-     * 
      * @param names รายชื่อพาธไฟล์รูปภาพ
      * @return อ็อบเจกต์ Image หรือ null หากไม่พบ
      */
@@ -711,9 +734,8 @@ public class TenantUI extends JFrame {
 
         /**
          * คอนสตรักเตอร์สร้าง LineIcon
-         * 
-         * @param type  ประเภทไอคอน
-         * @param size  ขนาดไอคอน
+         * @param type ประเภทไอคอน
+         * @param size ขนาดไอคอน
          * @param color สีของเส้นไอคอน
          */
         LineIcon(Type type, int size, Color color) {
@@ -724,7 +746,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คืนค่าความกว้างของไอคอน
-         * 
          * @return ความกว้างไอคอนเป็นพิกเซล
          */
         public int getIconWidth() {
@@ -733,7 +754,6 @@ public class TenantUI extends JFrame {
 
         /**
          * คืนค่าความสูงของไอคอน
-         * 
          * @return ความสูงไอคอนเป็นพิกเซล
          */
         public int getIconHeight() {
@@ -742,7 +762,6 @@ public class TenantUI extends JFrame {
 
         /**
          * วาดไอคอนเส้นเวกเตอร์ตามประเภทที่กำหนด
-         * 
          * @param c คอมโพเนนต์ที่เรียกใช้วาดไอคอน
          * @param g กราฟิกส์สำหรับวาด
          * @param x พิกัดแกน X

@@ -4,19 +4,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 /**
- * AdminTenantLogic
- * คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบทะเบียนผู้เช่าและสัญญาเช่าสำหรับผู้ดูแล
- * ให้บริการดึงรายการสัญญาเช่า ทำสัญญาใหม่ แก้ไขสัญญา ต่ออายุสัญญา
- * และยกเลิกสัญญาเช่า
+ * AdminTenantLogic คือคลาสสำหรับจัดการตรรกะทางธุรกิจของระบบทะเบียนผู้เช่าและสัญญาเช่าสำหรับผู้ดูแล
+ * ให้บริการดึงรายการสัญญาเช่า ทำสัญญาใหม่ แก้ไขสัญญา ต่ออายุสัญญา และยกเลิกสัญญาเช่า
  */
 public class AdminTenantLogic {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF() คือ ตัวแทนตรรกะการจัดการสัญญาเช่าและผู้เช่าใน contracts.csv และ
-    // users.csv
+    // AF() คือ ตัวแทนตรรกะการจัดการสัญญาเช่าและผู้เช่าใน contracts.csv และ users.csv
     // RI
     // 1. contracts.csv และ users.csv ต้องพร้อมใช้งานและสามารถบันทึกข้อมูลได้
     // 2. การทำสัญญาใหม่หรือต่ออายุสัญญา ต้องมีเงินประกันและค่าเช่ามากกว่า 0
@@ -40,8 +36,7 @@ public class AdminTenantLogic {
 
         // ===== representation =====
         // Abstraction Function:
-        // AF(id, userId, name, roomId, room, startDate, endDate, status, phone,
-        // roomType, rent, deposit) คือ
+        // AF(id, userId, name, roomId, room, startDate, endDate, status, phone, roomType, rent, deposit) คือ
         // ข้อมูลจำลองสัญญาเช่าของผู้เช่า 1 รายการ
         // RI
         // 1. id, userId, name, roomId, status ต้องไม่เป็น null
@@ -52,22 +47,21 @@ public class AdminTenantLogic {
         /**
          * คอนสตรักเตอร์สำหรับสร้างอ็อบเจกต์ TenantModel
          *
-         * @param id        เลขที่สัญญาเช่า
-         * @param userId    รหัสผู้ใช้งานผู้เช่า
-         * @param name      ชื่อ-นามสกุลของผู้เช่า
-         * @param roomId    รหัสห้องพัก
-         * @param room      หมายเลขห้องพัก
+         * @param id เลขที่สัญญาเช่า
+         * @param userId รหัสผู้ใช้งานผู้เช่า
+         * @param name ชื่อ-นามสกุลของผู้เช่า
+         * @param roomId รหัสห้องพัก
+         * @param room หมายเลขห้องพัก
          * @param startDate วันที่เริ่มสัญญา
-         * @param endDate   วันที่สิ้นสุดสัญญา
-         * @param status    สถานะสัญญา (ใช้งานอยู่, รออนุมัติ, หมดอายุ, ยกเลิกสัญญา)
-         * @param phone     เบอร์โทรศัพท์ติดต่อ
-         * @param roomType  ข้อความระบุห้องพักและประเภทห้อง
-         * @param rent      ข้อความแสดงอัตราค่าเช่า
-         * @param deposit   ข้อความแสดงเงินมัดจำประกัน
+         * @param endDate วันที่สิ้นสุดสัญญา
+         * @param status สถานะสัญญา (ใช้งานอยู่, รออนุมัติ, หมดอายุ, ยกเลิกสัญญา)
+         * @param phone เบอร์โทรศัพท์ติดต่อ
+         * @param roomType ข้อความระบุห้องพักและประเภทห้อง
+         * @param rent ข้อความแสดงอัตราค่าเช่า
+         * @param deposit ข้อความแสดงเงินมัดจำประกัน
          */
-        public TenantModel(String id, String userId, String name, String roomId, String room, String startDate,
-                String endDate,
-                String status, String phone, String roomType, String rent, String deposit) {
+        public TenantModel(String id, String userId, String name, String roomId, String room, String startDate, String endDate,
+                           String status, String phone, String roomType, String rent, String deposit) {
             this.id = id;
             this.userId = userId;
             this.name = name;
@@ -94,14 +88,14 @@ public class AdminTenantLogic {
         for (DataStore.Contract c : DataStore.contracts()) {
             LoginLogic.User u = LoginLogic.findUser(c.userId);
             DataStore.Room r = DataStore.room(c.roomId);
-
+            
             String name = (u != null) ? u.fullName : c.userId;
             String phone = (u != null) ? u.phone : "-";
             String roomNum = (r != null) ? r.number : c.roomId;
             String typeStr = (r != null) ? "ห้อง " + r.number + " • " + r.typeShort() : "ห้อง " + c.roomId;
 
-            list.add(new TenantModel(c.id, c.userId, name, c.roomId, roomNum,
-                    DataStore.thaiDate(c.start), DataStore.thaiDate(c.end), c.statusThai(),
+            list.add(new TenantModel(c.id, c.userId, name, c.roomId, roomNum, 
+                    DataStore.thaiDate(c.start), DataStore.thaiDate(c.end), c.statusThai(), 
                     phone, typeStr, DataStore.money(c.rent) + " บาท", DataStore.money(c.deposit) + " บาท"));
         }
         return list;
@@ -109,8 +103,7 @@ public class AdminTenantLogic {
 
     /**
      * แปลงรายการสัญญาเช่าให้อยู่ในรูปแบบ Object[][] สำหรับแสดงผลบน JTable
-     * ประกอบด้วย 5 คอลัมน์: ชื่อผู้เช่า, ห้องพัก, วันเริ่มสัญญา, วันสิ้นสุดสัญญา,
-     * สถานะ
+     * ประกอบด้วย 5 คอลัมน์: ชื่อผู้เช่า, ห้องพัก, วันเริ่มสัญญา, วันสิ้นสุดสัญญา, สถานะ
      *
      * @return อาร์เรย์ 2 มิติของข้อมูลตารางผู้เช่า
      */
@@ -119,7 +112,7 @@ public class AdminTenantLogic {
         Object[][] rows = new Object[list.size()][5];
         for (int i = 0; i < list.size(); i++) {
             TenantModel t = list.get(i);
-            rows[i] = new Object[] { t.name, t.room, t.startDate, t.endDate, t.status };
+            rows[i] = new Object[]{t.name, t.room, t.startDate, t.endDate, t.status};
         }
         return rows;
     }
@@ -131,11 +124,9 @@ public class AdminTenantLogic {
      * @return true หากห้องพักมีผู้อาศัยอยู่แล้ว
      */
     public static boolean isRoomOccupied(String roomId) {
-        if (DataStore.blank(roomId))
-            return false;
+        if (DataStore.blank(roomId)) return false;
         DataStore.Room r = DataStore.room(roomId);
-        if (r == null)
-            r = DataStore.roomByNumber(roomId);
+        if (r == null) r = DataStore.roomByNumber(roomId);
         String rId = (r != null) ? r.id : roomId.trim();
         String rNum = (r != null) ? r.number : roomId.trim();
 
@@ -171,29 +162,16 @@ public class AdminTenantLogic {
      * สร้างและบันทึกสัญญาเช่าใหม่เข้าสู่ระบบ
      * พร้อมปรับสถานะห้องพักเป็น OCCUPIED และตั้งค่าบทบาทผู้ใช้งานเป็น TENANT
      *
-     * @param userId  รหัสผู้ใช้งาน
-     * @param roomId  รหัสห้องพัก
-     * @param rent    อัตราค่าเช่าต่อเดือน
+     * @param userId รหัสผู้ใช้งาน
+     * @param roomId รหัสห้องพัก
+     * @param rent อัตราค่าเช่าต่อเดือน
      * @param deposit เงินประกันสัญญา
-     * @return true หากบันทึกสัญญาสำเร็จ, false
-     *         หากเกิดข้อผิดพลาดหรือห้องมีผู้อาศัยอยู่แล้ว
+     * @return true หากบันทึกสัญญาสำเร็จ, false หากเกิดข้อผิดพลาดหรือห้องมีผู้อาศัยอยู่แล้ว
      */
     public boolean addContract(String userId, String roomId, int rent, int deposit) {
         if (isRoomOccupied(roomId)) {
             return false;
         }
-
-        // หากผู้ใช้นี้มีสัญญา ACTIVE เดิมอยู่
-        // ให้ยกเลิกสัญญาเดิมก่อนและปล่อยห้องเดิมเป็น AVAILABLE
-        for (DataStore.Contract oldC : DataStore.contracts()) {
-            if (oldC.userId.equalsIgnoreCase(userId) && oldC.isActive()) {
-                DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", oldC.id, "status", "TERMINATED");
-                if (!oldC.roomId.equalsIgnoreCase(roomId)) {
-                    DataStore.setRoomStatus(oldC.roomId, "AVAILABLE");
-                }
-            }
-        }
-
         boolean ok = DataStore.saveContract(userId, roomId, rent, deposit, "ACTIVE");
         if (ok) {
             DataStore.setRoomStatus(roomId, "OCCUPIED");
@@ -203,20 +181,18 @@ public class AdminTenantLogic {
     }
 
     /**
-     * แก้ไขข้อมูลสัญญาเช่าที่มีอยู่เดิม
-     * พร้อมซิงค์ข้อมูลผู้ใช้งานและห้องพักที่เกี่ยวข้อง
+     * แก้ไขข้อมูลสัญญาเช่าที่มีอยู่เดิม พร้อมซิงค์ข้อมูลผู้ใช้งานและห้องพักที่เกี่ยวข้อง
      *
      * @param contractId เลขที่สัญญาเช่า
-     * @param oldUserId  รหัสผู้ใช้เดิม
-     * @param newUserId  รหัสผู้ใช้ใหม่
-     * @param oldRoomId  รหัสห้องเดิม
-     * @param newRoomId  รหัสห้องใหม่
-     * @param rent       อัตราค่าเช่าใหม่
-     * @param deposit    เงินมัดจำประกันใหม่
+     * @param oldUserId รหัสผู้ใช้เดิม
+     * @param newUserId รหัสผู้ใช้ใหม่
+     * @param oldRoomId รหัสห้องเดิม
+     * @param newRoomId รหัสห้องใหม่
+     * @param rent อัตราค่าเช่าใหม่
+     * @param deposit เงินมัดจำประกันใหม่
      * @return true หากแก้ไขสำเร็จ, false หากห้องใหม่มีผู้อาศัยอยู่แล้ว
      */
-    public boolean updateContract(String contractId, String oldUserId, String newUserId, String oldRoomId,
-            String newRoomId, int rent, int deposit) {
+    public boolean updateContract(String contractId, String oldUserId, String newUserId, String oldRoomId, String newRoomId, int rent, int deposit) {
         if (!oldRoomId.equalsIgnoreCase(newRoomId) && isRoomOccupied(newRoomId)) {
             return false;
         }
@@ -280,33 +256,16 @@ public class AdminTenantLogic {
      * และปรับบทบาทผู้ใช้กลับเป็น GUEST
      *
      * @param contractId เลขที่สัญญาเช่า
-     * @param roomId     รหัสห้องพัก
-     * @param userId     รหัสผู้ใช้งาน
+     * @param roomId รหัสห้องพัก
+     * @param userId รหัสผู้ใช้งาน
      * @return true หากยกเลิกสัญญาสำเร็จ
      */
     public boolean terminateContract(String contractId, String roomId, String userId) {
         boolean ok = DataStore.updateCell(DataStore.CONTRACTS_FILE, "contractId", contractId, "status", "TERMINATED");
         if (ok) {
             DataStore.setRoomStatus(roomId, "AVAILABLE");
-
-            // ตรวจสอบว่าผู้เช่ายังมีสัญญา ACTIVE อื่นอยู่อีกหรือไม่
-            DataStore.Contract otherActive = null;
-            for (DataStore.Contract c : DataStore.contracts()) {
-                if (c.isActive() && c.userId.equalsIgnoreCase(userId) && !c.id.equalsIgnoreCase(contractId)) {
-                    otherActive = c;
-                    break;
-                }
-            }
-
-            if (otherActive != null) {
-                // หากยังมีสัญญาอื่นที่ active อยู่ ให้คงสถานะ TENANT และผูกกับห้องนั้น
-                DataStore.updateCell("users.csv", "userId", userId, "roomId", otherActive.roomId);
-                DataStore.updateCell("users.csv", "userId", userId, "role", "TENANT");
-                LoginLogic.assignRoom(userId, otherActive.roomId);
-            } else {
-                DataStore.updateCell("users.csv", "userId", userId, "roomId", "-");
-                DataStore.updateCell("users.csv", "userId", userId, "role", "GUEST");
-            }
+            DataStore.updateCell("users.csv", "userId", userId, "roomId", "-");
+            DataStore.updateCell("users.csv", "userId", userId, "role", "GUEST");
         }
         return ok;
     }

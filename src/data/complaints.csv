@@ -1,4 +1,2 @@
 complaintId,userId,roomId,category,topic,description,requestDate,status
-C001,U002,R205,ระบบประปา,dfghfdh,fdgdfgfd,17/10/2026 08:00,RESOLVED
-C002,U002,R204,ระบบไฟฟ้า,dfsdf,dsfsdfds,17/10/2026 08:00,RESOLVED
-C003,U002,R205,ระบบไฟฟ้า,asd,fgjfg,17/10/2026 08:00,RESOLVED
+

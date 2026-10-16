@@ -1,17 +1,18 @@
 package ui;
 
 import logic.GuestLogic;
+import logic.ImageLoader;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.util.List;
 
 /**
- * GuestUI
- * คือคลาสหน้าต่างหลักสำหรับผู้เข้าชมทั่วไปในการค้นหาและดูรายละเอียดห้องพัก
+ * GuestUI คือคลาสหน้าต่างหลักสำหรับผู้เข้าชมทั่วไปในการค้นหาและดูรายละเอียดห้องพัก
  * logic คือ อ็อบเจกต์ตรรกะสำหรับการค้นหาและกรองห้องพักของผู้เข้าชม
  * cbType คือ คอมโบ้บ็อกซ์สำหรับเลือกประเภทห้องพักที่ต้องการค้นหา
  * cbPrice คือ คอมโบ้บ็อกซ์สำหรับเลือกระดับราคาค่าเช่า
@@ -26,8 +27,7 @@ public class GuestUI extends JFrame {
 
     // ===== representation =====
     // Abstraction Function:
-    // AF(logic, cardsContainer, cardLayout, grid) คือ
-    // หน้าต่างค้นหาห้องพักสำหรับบุคคลทั่วไปและผู้เข้าชม
+    // AF(logic, cardsContainer, cardLayout, grid) คือ หน้าต่างค้นหาห้องพักสำหรับบุคคลทั่วไปและผู้เข้าชม
     // RI
     // 1. logic ต้องไม่เป็น null
     // 2. cardsContainer และ cardLayout ต้องไม่เป็น null
@@ -76,8 +76,7 @@ public class GuestUI extends JFrame {
     }
 
     /**
-     * สร้างหน้าจอแสดงรายการห้องพัก ประกอบด้วยแถบนำทาง แผงตัวกรอง
-     * และตารางการ์ดห้องพัก
+     * สร้างหน้าจอแสดงรายการห้องพัก ประกอบด้วยแถบนำทาง แผงตัวกรอง และตารางการ์ดห้องพัก
      * 
      * @return JPanel แผงหน้าจอรายการห้องพัก
      */
@@ -255,12 +254,11 @@ public class GuestUI extends JFrame {
     }
 
     /**
-     * สร้างการ์ดแสดงข้อมูลห้องพักเดี่ยว พร้อมรูปภาพ ประเภท ราคา
-     * และเอฟเฟกต์การเด้งเมื่อเมาส์ชี้
+     * สร้างการ์ดแสดงข้อมูลห้องพักเดี่ยว พร้อมรูปภาพ ประเภท ราคา และเอฟเฟกต์การเด้งเมื่อเมาส์ชี้
      * 
      * @param room ข้อมูลวิวโมเดลห้องพัก
-     * @param x    ตำแหน่ง X
-     * @param y    ตำแหน่ง Y
+     * @param x ตำแหน่ง X
+     * @param y ตำแหน่ง Y
      * @return JPanel การ์ดห้องพัก
      */
     private JPanel createRoomCard(GuestLogic.RoomViewModel room, int x, int y) {
@@ -271,10 +269,8 @@ public class GuestUI extends JFrame {
 
         String roomNumOnly = room.numberText.replace("ห้อง ", "");
 
-        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg
-        // หากไม่มีจะแสดงกรอบว่างๆ
-        RoomImage img = new RoomImage(
-                new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, w - 16, 132);
+        // 🟢 ค้นหาไฟล์รูปภาพเฉพาะห้อง เช่น img/room_101.png หรือ .jpg หากไม่มีจะแสดงกรอบว่างๆ
+        RoomImage img = new RoomImage(new String[] { "img/room_" + roomNumOnly + ".png", "img/room_" + roomNumOnly + ".jpg" }, w - 16, 132);
         img.setBounds(8, 8, w - 16, 132);
         card.add(img);
 
@@ -378,8 +374,7 @@ public class GuestUI extends JFrame {
     }
 
     /**
-     * สร้างป้ายสถานะห้องพักพร้อมจุดสีระบุความพร้อม (เขียว=ว่าง, แดง=มีผู้เช่า,
-     * ส้ม=ปรับปรุง)
+     * สร้างป้ายสถานะห้องพักพร้อมจุดสีระบุความพร้อม (เขียว=ว่าง, แดง=มีผู้เช่า, ส้ม=ปรับปรุง)
      * 
      * @param status ข้อความสถานะห้องพัก
      * @return JPanel ป้ายสถานะ
@@ -391,13 +386,13 @@ public class GuestUI extends JFrame {
 
         Color bg = isAvailable ? new Color(240, 253, 244)
                 : (isOccupied ? new Color(254, 242, 242)
-                        : (isMaintenance ? new Color(254, 243, 199) : new Color(254, 252, 232)));
+                : (isMaintenance ? new Color(254, 243, 199) : new Color(254, 252, 232)));
         Color fg = isAvailable ? new Color(22, 101, 52)
                 : (isOccupied ? new Color(153, 27, 27)
-                        : (isMaintenance ? new Color(180, 83, 9) : new Color(133, 77, 14)));
+                : (isMaintenance ? new Color(180, 83, 9) : new Color(133, 77, 14)));
         Color dotColor = isAvailable ? new Color(34, 197, 94)
                 : (isOccupied ? new Color(239, 68, 68)
-                        : (isMaintenance ? new Color(217, 119, 6) : new Color(234, 179, 8)));
+                : (isMaintenance ? new Color(217, 119, 6) : new Color(234, 179, 8)));
 
         JPanel badge = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2)) {
             @Override
@@ -424,8 +419,8 @@ public class GuestUI extends JFrame {
      * สร้างป้ายข้อความกำกับช่องกรอกข้อมูล
      * 
      * @param text ข้อความกำกับ
-     * @param x    ตำแหน่ง X
-     * @param y    ตำแหน่ง Y
+     * @param x ตำแหน่ง X
+     * @param y ตำแหน่ง Y
      * @return JLabel ป้ายข้อความ
      */
     private static JLabel fieldLabel(String text, int x, int y) {
@@ -437,9 +432,9 @@ public class GuestUI extends JFrame {
     /**
      * สร้างป้ายข้อความพร้อมกำหนดรูปแบบและสี
      * 
-     * @param text  ข้อความ
+     * @param text ข้อความ
      * @param style รูปแบบฟอนต์ (Font.PLAIN, Font.BOLD)
-     * @param size  ขนาดตัวอักษร
+     * @param size ขนาดตัวอักษร
      * @param color สีข้อความ
      * @return JLabel ป้ายข้อความ
      */
@@ -485,9 +480,9 @@ public class GuestUI extends JFrame {
         /**
          * สร้างแผงการ์ดพร้อมเงาและมุมโค้งมน
          * 
-         * @param bgColor     สีพื้นหลัง
+         * @param bgColor สีพื้นหลัง
          * @param borderColor สีเส้นขอบ
-         * @param radius      รัศมีความโค้งมนของมุม
+         * @param radius รัศมีความโค้งมนของมุม
          */
         public ShadowCardPanel(Color bgColor, Color borderColor, int radius) {
             this.bgColor = bgColor;
@@ -547,7 +542,7 @@ public class GuestUI extends JFrame {
     /**
      * สร้างปุ่มกดสไตล์โมเดิร์นแบนราบ (Flat Button)
      * 
-     * @param text      ข้อความบนปุ่ม
+     * @param text ข้อความบนปุ่ม
      * @param isPrimary กำหนดว่าเป็นปุ่มหลักหรือปุ่มรอง
      * @return JButton ปุ่มที่จัดรูปแบบแล้ว
      */
@@ -585,8 +580,7 @@ public class GuestUI extends JFrame {
     }
 
     /**
-     * ThinScrollBarUI คือคลาสกำหนดการแสดงผลแถบเลื่อน Scrollbar
-     * ให้มีความบางและโมเดิร์น
+     * ThinScrollBarUI คือคลาสกำหนดการแสดงผลแถบเลื่อน Scrollbar ให้มีความบางและโมเดิร์น
      */
     static class ThinScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
         // ===== representation =====
@@ -638,9 +632,83 @@ public class GuestUI extends JFrame {
         }
     }
 
-    static class RoomImage extends UIComponents.RoomImage {
+    /**
+     * RoomImage คือคอมโพเนนต์สำหรับแสดงรูปภาพห้องพักพร้อมการจัดกรอบขอบมน
+     * photo คือ อ็อบเจกต์รูปภาพห้องพักที่โหลดมาแสดงผล
+     */
+    static class RoomImage extends JPanel {
+        // ===== representation =====
+        // Abstraction Function:
+        // AF(photo) คือ พาเนลแสดงภาพห้องพัก หรือแสดงกรอบว่างพร้อมข้อความหากไม่มีรูปภาพ
+        // RI
+        // - photo อาจเป็น null ได้หากไม่มีไฟล์รูปภาพ
+
+        private final Image photo;
+
+        /**
+         * สร้างคอมโพเนนต์แสดงรูปภาพห้องพัก
+         * 
+         * @param paths รายชื่อพาธไฟล์รูปภาพที่ต้องการค้นหาและโหลด
+         * @param width ความกว้าง
+         * @param height ความสูง
+         */
         RoomImage(String[] paths, int width, int height) {
-            super(paths, width, height);
+            this.photo = ImageLoader.load(paths);
+            setOpaque(false);
+            setPreferredSize(new Dimension(width, height));
+            setSize(width, height);
+        }
+
+        /**
+         * วาดภาพห้องพักขอบมน หรือแสดงกรอบประพร้อมไอคอนเมื่อไม่มีรูป
+         * 
+         * @param g กราฟิกส์คอนเท็กซ์
+         */
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            int w = getWidth(), h = getHeight();
+
+            if (w > 0 && h > 0) {
+                g2.clipRect(0, 0, w, h);
+                g2.setClip(new RoundRectangle2D.Float(0, 0, w, h, 10, 10));
+
+                if (photo != null) {
+                    g2.drawImage(photo, 0, 0, w, h, this);
+                } else {
+                    // 🟢 ทำเป็นกรอบว่างๆ สำหรับห้องที่ไม่มีรูปภาพ
+                    g2.setColor(new Color(248, 250, 252));
+                    g2.fillRect(0, 0, w, h);
+
+                    // วาดเส้นขอบประแสดงกรอบว่าง
+                    float[] dash = { 6.0f, 4.0f };
+                    g2.setStroke(
+                            new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g2.setColor(new Color(203, 213, 225));
+                    g2.drawRoundRect(1, 1, w - 3, h - 3, 10, 10);
+
+                    // วาดไอคอนกล้อง
+                    g2.setStroke(new BasicStroke(1.5f));
+                    g2.setColor(new Color(148, 163, 184));
+                    int cx = w / 2, cy = h / 2 - 8;
+                    g2.drawRoundRect(cx - 14, cy - 10, 28, 20, 4, 4);
+                    g2.drawOval(cx - 5, cy - 5, 10, 10);
+
+                    // ข้อความระบุ
+                    Font baseFont = UIManager.getFont("Label.font");
+                    if (baseFont != null) {
+                        g2.setFont(baseFont.deriveFont(Font.PLAIN, 11f));
+                    }
+                    String msg = "ไม่มีรูปภาพห้องพัก";
+                    FontMetrics fm = g2.getFontMetrics();
+                    g2.drawString(msg, (w - fm.stringWidth(msg)) / 2, cy + 24);
+                }
+            }
+            g2.dispose();
         }
     }
 }
